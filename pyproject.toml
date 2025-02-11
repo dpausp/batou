@@ -36,6 +36,9 @@ dependencies = [
     "pyyaml",
     "rich",
     "remote-pdb",
+    "pyrage",
+    "cryptography",
+    "bcrypt",
 ]
 
 [project.scripts]
