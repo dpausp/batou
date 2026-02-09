@@ -8,6 +8,8 @@ from typing import Optional
 import importlib_resources
 
 import batou
+import batou.check
+import batou.debug.cli
 import batou.deploy
 import batou.migrate
 import batou.secrets.edit
@@ -100,6 +102,39 @@ def main(args: Optional[list] = None) -> None:
         type=lambda x: x.replace(".cfg", ""),
     )
     p.set_defaults(func=batou.deploy.main)
+
+    # CHECK
+    p = subparsers.add_parser(
+        "check", help="Fast local consistency check without execnet overhead."
+    )
+    p.add_argument(
+        "-p",
+        "--platform",
+        default=None,
+        help="Alternative platform to choose. Empty for no platform.",
+    )
+    p.add_argument(
+        "-t",
+        "--timeout",
+        default=None,
+        help="Override the environment's timeout setting",
+    )
+    p.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Enable debug mode.",
+    )
+    p.add_argument(
+        "environment",
+        help="Environment to check.",
+        type=lambda x: x.replace(".cfg", ""),
+    )
+    p.set_defaults(func=batou.check.main)
+
+    # DEBUG
+    p = subparsers.add_parser("debug", help="Display all available debug settings.")
+    p.set_defaults(func=batou.debug.cli.main)
 
     # SECRETS
     secrets = subparsers.add_parser(
@@ -211,12 +246,13 @@ def main(args: Optional[list] = None) -> None:
     )
     migrate.set_defaults(func=batou.migrate.main)
 
-    args = parser.parse_args(args)
+    args: argparse.Namespace = parser.parse_args(args)
 
     # Consume global arguments
     batou.output.enable_debug = args.debug
     batou.secrets.encryption.debug = args.debug
-    batou.secrets.manage.debug = args.debug
+    if hasattr(batou.secrets.manage, "debug"):
+        batou.secrets.manage.debug = args.debug
 
     # Pass over to function
     if args.func.__name__ == "print_usage":

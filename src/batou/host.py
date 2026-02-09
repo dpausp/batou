@@ -8,6 +8,7 @@ import yaml
 
 import batou.utils
 from batou import output, remote_core
+from batou.debug.settings import get_debug_settings
 from batou.utils import BagOfAttributes
 
 # Keys in os.environ which get propagated to the remote side:
@@ -234,6 +235,7 @@ class LocalHost(Host):
             env._host_data(),
             env.timeout,
             env.platform,
+            get_debug_settings().model_dump(mode="json"),
         )
 
     def disconnect(self):
@@ -355,6 +357,7 @@ class RemoteHost(Host):
             env._host_data(),
             env.timeout,
             env.platform,
+            get_debug_settings().model_dump(mode="json"),
             {
                 key: os.environ.get(key)
                 for key in REMOTE_OS_ENV_KEYS

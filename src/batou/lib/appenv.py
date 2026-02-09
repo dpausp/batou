@@ -82,8 +82,42 @@ class AppEnv(Component):
     def configure(self):
         with open("requirements.lock", "r") as f:
             lockfile = f.read()
+
+        # Include editable package sources in hash so code changes trigger rebuild
+        import re
+
+        editable_sources = []
+        for line in lockfile.splitlines():
+            match = re.match(r"^-e\s+(.+)$", line.strip())
+            if match:
+                path = match.group(1).strip()
+                # Resolve relative path
+                if not os.path.isabs(path):
+                    path = os.path.join(self.workdir, path)
+                if os.path.exists(path):
+                    editable_sources.append(path)
+
+        # Read appenv code
         with open(__file__, "r") as f:
             hash_content = lockfile + self.python_version + f.read()
+
+        # Read editable source files
+        for source_path in editable_sources:
+            for root, dirs, files in os.walk(source_path):
+                for filename in files:
+                    filepath = os.path.join(root, filename)
+                    if (
+                        filepath.endswith(".pyc")
+                        or ".git" in filepath
+                        or ".hg" in filepath
+                    ):
+                        continue
+                    try:
+                        with open(filepath, "r", errors="ignore") as f:
+                            hash_content += f.read()
+                    except (IOError, UnicodeDecodeError):
+                        pass
+
         hash_content = hash_content.encode("utf-8")
         self.env_hash = hashlib.new("sha256", hash_content).hexdigest()[:8]
         self.env_dir = os.path.join(".appenv", self.env_hash)

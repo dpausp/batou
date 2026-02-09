@@ -13,7 +13,10 @@ from batou import (
     SilentConfigurationError,
 )
 from batou._output import TerminalBackend, output
+from batou.debug.settings import get_debug_settings
 
+from .debug.fd_tracker import FileDescriptorTracker
+from .debug.profiler import Profiler
 from .environment import Environment
 from .utils import Timer, locked, notify, self_id
 
@@ -129,6 +132,12 @@ class Deployment(object):
         self.jobs = jobs
 
         self.timer = Timer("deployment")
+
+        self.debug_settings = get_debug_settings()
+        self.fd_tracker = FileDescriptorTracker(
+            self.environment.name, self.debug_settings
+        )
+        self.profiler = Profiler(self.debug_settings)
 
     @property
     def local_consistency_check(self):
@@ -341,6 +350,11 @@ class Deployment(object):
                 self.loop.run_until_complete(asyncio.gather(*pending))
                 pending = get_pending()
 
+        # # Debugging/profiling
+        hosts = self.environment.hosts.values()
+        self.fd_tracker.generate_reports(hosts)
+        self.profiler.generate_reports(hosts)
+
     def summarize(self):
         output.section("Summary")
         for node in list(self.environment.hosts.values()):
@@ -352,6 +366,10 @@ class Deployment(object):
             output.annotate(
                 f"Deployment took {self.timer.humanize('total', 'connect', 'deploy')}"
             )
+
+        # # Debugging/profiling
+        self.environment.template_stats.show_stats()
+        self.fd_tracker.show_summary()
 
     def disconnect(self):
         output.step("main", "Disconnecting from nodes ...", debug=True)
@@ -372,6 +390,10 @@ def main(
 ):
     output.backend = TerminalBackend()
     output.line(self_id())
+
+    # Log expert/debug flags
+    get_debug_settings().show()
+
     STEPS = ["load", "provision", "connect", "deploy", "summarize"]
     if consistency_only:
         ACTION = "CONSISTENCY CHECK"

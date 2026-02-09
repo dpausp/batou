@@ -160,6 +160,7 @@ class Deployment(object):
         host_data,
         timeout,
         platform,
+        debug_settings_dict,
         os_env=None,
     ):
         self.env_name = env_name
@@ -172,15 +173,25 @@ class Deployment(object):
         self.secret_data = secret_data
         self.timeout = timeout
         self.platform = platform
-        self.os_env = os_env
+        self.debug_settings_dict = debug_settings_dict
+        self.debug_settings = None
+        self.os_env = os_env or {}
 
     def load(self):
         from batou.environment import Environment
 
         if self.os_env:
             os.environ.update(self.os_env)
+        from batou.debug.settings import DebugSettings
+
+        self.debug_settings = DebugSettings(**self.debug_settings_dict)
+
+        from batou.debug.remote_fd_tracking import init_remote_fd_tracking
+
+        init_remote_fd_tracking(self.debug_settings.track_fds)
+
         self.environment = Environment(self.env_name, self.timeout, self.platform)
-        self.environment.deployment = self
+        self.environment.deployment = self  # type: ignore[attr-defined]
         self.environment.load()
         self.environment.overrides = self.overrides
 
@@ -193,7 +204,29 @@ class Deployment(object):
             self.environment.hosts[hostname].data.update(data)
         self.environment.secret_files = self.secret_files
         self.environment.secret_data = self.secret_data
-        return self.environment.configure()
+
+        if self.debug_settings.profile:
+            from batou.debug.profiling import RemoteProfiler
+
+            profiler = RemoteProfiler(
+                self.host_name,
+                self.debug_settings.profile_lines,
+            )
+            result = profiler.profile_execution(self.environment.configure)
+
+            return result
+        else:
+            result = self.environment.configure()
+            stats = self.environment.template_stats.get_stats()
+            if stats["hits"] + stats["misses"] > 0:
+                from batou import output
+
+                hit_rate = 100 * stats["hits"] / (stats["hits"] + stats["misses"])
+                output.annotate(
+                    f"Template cache: {stats['hits']} hits, {stats['misses']} misses, "
+                    f"{stats['size']} cached templates ({hit_rate:.1f}% hit rate)"
+                )
+            return result
 
     def deploy(self, root, predict_only):
         host = self.environment.get_host(self.host_name)
@@ -252,7 +285,7 @@ def ensure_repository(target, method):
     elif method in ["git-pull", "git-bundle"]:
         if not os.path.exists(target + "/.git"):
             cmd("git init {}".format(target))
-    elif method in ["rsync", "rsync-ext"]:
+    elif method in ["rsync", "rsync-ext", "rsync-dev"]:
         pass
     elif method == "local":
         pass
@@ -380,19 +413,68 @@ def setup_deployment(*args):
 
 
 def deploy(root, predict_only=False):
-    deployment.deploy(root, predict_only)
+    # Always install FD tracking hook (we'll only return stats if requested)
+    from batou.debug.remote_fd_tracking import (
+        install_remote_fd_tracking_hook,
+        get_remote_fd_tracking_stats,
+    )
+
+    install_remote_fd_tracking_hook()
+    if deployment is not None:
+        deployment.deploy(root, predict_only)  # type: ignore[attr-defined]
+
+    # Report FD tracking stats using debug package function
+    stats = get_remote_fd_tracking_stats()
+    if stats["open_fds"] > 200:
+        from batou._output import output
+
+        output.line(
+            f"FD Leak Warning: {stats['open_fds']} FDs still open after deployment",
+            red=True,
+        )
+        # Show leaked FD details
+        for fd, (path, mode, open_time) in list(stats["leaked_fds"])[:10]:
+            output.line(f"  FD {fd}: {path} ({mode}) since {open_time}")
+        if len(stats["leaked_fds"]) > 10:
+            output.line(f"  ... and {len(stats['leaked_fds']) - 10} more")
 
 
 def root_dependencies():
     deps = {}
-    for item in deployment.environment.root_dependencies().items():
-        (root, dependencies) = item
-        key = (root.host.name, root.name)
-        deps[key] = {
-            "dependencies": [(r.host.name, r.name) for r in dependencies],
-            "ignore": root.ignore,
-        }
+    if deployment is not None:
+        env = deployment.environment  # type: ignore[attr-defined]
+        if env is not None and hasattr(env, "root_dependencies"):
+            for item in env.root_dependencies().items():
+                (root, dependencies) = item
+                key = (root.host.name, root.name)
+                deps[key] = {
+                    "dependencies": [(r.host.name, r.name) for r in dependencies],
+                    "ignore": root.ignore,
+                }
     return deps
+
+
+def get_profiling_results():
+    """Get profiling results from remote side (RPC endpoint)."""
+    if deployment is None:
+        return None
+
+    if not deployment.debug_settings.profile:
+        return None
+
+    from batou.debug.profiling import RemoteProfiler
+
+    profiler = RemoteProfiler(
+        deployment.host_name, deployment.debug_settings.profile_lines
+    )
+    return profiler.get_profiling_results()
+
+
+def get_fd_tracking_stats():
+    """RPC function to get FD tracking stats from remote side."""
+    from batou.debug.remote_fd_tracking import get_remote_fd_tracking_stats
+
+    return get_remote_fd_tracking_stats()
 
 
 def whoami():

@@ -160,6 +160,7 @@ class Supervisor(Component):
     buildout_version = Attribute(default="3.0.1")
     setuptools_version = Attribute(default="68.0.0")
     wheel_version = Attribute(default="0.40.0")
+    pip_version = Attribute(default="23.3.1")
     buildout_cfg = os.path.join(
         os.path.dirname(__file__), "resources", "supervisor.buildout.cfg"
     )
@@ -201,6 +202,7 @@ class Supervisor(Component):
             config=buildout_cfg,
             python="3",
             wheel=self.wheel_version,
+            pip=self.pip_version,
         )
 
         self.program_config_dir = Directory("etc/supervisor.d", leading=True)

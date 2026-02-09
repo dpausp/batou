@@ -317,6 +317,7 @@ def test_Deployment_sets_os_environ_on_load(monkeypatch):
         host_data={},
         timeout=None,
         platform=None,
+        debug_settings_dict={},
         os_env={"MY_ENV_VAR": "MY-VALUE"},
     )
     dep.load()
@@ -341,6 +342,7 @@ def test_Deployment_sets_resolver_overrides(monkeypatch):
         host_data={},
         timeout=None,
         platform=None,
+        debug_settings_dict={},
         os_env={"MY_ENV_VAR": "MY-VALUE"},
     )
     dep.load()

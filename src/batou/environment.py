@@ -34,6 +34,7 @@ from batou import (
 )
 from batou._output import output
 from batou.component import Component, ComponentDefinition, RootComponent
+from batou.debug.template_stats import TemplateStats
 from batou.provision import Provisioner
 from batou.repository import Repository
 from batou.utils import CycleError, cmd
@@ -157,6 +158,8 @@ class Environment(object):
         self.secret_files: Dict[str, str] = {}
 
         self.provisioners: Dict[str, Provisioner] = {}
+
+        self.template_stats = TemplateStats()
 
     @classmethod
     def all(cls):
@@ -483,10 +486,18 @@ class Environment(object):
 
             for root in working_set:
                 try:
-                    Component._instances.clear()
+                    # Collect template cache stats BEFORE clearing instances
+                    components = Component._instances
+                    self.template_stats.collect_component_stats(components)
+                    components.clear()
+
                     self.resources.reset_component_resources(root)
                     root.overrides = self.overrides.get(root.name, {})
                     root.prepare()
+                    # output.annotate(f"{len(components)} components after prepare")
+                    # Collect template cache stats AFTER preparing components
+                    # This is when templates have been rendered
+                    self.template_stats.collect_component_stats(components)
                 except ConfigurationError as e:
                     # A known exception which we can report gracefully later.
                     exceptions.append(e)

@@ -1095,14 +1095,18 @@ def current_group():
             return group.gr_name
 
 
-@patch("os.chown")
-def test_group_lazy(chown, root):
-    with open("asdf", "w"):
+def test_group_lazy(root):
+    file_path = os.path.join(root.component.workdir, "asdf")
+    with open(file_path, "w"):
         pass
-    file = File("asdf", group=current_group())
-    root.component += file
-    root.component.deploy()
-    assert not os.chown.called
+    # Set file group to match current user's group
+    gid = grp.getgrnam(current_group()).gr_gid
+    os.chown(file_path, -1, gid)
+    with patch("os.chown") as chown:
+        file = File("asdf", group=current_group(), content="")
+        root.component += file
+        root.component.deploy()
+        assert not chown.called
 
 
 @patch("os.chown")
@@ -1162,3 +1166,253 @@ def test_directory_passes_args_to_syncdirectory(root):
     assert isinstance(sd, SyncDirectory)
     assert sd.verify_opts == "-abc"
     assert sd.sync_opts == "-xyz"
+
+
+# Diff control tests
+def test_verify_diff_mode_none(monkeypatch, output, root):
+    """Test BATOU_SHOW_DIFF=none suppresses all diff output."""
+    monkeypatch.setenv("BATOU_SHOW_DIFF", "none")
+    monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new content\n")
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old content\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # No diff output, only the component header
+    assert "  path ---" not in output.backend.output
+    assert "  path +++" not in output.backend.output
+
+
+def test_verify_diff_mode_summary(monkeypatch, output, root):
+    """Test BATOU_SHOW_DIFF=summary shows only file change summary."""
+    monkeypatch.setenv("BATOU_SHOW_DIFF", "summary")
+    monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new content\nline 2\nline 3\n")
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old content\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # Only show summary, not diff lines
+    assert f"changed: {p.path}" in output.backend.output
+    assert "  path ---" not in output.backend.output
+    assert "  path +++" not in output.backend.output
+    assert "  path -old" not in output.backend.output
+    assert "  path +new" not in output.backend.output
+
+
+def test_verify_diff_mode_full(monkeypatch, output, root):
+    """Test BATOU_SHOW_DIFF=full shows complete diff (default behavior)."""
+    monkeypatch.delenv("BATOU_SHOW_DIFF", raising=False)
+    monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new content\nline 2\n")
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old content\nline 2\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # Show full diff
+    assert "  path ---" in output.backend.output
+    assert "  path +++" in output.backend.output
+    assert "  path -old content" in output.backend.output
+    assert "  path +new content" in output.backend.output
+
+
+def test_verify_sensitive_data_without_override(monkeypatch, output, root):
+    """Test sensitive data without BATOU_SHOW_SECRET_DIFFS shows warning."""
+    monkeypatch.delenv("BATOU_SHOW_DIFF", raising=False)
+    monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new secret\n", sensitive_data=True)
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old secret\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # No diff shown, just warning
+    assert "Not showing diff as it contains sensitive data." in output.backend.output
+    assert "  path ---" not in output.backend.output
+    assert "  path +++" not in output.backend.output
+
+
+def test_verify_sensitive_data_with_override(monkeypatch, output, root):
+    """Test BATOU_SHOW_SECRET_DIFFS=1 shows diff for sensitive data."""
+    monkeypatch.delenv("BATOU_SHOW_DIFF", raising=False)
+    monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new secret\n", sensitive_data=True)
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old secret\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # Diff shown despite sensitive_data flag
+    assert "  path ---" in output.backend.output
+    assert "  path +++" in output.backend.output
+    assert "  path -old secret" in output.backend.output
+    assert "  path +new secret" in output.backend.output
+
+
+def test_verify_sensitive_data_with_env_secrets(monkeypatch, output, root):
+    """Test env secret detection with BATOU_SHOW_SECRET_DIFFS=1."""
+    monkeypatch.delenv("BATOU_SHOW_DIFF", raising=False)
+    monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new secret value\n")
+    root.component += p
+
+    # Add a secret to the environment
+    root.environment.secret_data.add("secret")
+
+    with open(p.path, "w") as f:
+        f.write("old secret value\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # Diff shown because BATOU_SHOW_SECRET_DIFFS=1
+    assert "  path ---" in output.backend.output
+    assert "  path +++" in output.backend.output
+
+
+def test_verify_secret_diffs_0_respects_sensitive_data(monkeypatch, output, root):
+    """Test BATOU_SHOW_SECRET_DIFFS=0 respects sensitive_data flag."""
+    monkeypatch.delenv("BATOU_SHOW_DIFF", raising=False)
+    monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "0")
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new secret\n", sensitive_data=True)
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old secret\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # No diff shown
+    assert "Not showing diff as it contains sensitive data." in output.backend.output
+    assert "  path ---" not in output.backend.output
+
+
+def test_verify_summary_with_sensitive_override(monkeypatch, output, root):
+    """Test BATOU_SHOW_DIFF=summary with BATOU_SHOW_SECRET_DIFFS=1."""
+    monkeypatch.setenv("BATOU_SHOW_DIFF", "summary")
+    monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new secret\n", sensitive_data=True)
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old secret\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # Show summary only
+    assert f"changed: {p.path}" in output.backend.output
+    assert "  path ---" not in output.backend.output
+    assert "  path +++" not in output.backend.output
+
+
+def test_verify_none_with_sensitive_override(monkeypatch, output, root):
+    """Test BATOU_SHOW_DIFF=none with BATOU_SHOW_SECRET_DIFFS=1."""
+    monkeypatch.setenv("BATOU_SHOW_DIFF", "none")
+    monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
+
+    # Patch file.py's debug_settings to pick up new environment variables
+    from batou.debug.settings import DebugSettings
+    import batou.lib.file as file_module
+
+    file_module.debug_settings = DebugSettings()
+
+    path = "path"
+    p = Content(path, content="new secret\n", sensitive_data=True)
+    root.component += p
+
+    with open(p.path, "w") as f:
+        f.write("old secret\n")
+
+    with pytest.raises(batou.UpdateNeeded):
+        p.verify()
+
+    # No output at all (none mode overrides everything)
+    assert f"changed: {p.path}" not in output.backend.output
+    assert "  path ---" not in output.backend.output
+    assert (
+        "Not showing diff as it contains sensitive data." not in output.backend.output
+    )

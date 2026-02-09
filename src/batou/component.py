@@ -228,6 +228,7 @@ class Component(object):
 
         Component._instances.append(self)
         self.timer = batou.utils.Timer(self.__class__.__name__)
+        self._template_engine = batou.template.Jinja2Engine()
         # Are any keyword arguments undefined attributes?
         # This is a somewhat rough implementation as it allows overriding
         # methods
@@ -920,9 +921,8 @@ class Component(object):
 
         """
 
-        engine = batou.template.Jinja2Engine()
         args = self._template_args(component=component, **kw)
-        return engine.expand(string, args, self._breadcrumbs)
+        return self._template_engine.expand(string, args, self._breadcrumbs)
 
     def template(self, filename, component=None):
         """Expand the given file in the context of this component.
@@ -957,8 +957,9 @@ class Component(object):
         :return type: unicode
 
         """
-        engine = batou.template.Jinja2Engine()
-        return engine.template(filename, self._template_args(component=component))
+        return self._template_engine.template(
+            filename, self._template_args(component=component)
+        )
 
     def _template_args(self, component=None, **kw):
         if component is None:

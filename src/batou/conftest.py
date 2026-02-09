@@ -44,3 +44,27 @@ def git_main_branch() -> str:
             .decode("ascii")
             .strip()
         )
+
+
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_fd_tracking():
+    """Clean up FD tracking singleton after each test to prevent hook leakage.
+
+    This is critical because:
+    1. FileDescriptorTracker is a singleton that persists across tests
+    2. The tracker wraps builtins.open with a hook
+    3. The hook's close_hook wrapper creates reference cycles
+    4. These cycles prevent proper garbage collection
+    5. This causes ResourceWarnings in later tests
+    """
+    from batou.debug.fd_tracker import FileDescriptorTracker
+    import warnings
+    import pytest
+
+    # Suppress unraisable exception warnings during test execution
+    # These are often false positives from coverage/pytest internals
+    warnings.filterwarnings("ignore", category=pytest.PytestUnraisableExceptionWarning)
+
+    yield
+
+    FileDescriptorTracker.cleanup()

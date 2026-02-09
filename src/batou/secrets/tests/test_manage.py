@@ -28,6 +28,7 @@ def test_manage__1(monkeypatch, func):
     assert "Unknown environment(s): foo, bar" == str(err.value)
 
 
+@pytest.mark.slow
 def test_manage__2(tmp_path, monkeypatch, capsys):
     """It allows to add/remove users."""
     shutil.copytree("examples/errors", tmp_path / "errors")
@@ -116,12 +117,13 @@ def test_manage__summary__3(capsys, monkeypatch):
     assert err == ""
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(
     sys.version_info < (3, 7),
     reason="age is available in tests with python 3.7 only",
 )
 def test_manage__reencrypt__1(tmp_path, monkeypatch, capsys):
-    """It re-encrypts all files with the current members."""
+    """It re-encrypts all files with current members."""
     shutil.copytree("examples/tutorial-secrets", tmp_path / "tutorial-secrets")
 
     monkeypatch.chdir(tmp_path / "tutorial-secrets")

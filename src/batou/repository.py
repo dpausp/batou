@@ -39,12 +39,32 @@ class Repository(object):
 
     @classmethod
     def from_environment(cls, environment):
+        output.annotate(
+            "Repository.from_environment: connect_method={}, update_method={}".format(
+                environment.connect_method, environment.update_method
+            ),
+            debug=True,
+        )
         if environment.connect_method == "local":
             return NullRepository(environment)
         elif environment.update_method == "rsync":
-            return RSyncRepository(environment)
+            repo = RSyncRepository(environment)
+            output.annotate(
+                "Repository.from_environment: Using RSyncRepository", debug=True
+            )
+            return repo
         elif environment.update_method == "rsync-ext":
-            return RSyncExtRepository(environment)
+            repo = RSyncExtRepository(environment)
+            output.annotate(
+                "Repository.from_environment: Using RSyncExtRepository", debug=True
+            )
+            return repo
+        elif environment.update_method == "rsync-dev":
+            repo = RSyncDevRepository(environment)
+            output.annotate(
+                "Repository.from_environment: Using RSyncDevRepository", debug=True
+            )
+            return repo
         elif environment.update_method == "hg-bundle":
             return MercurialBundleRepository(environment)
         elif environment.update_method == "hg-pull":
@@ -143,9 +163,11 @@ class RSyncExtRepository(Repository):
             "ssh_config_{}".format(self.environment.name),
             "ssh_config",
         ]
+        ssh_config_used = None
         for ssh_config in ssh_configs:
             if os.path.exists(ssh_config):
                 rsync_args.append(f"--rsh='ssh -F {ssh_config}'")
+                ssh_config_used = ssh_config
                 break
 
         for ignore in self.IGNORE_LIST:
@@ -157,6 +179,25 @@ class RSyncExtRepository(Repository):
             )
 
         output.annotate("rsync-ext: {} -> {}".format(source, dest), debug=True)
+        output.annotate(
+            "rsync-ext: SSH config: {}".format(ssh_config_used or "none"), debug=True
+        )
+        output.annotate(
+            "rsync-ext: Excludes: {}".format(", ".join(self.IGNORE_LIST)), debug=True
+        )
+        if host.require_sudo:
+            output.annotate(
+                "rsync-ext: Sudo user: {}".format(host.service_user), debug=True
+            )
+        output.annotate(
+            "rsync-ext: Command: rsync {opts} {source}/ {target}:{dest}".format(
+                opts=" ".join(rsync_args),
+                source=source,
+                target=host.fqdn,
+                dest=dest,
+            ),
+            debug=True,
+        )
 
         cmd(
             "rsync {opts} {source}/ {target}:{dest}".format(
@@ -166,6 +207,61 @@ class RSyncExtRepository(Repository):
                 dest=dest,
             )
         )
+
+
+class RSyncDevRepository(RSyncExtRepository):
+    SYNC_OPTS = [
+        "--recursive",
+        "--copy-links",  # dereference symlinks
+        "--delete-before",  # delete before transfer (handles symlinks better than --delete)
+    ]
+
+    def verify(self):
+        output.annotate(
+            "You are using rsync-dev (symlinks are dereferenced). "
+            "This is a non-verifying repository "
+            "-- continuing on your own risk!",
+            red=True,
+        )
+
+    def update(self, host):
+        output.annotate(
+            "RSyncDevRepository: Using --copy-links --delete-before to dereference symlinks",
+            debug=True,
+        )
+        output.annotate(
+            "RSyncDevRepository: source={} dest={}".format(
+                self.root, host.remote_repository
+            ),
+            debug=True,
+        )
+
+        # Detect symlinks in source
+
+        symlinks = []
+        for root, dirs, files in os.walk(self.root):
+            for name in dirs + files:
+                path = os.path.join(root, name)
+                if os.path.islink(path):
+                    rel_path = os.path.relpath(path, self.root)
+                    link_target = os.readlink(path)
+                    symlinks.append((rel_path, link_target))
+
+        if symlinks:
+            output.annotate(
+                "RSyncDevRepository: Found {} symlinks in source:".format(
+                    len(symlinks)
+                ),
+                debug=True,
+            )
+            for rel_path, link_target in symlinks:
+                output.annotate("  {} -> {}".format(rel_path, link_target), debug=True)
+        else:
+            output.annotate(
+                "RSyncDevRepository: No symlinks found in source", debug=True
+            )
+
+        super().update(host)
 
 
 def hg_cmd(hgcmd):

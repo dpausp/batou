@@ -53,6 +53,14 @@ To deploy this, you run:
 $ ./batou deploy dev
 ```
 
+You can also perform a fast local consistency check without execnet overhead:
+
+```console
+$ ./batou check dev
+```
+
+The `check` command validates your deployment model locally without connecting to remote hosts, providing rapid feedback during development.
+
 Check the [detailed documentation](http://batou.readthedocs.org) to get going with a more ambitious project.
 
 

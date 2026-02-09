@@ -17,7 +17,6 @@ from batou.utils import (
     call_with_optional_args,
     cmd,
     flatten,
-    format_duration,
     hash,
     locked,
     notify,
@@ -27,6 +26,7 @@ from batou.utils import (
     resolve_v6,
     revert_graph,
     topological_sort,
+    format_duration,
 )
 
 RESOLVER_ERRORS = [

@@ -5,7 +5,13 @@ import mock
 import pytest
 
 import batou.utils
-from batou.repository import MercurialRepository
+from batou.repository import (
+    MercurialRepository,
+    Repository,
+    RSyncDevRepository,
+    RSyncExtRepository,
+    RSyncRepository,
+)
 
 
 def test_repository_hg_norepo(tmpdir):
@@ -144,3 +150,54 @@ def test_repository_hg_ship_verify_after_ship(tmpdir):
 
     environment.deployment.dirty = True
     repository.update(host)
+
+
+def test_repository_rsync_dev_uses_copy_links():
+    """RSyncDevRepository should use --copy-links instead of --links."""
+    environment = mock.Mock()
+    environment.name = "test"
+
+    repo = RSyncDevRepository(environment)
+
+    assert "--copy-links" in repo.SYNC_OPTS
+    assert "--links" not in repo.SYNC_OPTS
+
+    # Verify it inherits from RSyncExtRepository
+    assert isinstance(repo, RSyncExtRepository)
+
+    # Verify other options are present
+    assert "--recursive" in repo.SYNC_OPTS
+    assert "--delete-before" in repo.SYNC_OPTS
+
+
+def test_repository_from_environment_rsync_dev():
+    """Repository.from_environment() should return RSyncDevRepository for rsync-dev."""
+    environment = mock.Mock()
+    environment.connect_method = "ssh"
+    environment.update_method = "rsync-dev"
+
+    repo = Repository.from_environment(environment)
+
+    assert isinstance(repo, RSyncDevRepository)
+
+
+def test_repository_from_environment_rsync():
+    """Repository.from_environment() should return RSyncRepository for rsync."""
+    environment = mock.Mock()
+    environment.connect_method = "ssh"
+    environment.update_method = "rsync"
+
+    repo = Repository.from_environment(environment)
+
+    assert isinstance(repo, RSyncRepository)
+
+
+def test_repository_from_environment_rsync_ext():
+    """Repository.from_environment() should return RSyncExtRepository for rsync-ext."""
+    environment = mock.Mock()
+    environment.connect_method = "ssh"
+    environment.update_method = "rsync-ext"
+
+    repo = Repository.from_environment(environment)
+
+    assert isinstance(repo, RSyncExtRepository)

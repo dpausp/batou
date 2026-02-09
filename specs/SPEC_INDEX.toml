@@ -1,0 +1,28 @@
+[metadata]
+created = "2026-01-26T00:00:00Z"
+modified = "2026-02-03T00:00:00Z"
+version = "1.0"
+
+[features.F-001]
+slug = "local-consistency-check"
+requirements_file = "./srs-001-local-consistency-check.md"
+design_file = "./sdd-001-local-consistency-check.md"
+
+[features.F-002]
+slug = "fd-tracking"
+requirements_file = "./specs/requirements/fd-tracking.md"
+design_file = "./specs/design/fd-tracking.md"
+
+[features.F-003]
+slug = "diff-control-env-vars"
+requirements_file = "./specs/requirements/diff-control-env-vars.md"
+design_file = "./specs/design/diff-control-env-vars.md"
+
+[features.F-004]
+slug = "templatestats-class"
+design_file = "./specs/design/templatestats-class.md"
+
+[features.F-005]
+slug = "debug-settings"
+requirements_file = "./specs/requirements/debug-settings.md"
+design_file = "./specs/design/debug-settings.md"

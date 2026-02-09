@@ -14,9 +14,13 @@ setup(
     install_requires=[
         "ConfigUpdater>=3.2",
         "Jinja2>=3.1.4",
+        "pydantic>=2.0.0",
+        "pydantic-settings>=2.0.0",
         "requests",
+        "rich",
         # ConfigUpdater does not manage its minimum requirements correctly.
         "setuptools>=66.1.0",
+        "typer",
         "execnet>=1.8.1",
         "importlib_metadata",
         "importlib_resources",

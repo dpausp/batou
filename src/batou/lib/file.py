@@ -3,6 +3,7 @@ import glob
 import grp
 import itertools
 import json
+import os
 import os.path
 import pwd
 import re
@@ -14,6 +15,9 @@ import yaml
 
 import batou
 from batou import ComponentUsageError, output
+from batou.debug.settings import get_debug_settings
+
+debug_settings = get_debug_settings()
 from batou.component import Attribute, Component
 from batou.utils import dict_merge
 
@@ -466,7 +470,7 @@ class ManagedContentBase(FileComponent):
         if not self.encoding:
             output.annotate("Not showing diff for binary data.", yellow=True)
             raise batou.UpdateNeeded()
-        elif self.sensitive_data:
+        elif self.sensitive_data and not debug_settings.show_secret_diffs:
             output.annotate("Not showing diff as it contains sensitive data.", red=True)
             raise batou.UpdateNeeded()
 
@@ -485,6 +489,21 @@ class ManagedContentBase(FileComponent):
             )
             contains_secrets = bool(self.environment.secret_data.intersection(words))
 
+        # Check diff mode
+        show_diff = debug_settings.show_diff
+
+        if show_diff == "none":
+            # Suppress all diff output
+            raise batou.UpdateNeeded()
+
+        if show_diff == "summary":
+            # Show only file change summary
+            output.annotate(
+                f"changed: {self.path}",
+            )
+            raise batou.UpdateNeeded()
+
+        # show_diff == "full" (default)
         diff = difflib.unified_diff(current_lines, wanted_lines)
         if not os.path.exists(self.diff_dir):
             os.makedirs(self.diff_dir)
@@ -492,12 +511,12 @@ class ManagedContentBase(FileComponent):
             diff, self._max_diff, self._max_diff_lead, logdir=self.diff_dir
         )
 
-        if contains_secrets:
+        if contains_secrets and not debug_settings.show_secret_diffs:
             output.annotate(
                 "Not showing diff as it contains sensitive data,",
                 yellow=True,
             )
-            output.line(f"see {diff_log} for the diff.".format(), yellow=True)
+            output.line(f"see {diff_log} for the diff.", yellow=True)
             raise batou.UpdateNeeded()
 
         if diff_too_long:
@@ -506,7 +525,7 @@ class ManagedContentBase(FileComponent):
                 f"and last {self._max_diff_lead} lines.",
                 yellow=True,
             )
-            output.line(f"see {diff_log} for the full diff.".format(), yellow=True)
+            output.line(f"see {diff_log} for the full diff.", yellow=True)
 
         for line in diff:
             line = line.replace("\n", "")
