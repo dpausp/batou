@@ -58,7 +58,6 @@ class VirtualEnvPyBase(Component):
         )
         # Is this Python (still) functional 'enough'
         # from a setuptools/distribute perspective?
-        self.assert_cmd('bin/python -c "import pkg_resources"')
         self.assert_cmd('bin/python -c "import pip"')
 
     def update(self):
@@ -68,27 +67,14 @@ class VirtualEnvPyBase(Component):
     def verify_pkg(self, pkg):
         try:
             self.cmd(
-                'bin/python -c "'
-                "import pkg_resources; "
-                f"assert pkg_resources.require('{pkg.package}')[0].parsed_version == "
-                f"pkg_resources.parse_version('{pkg.version}')\""
+                "bin/python -c '"
+                "import importlib.metadata; "
+                f'assert importlib.metadata.version("{pkg.package}") == '
+                f' "{pkg.version}"'
+                "'"
             )
         except CmdExecutionError:
             raise batou.UpdateNeeded()
-        # Is the package usable? Is the package a module?  This might be
-        # overspecific - I'm looking for a way to deal with:
-        # https://github.com/pypa/pip/issues/3 if a namespace package was not
-        # installed cleanly. This only works (currently), when the package name
-        # corresponds with what it contains. I.E. it works for zc.buildout but
-        # not for distribute, which installs a setuptools package.
-        if pkg.check_package_is_module:
-            try:
-                self.cmd(
-                    'bin/python -c "import pkg_resources; '
-                    f'import {pkg.package};{pkg.package}.__file__"'
-                )
-            except CmdExecutionError:
-                raise batou.UpdateNeeded()
 
     def update_pkg(self, pkg):
         if self.installer == "pip":
@@ -218,7 +204,6 @@ class Package(Component):
 
     namevar = "package"
     version = None
-    check_package_is_module = True
     timeout = None
     dependencies = True
     env = None
