@@ -1,1 +1,312 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "batou"
+version = "2.7.0.dev5"
+description = "A utility for automating multi-host, multi-environment software builds and deployments."
+readme = "README.md"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+requires-python = ">=3.8"
+authors = [{ name = "Christian Theune", email = "ct@flyingcircus.io" }]
+keywords = ["deployment"]
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = [
+    "ConfigUpdater>=3.2",
+    "Jinja2>=3.1.4",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "requests",
+    "rich",
+    "setuptools>=66.1.0",
+    "typer",
+    "execnet>=1.8.1",
+    "importlib_metadata",
+    "importlib_resources",
+    "py>=1.11.0",
+    "pyyaml",
+    "remote-pdb",
+]
+
+[project.scripts]
+batou = "batou.main:main"
+
+[project.entry-points."zc.buildout"]
+requirements = "batou.buildout:Requirements"
+
+[project.entry-points."batou.provisioners"]
+fc-nixos-dev-container = "batou.provision:FCDevContainer"
+fc-nixos-dev-vm = "batou.provision:FCDevVM"
+
+[project.urls]
+Homepage = "https://batou.readthedocs.io/en/latest/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/batou"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/README.md", "/LICENSE"]
+
+[dependency-groups]
+test = [
+    "mock",
+    "pytest",
+    "pytest-cov",
+    "pytest-instafail",
+    "pytest-timeout",
+]
+pre-commit = ["pre-commit"]
+dev = [
+    { include-group = "test" },
+    { include-group = "pre-commit" },
+    "tox>=4.0",
+    "tox-uv",
+    "sphinx",
+    "recommonmark",
+    "ruff",
+]
+
+# =============================================================================
+# ruff configuration
+# =============================================================================
 [tool.ruff]
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4"]
+ignore = ["E501"]
+
+# =============================================================================
+# ty type-checking overrides
+# Batou uses dynamic attribute patterns (configure() sets attributes used in verify()/update())
+# that ty cannot statically verify. These overrides silence false positives.
+# =============================================================================
+
+# Core exceptions - factory pattern with dynamic attributes in from_context()
+[[tool.ty.overrides]]
+include = ["src/batou/__init__.py"]
+
+[tool.ty.overrides.rules]
+invalid-method-override = "ignore"
+unresolved-attribute = "ignore"
+unsupported-operator = "ignore"
+
+# Component base - workdir:str=None pattern
+[[tool.ty.overrides]]
+include = ["src/batou/component.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-assignment = "ignore"
+not-iterable = "ignore"
+
+# Template engine - dynamic cache attributes
+[[tool.ty.overrides]]
+include = ["src/batou/template.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+
+# Resources - dynamic component/resource attributes
+[[tool.ty.overrides]]
+include = ["src/batou/resources.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+call-non-callable = "ignore"
+unsupported-operator = "ignore"
+not-subscriptable = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Remote core - channel can be None, execnet dynamic
+[[tool.ty.overrides]]
+include = ["src/batou/remote_core.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+unresolved-reference = "ignore"
+not-subscriptable = "ignore"
+call-non-callable = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Host - execnet monkey-patching, yaml.load
+[[tool.ty.overrides]]
+include = ["src/batou/host.py"]
+
+[tool.ty.overrides.rules]
+invalid-assignment = "ignore"
+invalid-argument-type = "ignore"
+missing-argument = "ignore"
+
+# Environment - configparser optionxform override
+[[tool.ty.overrides]]
+include = ["src/batou/environment.py"]
+
+[tool.ty.overrides.rules]
+invalid-assignment = "ignore"
+
+# Deploy - deployment tracking, threading.join override
+[[tool.ty.overrides]]
+include = ["src/batou/deploy.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+call-non-callable = "ignore"
+invalid-method-override = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Check - timing attributes
+[[tool.ty.overrides]]
+include = ["src/batou/check.py"]
+
+[tool.ty.overrides.rules]
+unsupported-operator = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Utils - dynamic attributes
+[[tool.ty.overrides]]
+include = ["src/batou/utils.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Repository - vcs attributes
+[[tool.ty.overrides]]
+include = ["src/batou/repository.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+
+# Provision - dynamic provisioner
+[[tool.ty.overrides]]
+include = ["src/batou/provision.py"]
+
+[tool.ty.overrides.rules]
+invalid-method-override = "ignore"
+
+# =============================================================================
+# Library components - all use configure()/verify()/update() pattern
+# =============================================================================
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/file.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+possibly-missing-attribute = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/archive.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/supervisor.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+not-iterable = "ignore"
+call-non-callable = "ignore"
+no-matching-overload = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/cmmi.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/download.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/python.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+no-matching-overload = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/package.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/cron.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+unknown-argument = "ignore"
+invalid-argument-type = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/appenv.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+no-matching-overload = "ignore"
+missing-argument = "ignore"
+
+[[tool.ty.overrides]]
+include = [
+    "src/batou/lib/service.py",
+    "src/batou/lib/mercurial.py",
+    "src/batou/lib/logrotate.py",
+]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+no-matching-overload = "ignore"
+possibly-missing-attribute = "ignore"
+
+# =============================================================================
+# Secrets - encryption providers
+# =============================================================================
+
+[[tool.ty.overrides]]
+include = ["src/batou/secrets/encryption.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+not-subscriptable = "ignore"
+invalid-assignment = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/batou/secrets/__init__.py", "src/batou/secrets/edit.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+possibly-missing-attribute = "ignore"
+
+# =============================================================================
+# Third-party workarounds
+# =============================================================================
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["yaml"]
