@@ -85,15 +85,11 @@ def load_components_from_file(filename):
     for candidate in list(module.__dict__.values()):
         if candidate in [Component]:
             continue
-        if not (
-            isinstance(candidate, type) and issubclass(candidate, Component)
-        ):
+        if not (isinstance(candidate, type) and issubclass(candidate, Component)):
             continue
         compdef = ComponentDefinition(candidate, filename, defdir)
         if compdef.name in components:
-            raise DuplicateComponent.from_context(
-                compdef, components[compdef.name]
-            )
+            raise DuplicateComponent.from_context(compdef, components[compdef.name])
         components[compdef.name] = compdef
 
     return components
@@ -225,9 +221,7 @@ class Component(object):
                     # some ._breadcrumb are broken
                     breadcrumb = component.__class__.__name__
                     if component.namevar:
-                        breadcrumb += (
-                            f"({getattr(component, component.namevar, None)})"
-                        )
+                        breadcrumb += f"({getattr(component, component.namevar, None)})"
                     init_breadcrumbs.append(breadcrumb)
 
         self._init_breadcrumbs = reversed(init_breadcrumbs)
@@ -387,18 +381,14 @@ class Component(object):
             require_update = False
             try:
                 with self.timer.step("verify"):
-                    call_with_optional_args(
-                        self.verify, predicting=predict_only
-                    )
+                    call_with_optional_args(self.verify, predicting=predict_only)
             except AssertionError:
                 # avoid nested exception messages, when running `update()` in
                 # except block
                 require_update = True
 
             if require_update:
-                self.__trigger_event__(
-                    "before-update", predict_only=predict_only
-                )
+                self.__trigger_event__("before-update", predict_only=predict_only)
                 output.flush_buffer()
                 if not predict_only:
                     with self.timer.step("update"):
@@ -645,9 +635,7 @@ class Component(object):
             self.root, key, host, strict, reverse, dirty
         )
 
-    def require_one(
-        self, key, host=None, strict=True, reverse=False, dirty=False
-    ):
+    def require_one(self, key, host=None, strict=True, reverse=False, dirty=False):
         """Require a resource, returning a scalar.
 
         For the parameters, see :py:meth:`require`.
@@ -712,9 +700,7 @@ class Component(object):
 
         reference = Presence(reference)
         self |= reference
-        reference.assert_component_is_current(
-            [Presence(r) for r in requirements], **kw
-        )
+        reference.assert_component_is_current([Presence(r) for r in requirements], **kw)
 
     def assert_component_is_current(self, requirements=[], **kw):
         """Assert that this component has been updated more recently
@@ -972,9 +958,7 @@ class Component(object):
 
         """
         engine = batou.template.Jinja2Engine()
-        return engine.template(
-            filename, self._template_args(component=component)
-        )
+        return engine.template(filename, self._template_args(component=component))
 
     def _template_args(self, component=None, **kw):
         if component is None:
@@ -1229,9 +1213,7 @@ class Attribute(object):
                 value = obj.expand(value)
         except Exception as e:
             name = self.names.get(obj.__class__, "<unknown>")
-            raise batou.AttributeExpansionError.from_context(
-                obj, name, value, e
-            ) from e
+            raise batou.AttributeExpansionError.from_context(obj, name, value, e) from e
         if self.map:
             value = obj.map(value)
         try:

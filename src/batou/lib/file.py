@@ -54,7 +54,6 @@ def ensure_path_nonexistent(path: str) -> None:
 
 
 class File(Component):
-
     namevar = "path"
 
     ensure = "file"  # or: directory, symlink
@@ -87,15 +86,12 @@ class File(Component):
         if self.ensure == "file":
             self += Presence(self.path, leading=self.leading)
         elif self.ensure == "directory":
-            self += Directory(
-                self.path, leading=self.leading, source=self.source
-            )
+            self += Directory(self.path, leading=self.leading, source=self.source)
         elif self.ensure == "symlink":
             self += Symlink(self.path, source=self.link_to)
         else:
             raise ValueError(
-                "Ensure must be one of: file, directory, "
-                "symlink not %s" % self.ensure
+                "Ensure must be one of: file, directory, symlink not %s" % self.ensure
             )
         # variation: content or source explicitly given
 
@@ -167,13 +163,11 @@ class File(Component):
 
 
 class BinaryFile(File):
-
     is_template = False
     encoding = None
 
 
 class Presence(Component):
-
     namevar = "path"
     leading = False
 
@@ -207,7 +201,6 @@ class Presence(Component):
 
 
 class SyncDirectory(Component):
-
     namevar = "path"
     source = None
     exclude = ()
@@ -221,9 +214,7 @@ class SyncDirectory(Component):
             raise ComponentUsageError.from_context(
                 "SyncDirectory requires a source to sync from."
             )
-        self.source = os.path.normpath(
-            os.path.join(self.root.defdir, self.source)
-        )
+        self.source = os.path.normpath(os.path.join(self.root.defdir, self.source))
 
     @property
     def exclude_arg(self):
@@ -266,7 +257,6 @@ class SyncDirectory(Component):
 
 
 class Directory(Component):
-
     namevar = "path"
     leading = False
     source = None
@@ -319,7 +309,6 @@ class Directory(Component):
 
 
 class FileComponent(Component):
-
     namevar = "path"
     leading = False
 
@@ -397,9 +386,7 @@ class ManagedContentBase(FileComponent):
     def configure(self):
         super(ManagedContentBase, self).configure()
 
-        self.diff_dir = os.path.join(
-            self.environment.workdir_base, ".batou-diffs"
-        )
+        self.diff_dir = os.path.join(self.environment.workdir_base, ".batou-diffs")
         # Step 1: Determine content attribute:
         # - it might be given directly (content='...'),
         # - we might have been passed a filename (source='...'), or
@@ -480,9 +467,7 @@ class ManagedContentBase(FileComponent):
             output.annotate("Not showing diff for binary data.", yellow=True)
             raise batou.UpdateNeeded()
         elif self.sensitive_data:
-            output.annotate(
-                "Not showing diff as it contains sensitive data.", red=True
-            )
+            output.annotate("Not showing diff as it contains sensitive data.", red=True)
             raise batou.UpdateNeeded()
 
         current_text = current.decode(self.encoding, errors="replace")
@@ -498,9 +483,7 @@ class ManagedContentBase(FileComponent):
                     *(x.split() for x in wanted_lines),
                 )
             )
-            contains_secrets = bool(
-                self.environment.secret_data.intersection(words)
-            )
+            contains_secrets = bool(self.environment.secret_data.intersection(words))
 
         diff = difflib.unified_diff(current_lines, wanted_lines)
         if not os.path.exists(self.diff_dir):
@@ -523,9 +506,7 @@ class ManagedContentBase(FileComponent):
                 f"and last {self._max_diff_lead} lines.",
                 yellow=True,
             )
-            output.line(
-                f"see {diff_log} for the full diff.".format(), yellow=True
-            )
+            output.line(f"see {diff_log} for the full diff.".format(), yellow=True)
 
         for line in diff:
             line = line.replace("\n", "")
@@ -564,7 +545,6 @@ class Content(ManagedContentBase):
 
 
 class JSONContent(ManagedContentBase):
-
     # Data to be used.
     data = None
 
@@ -599,7 +579,6 @@ class JSONContent(ManagedContentBase):
 
 
 class YAMLContent(ManagedContentBase):
-
     # Data to be used.
     data = None
 
@@ -618,7 +597,6 @@ class YAMLContent(ManagedContentBase):
 
 
 class Owner(FileComponent):
-
     owner = None
 
     def verify(self):
@@ -633,7 +611,6 @@ class Owner(FileComponent):
 
 
 class Group(FileComponent):
-
     group = None
 
     def verify(self):
@@ -672,13 +649,10 @@ def convert_mode(string: str) -> int:
         )
     else:
         # No match, treat it as wrong syntax
-        raise SyntaxError(
-            "Mode-string should be between `---------` and `rwxrwxrwx`."
-        )
+        raise SyntaxError("Mode-string should be between `---------` and `rwxrwxrwx`.")
 
 
 class Mode(FileComponent):
-
     mode = Attribute(default=None)
 
     def configure(self):
@@ -725,7 +699,6 @@ class Mode(FileComponent):
 
 
 class Symlink(Component):
-
     namevar = "target"
     source = None
 

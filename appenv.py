@@ -118,15 +118,11 @@ def ensure_venv(target):
 
             cmd(["tar", "xf", download, "-C", tmp_base])
 
-            assert os.path.exists(
-                os.path.join(tmp_base, "Python-{}".format(version))
-            )
+            assert os.path.exists(os.path.join(tmp_base, "Python-{}".format(version)))
             for module in ["ensurepip"]:
                 print(module)
                 shutil.copytree(
-                    os.path.join(
-                        tmp_base, "Python-{}".format(version), "Lib", module
-                    ),
+                    os.path.join(tmp_base, "Python-{}".format(version), "Lib", module),
                     os.path.join(
                         target,
                         "lib",
@@ -139,16 +135,10 @@ def ensure_venv(target):
             # (always) prepend the site packages so we can actually have a
             # fixed installation.
             site_packages = os.path.abspath(
-                os.path.join(
-                    target, "lib", "python" + python_maj_min, "site-packages"
-                )
+                os.path.join(target, "lib", "python" + python_maj_min, "site-packages")
             )
             with open(os.path.join(site_packages, "batou.pth"), "w") as f:
-                f.write(
-                    "import sys; sys.path.insert(0, '{}')\n".format(
-                        site_packages
-                    )
-                )
+                f.write("import sys; sys.path.insert(0, '{}')\n".format(site_packages))
 
         finally:
             shutil.rmtree(tmp_base)
@@ -229,9 +219,7 @@ def ensure_best_python(base):
     if preferences is None:
         if sys.version_info >= (3, 12):
             print("You are using a Python version >= 3.12.")
-            print(
-                "Please specify a Python version in the requirements.txt file."
-            )
+            print("Please specify a Python version in the requirements.txt file.")
             print("Lockfiles created with a Python version lower than 3.12")
             print("may create a broken venv with a Python version >= 3.12.")
         # use newest Python available if nothing else is requested
@@ -320,8 +308,7 @@ def parse_requirement_string(requirement_string):
     name = name_match.group() if name_match else None
     # check for URL
     url_match = re.search(
-        f"@(?:{whitespace_regex})?(?P<url>{url_regex})"
-        f"(?:{whitespace_regex})?;?",
+        f"@(?:{whitespace_regex})?(?P<url>{url_regex})(?:{whitespace_regex})?;?",
         requirement_string,
     )
     url = url_match.group("url") if url_match else None
@@ -330,7 +317,6 @@ def parse_requirement_string(requirement_string):
 
 
 class AppEnv(object):
-
     base = None  # The directory where we add the environments. Co-located
     # with the application script - not necessarily the appenv
     # script so we can link to an appenv script from multiple
@@ -356,9 +342,7 @@ class AppEnv(object):
         # Parse the appenv arguments
         parser = argparse.ArgumentParser()
         subparsers = parser.add_subparsers()
-        p = subparsers.add_parser(
-            "update-lockfile", help="Update the lock file."
-        )
+        p = subparsers.add_parser("update-lockfile", help="Update the lock file.")
         p.set_defaults(func=self.update_lockfile)
 
         p = subparsers.add_parser("init", help="Create a new appenv project.")
@@ -400,8 +384,7 @@ class AppEnv(object):
     def _assert_requirements_lock(self):
         if not os.path.exists("requirements.lock"):
             print(
-                "No requirements.lock found. Generate it using"
-                " ./appenv update-lockfile"
+                "No requirements.lock found. Generate it using ./appenv update-lockfile"
             )
             sys.exit(67)
 
@@ -450,9 +433,7 @@ class AppEnv(object):
                 os.path.join(self.appenv_dir, "current"),
             ]
         )
-        for path in glob.glob(
-            "{appenv_dir}/*".format(appenv_dir=self.appenv_dir)
-        ):
+        for path in glob.glob("{appenv_dir}/*".format(appenv_dir=self.appenv_dir)):
             if path not in whitelist:
                 print("Removing expired path: {path} ...".format(path=path))
                 if not os.path.isdir(path):
@@ -465,9 +446,7 @@ class AppEnv(object):
             # interruptions to running services, but that isn't what we're
             # using it for at the  moment
             try:
-                if not os.path.exists(
-                    "{env_dir}/appenv.ready".format(env_dir=env_dir)
-                ):
+                if not os.path.exists("{env_dir}/appenv.ready".format(env_dir=env_dir)):
                     raise Exception()
             except Exception:
                 print("Existing envdir not consistent, deleting")
@@ -508,15 +487,11 @@ class AppEnv(object):
         while not command:
             command = input("What should the command be named? ").strip()
         dependency = input(
-            "What is the main dependency as found on PyPI? [{}] ".format(
-                command
-            )
+            "What is the main dependency as found on PyPI? [{}] ".format(command)
         ).strip()
         if not dependency:
             dependency = command
-        default_target = os.path.abspath(
-            os.path.join(self.original_cwd, command)
-        )
+        default_target = os.path.abspath(os.path.join(self.original_cwd, command))
         target = input(
             "Where should we create this? [{}] ".format(default_target)
         ).strip()
@@ -542,8 +517,7 @@ class AppEnv(object):
             requirements_txt.write(dependency + "\n")
         print()
         print(
-            "Done. You can now `cd {}` and call"
-            " `./{}` to bootstrap and run it.".format(
+            "Done. You can now `cd {}` and call `./{}` to bootstrap and run it.".format(
                 os.path.relpath(target, self.original_cwd), command
             )
         )
@@ -617,9 +591,7 @@ class AppEnv(object):
         lines.sort()
         with open(os.path.join(self.base, "requirements.lock"), "w") as f:
             f.write(
-                "# appenv-requirements-hash: {}\n".format(
-                    self._hash_requirements()
-                )
+                "# appenv-requirements-hash: {}\n".format(self._hash_requirements())
             )
             f.write("\n".join(lines))
             f.write("\n")

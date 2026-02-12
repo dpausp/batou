@@ -9,9 +9,7 @@ from batou.lib.cron import CronJob
 class RebootCronjob(Component):
     def configure(self):
         self += CronJob(
-            self.expand(
-                "{{component.root.workdir}}/{{component.parent.executable}}"
-            ),
+            self.expand("{{component.root.workdir}}/{{component.parent.executable}}"),
             timing="@reboot",
             logger=self.root.name,
         )
@@ -19,12 +17,10 @@ class RebootCronjob(Component):
 
 # XXX can't use @platform since that's too late (see #12418)
 class Supervisor(batou.lib.supervisor.Supervisor):
-
     pidfile = Attribute(default="var/supervisord.pid", map=True)
 
 
 class Logrotate(batou.lib.logrotate.Logrotate):
-
     common_config = b"""\
 daily
 rotate 14

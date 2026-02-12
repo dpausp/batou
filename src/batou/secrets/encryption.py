@@ -49,9 +49,7 @@ class EncryptedFile:
     def locked(self) -> bool:
         return self.fd is not None
 
-    def write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
-    ):
+    def write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
         if debug:
             print(
                 f"EncryptedFile({self.path}).write({content}, {recipients}, {reencrypt})",
@@ -61,9 +59,7 @@ class EncryptedFile:
         self._write(content, recipients, reencrypt)
         self._decrypted = content
 
-    def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
-    ):
+    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
         raise NotImplementedError("_write() not implemented")
 
     def __enter__(self):
@@ -150,14 +146,10 @@ class GPGEncryptedFile(EncryptedFile):
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise GPGCallError.from_context(
-                e.cmd, e.returncode, e.stderr
-            ) from e
+            raise GPGCallError.from_context(e.cmd, e.returncode, e.stderr) from e
         return p.stdout
 
-    def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
-    ):
+    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
         if not self.locked:
             raise RuntimeError("File not locked")
         if not self.writeable:
@@ -240,9 +232,7 @@ def get_identities():
     global identities
     if identities is None:
         identities = os.environ.get("BATOU_AGE_IDENTITIES")
-        identities = (
-            [x.strip() for x in identities.split(",")] if identities else []
-        )
+        identities = [x.strip() for x in identities.split(",")] if identities else []
         if not identities:
             # ssh uses ~/.ssh/id_rsa,
             #  ~/.ssh/id_ecdsa, ~/.ssh/id_ecdsa_sk, ~/.ssh/id_ed25519,
@@ -290,9 +280,7 @@ def get_passphrase(identity: str) -> str:
     else:
         import getpass
 
-        passphrase = getpass.getpass(
-            "Enter passphrase for {}: ".format(identity)
-        )
+        passphrase = getpass.getpass("Enter passphrase for {}: ".format(identity))
 
     known_passphrases[identity] = passphrase
     return passphrase
@@ -332,9 +320,7 @@ class AGEEncryptedFile(EncryptedFile):
 
                 matches, out = expect(
                     fd,
-                    b'Enter passphrase for "'
-                    + identity.encode("utf-8")
-                    + b'": ',
+                    b'Enter passphrase for "' + identity.encode("utf-8") + b'": ',
                 )
 
                 if matches:
@@ -372,9 +358,7 @@ class AGEEncryptedFile(EncryptedFile):
                             buffer = buffer[len(magic_bytes) :]
                     if buffer:
                         exceptions.append(
-                            Exception(
-                                "Unexpected output from age: {}".format(buffer)
-                            )
+                            Exception("Unexpected output from age: {}".format(buffer))
                         )
                         continue
 
@@ -382,9 +366,7 @@ class AGEEncryptedFile(EncryptedFile):
                 pid, exitcode = os.waitpid(child_pid, 0)
 
                 if exitcode != 0 or pid != child_pid:
-                    exceptions.append(
-                        AgeCallError.from_context(args, exitcode, out)
-                    )
+                    exceptions.append(AgeCallError.from_context(args, exitcode, out))
                     continue
 
                 temp_file.seek(0)
@@ -398,9 +380,7 @@ class AGEEncryptedFile(EncryptedFile):
             f"Could not decrypt {self.path} with any of the identities {identities}"
         )
 
-    def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
-    ):
+    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
         if not self.locked:
             raise ValueError("File is not locked")
         if not self.writeable:
@@ -493,9 +473,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
             # for each option
             for option in config[section]:
                 # decrypt the value
-                decrypted = self.decrypt_age_string(
-                    config[section][option].value
-                )
+                decrypted = self.decrypt_age_string(config[section][option].value)
                 if "\n" in decrypted:
                     # multiline: accounts for indents
                     config[section][option].set_values(
@@ -512,9 +490,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         # return the decrypted content as bytes
         return str(config).encode("utf-8")
 
-    def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
-    ):
+    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
         # parse the content as ConfigUpdater
         config = ConfigUpdater()
         config.read_string(content.decode("utf-8"))
@@ -537,13 +513,9 @@ class DiffableAGEEncryptedFile(EncryptedFile):
                 value_has_changed = new_value != old_value
 
                 if reencrypt or value_has_changed:
-                    new_encrypted_value = self.encrypt_age_string(
-                        new_value, recipients
-                    )
+                    new_encrypted_value = self.encrypt_age_string(new_value, recipients)
                 else:
-                    new_encrypted_value = self._encrypted_content[section][
-                        option
-                    ].value
+                    new_encrypted_value = self._encrypted_content[section][option].value
 
                 config[section][option].value = new_encrypted_value
 
@@ -562,9 +534,7 @@ all_encrypted_file_types = [
 ]
 
 
-def get_encrypted_file(
-    path: "pathlib.Path", writeable: bool = False
-) -> EncryptedFile:
+def get_encrypted_file(path: "pathlib.Path", writeable: bool = False) -> EncryptedFile:
     """Return the appropriate EncryptedFile object for the given path."""
     for ef in all_encrypted_file_types:
         if ef.file_ending and path.name.endswith(ef.file_ending):

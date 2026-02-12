@@ -69,9 +69,9 @@ def test_starts_stopped_program(root, supervisor):
     root.component.deploy()
     assert (
         "RUNNING"
-        in supervisor.cmd(
-            "{}/bin/supervisorctl status foo".format(supervisor.workdir)
-        )[0]
+        in supervisor.cmd("{}/bin/supervisorctl status foo".format(supervisor.workdir))[
+            0
+        ]
     )
 
 
@@ -99,6 +99,4 @@ def test_setting_nagios_to_True_creates_a_nagios_nrpe_service(root):
     root.component += supervisor
     # assert nothing raised
     root.component.configure()
-    assert "NRPEService" in [
-        x.__class__.__name__ for x in supervisor.sub_components
-    ]
+    assert "NRPEService" in [x.__class__.__name__ for x in supervisor.sub_components]

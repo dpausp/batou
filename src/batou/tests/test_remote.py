@@ -1,4 +1,3 @@
-
 import mock
 import pytest
 
@@ -32,8 +31,7 @@ def test_remote_bundle_breaks_on_missing_head(sample_service):
     with pytest.raises(ValueError) as e:
         repository.update(h)
     assert e.value.args == (
-        "Remote repository did not find any heads. "
-        "Can not continue creating a bundle.",
+        "Remote repository did not find any heads. Can not continue creating a bundle.",
     )
 
 

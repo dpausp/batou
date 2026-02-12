@@ -134,10 +134,7 @@ class GPGCallError(ReportingException):
         return self
 
     def __str__(self):
-        return (
-            f"Exitcode {self.exitcode} while calling: "
-            f"{self.command}\n{self.output}"
-        )
+        return f"Exitcode {self.exitcode} while calling: {self.command}\n{self.output}"
 
     def report(self):
         output.error("Error while calling GPG")
@@ -162,10 +159,7 @@ class AgeCallError(ReportingException):
         return self
 
     def __str__(self):
-        return (
-            f"Exitcode {self.exitcode} while calling: "
-            f"{self.command}\n{self.output}"
-        )
+        return f"Exitcode {self.exitcode} while calling: {self.command}\n{self.output}"
 
     def report(self):
         output.error("Error while calling age")
@@ -410,9 +404,7 @@ class DuplicateHostMapping(ConfigurationError):
         return "Duplicate host mapping: " + self.affected_hostname
 
     def report(self):
-        output.error(
-            'Duplicate host mapping "{}"'.format(self.affected_hostname)
-        )
+        output.error('Duplicate host mapping "{}"'.format(self.affected_hostname))
         output.tabular("Mapping 1: ", self.a)
         output.tabular("Mapping 2: ", self.b)
 
@@ -445,9 +437,7 @@ class UnknownComponentConfigurationError(ConfigurationError):
         )
         output.tabular("Host", self.root_host_name, red=True)
         output.tabular("Component", self.root_name + "\n", red=True)
-        output.annotate(
-            "Traceback (simplified, most recent call last):", red=True
-        )
+        output.annotate("Traceback (simplified, most recent call last):", red=True)
         output.annotate(self.traceback, red=True)
 
 
@@ -552,9 +542,7 @@ class ComponentWithUpdateWithoutVerify(ConfigurationError):
         return out_str
 
     def report(self):
-        output.error(
-            "Some components have an update method but no verify method:"
-        )
+        output.error("Some components have an update method but no verify method:")
         for component in self.components:
             output.line(f"    {component}", red=True)
         output.tabular("Root", self.root_name, red=True)
@@ -586,15 +574,12 @@ class UnsatisfiedResources(ConfigurationError):
         output.error("Unsatisfied resource requirements")
         for key, host, resources in self.unsatisfied_resources:
             if host is None:
-                msg = (
-                    f'    Resource "{key}" required by '
-                    f'{",".join(resources)}'
-                )
+                msg = f'    Resource "{key}" required by {",".join(resources)}'
 
             else:
                 msg = (
                     f'    Resource "{key}" on "{host}" required by '
-                    f'{",".join(resources)}'
+                    f"{','.join(resources)}"
                 )
 
             output.line(msg, red=True)
@@ -640,9 +625,7 @@ class ComponentLoadingError(ConfigurationError):
         output.error("Failed loading component file")
         output.tabular("File", self.filename, red=True)
         output.tabular("Exception", self.exception_str, red=True)
-        output.annotate(
-            "Traceback (simplified, most recent call last):", red=True
-        )
+        output.annotate("Traceback (simplified, most recent call last):", red=True)
         output.annotate(self.traceback, red=True)
 
         # TODO provide traceback in debug output
@@ -704,10 +687,7 @@ class SuperfluousComponentSection(ConfigurationError):
         return self
 
     def __str__(self):
-        return (
-            "Override section for unknown component found: "
-            + self.component_name
-        )
+        return "Override section for unknown component found: " + self.component_name
 
     def report(self):
         output.error("Override section for unknown component found")
@@ -729,10 +709,7 @@ class SuperfluousSecretsSection(ConfigurationError):
         return self
 
     def __str__(self):
-        return (
-            "Secrets section for unknown component found: "
-            + self.component_name
-        )
+        return "Secrets section for unknown component found: " + self.component_name
 
     def report(self):
         output.error("Secrets section for unknown component found")
@@ -912,9 +889,7 @@ class DuplicateHostError(ConfigurationError):
         return "Duplicate host: " + self.affected_hostname
 
     def report(self):
-        output.error(
-            "Duplicate definition of host: {}".format(self.affected_hostname)
-        )
+        output.error("Duplicate definition of host: {}".format(self.affected_hostname))
 
 
 class InvalidIPAddressError(ConfigurationError):
@@ -956,8 +931,7 @@ class IPAddressConfigurationError(ConfigurationError):
 
         output.tabular(
             "Hint",
-            f"Use `require_v{self.kind}=True` when instantiating the Address"
-            " object.",
+            f"Use `require_v{self.kind}=True` when instantiating the Address object.",
             red=True,
         )
 

@@ -119,9 +119,7 @@ def test_migrate__assert_up_to_date__2(migrations, output):
     """
     with pytest.raises(SystemExit):
         assert_up_to_date()
-    assert (
-        "ERROR: Please run `./batou migrate` first.\n" == output.backend.output
-    )
+    assert "ERROR: Please run `./batou migrate` first.\n" == output.backend.output
 
 
 def test_migrate__main__1(tmp_path, migrations, capsys):

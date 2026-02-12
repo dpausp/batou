@@ -175,7 +175,6 @@ def hg_cmd(hgcmd):
 
 
 class MercurialRepository(Repository):
-
     root = None
     _upstream = None
 
@@ -222,8 +221,7 @@ class MercurialRepository(Repository):
             status = hg_cmd("hg stat")
         except CmdExecutionError:
             output.error(
-                "Unable to check repository status. "
-                "Is there an HG repository here?"
+                "Unable to check repository status. Is there an HG repository here?"
             )
             raise
         else:
@@ -278,13 +276,9 @@ class MercurialBundleRepository(MercurialRepository):
         change_size = os.stat(bundle_file).st_size
         if not change_size:
             return
-        output.annotate(
-            "Sending {} bytes of changes".format(change_size), debug=True
-        )
+        output.annotate("Sending {} bytes of changes".format(change_size), debug=True)
         rsync = execnet.RSync(bundle_file, verbose=False)
-        rsync.add_target(
-            host.gateway, host.remote_repository + "/batou-bundle.hg"
-        )
+        rsync.add_target(host.gateway, host.remote_repository + "/batou-bundle.hg")
         rsync.send()
         os.unlink(bundle_file)
         output.annotate("Unbundling changes", debug=True)
@@ -292,7 +286,6 @@ class MercurialBundleRepository(MercurialRepository):
 
 
 class GitRepository(Repository):
-
     root = None
     _upstream = None
     remote = "origin"
@@ -300,9 +293,7 @@ class GitRepository(Repository):
     def __init__(self, environment):
         super(GitRepository, self).__init__(environment)
         self.branch = environment.branch or "master"
-        root = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"]
-        ).strip()
+        root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).strip()
         self.root = root.decode(sys.getfilesystemencoding())
         self.subdir = os.path.relpath(self.environment.base_dir, self.root)
 
@@ -339,8 +330,7 @@ class GitRepository(Repository):
             status, _ = cmd("git status --porcelain")
         except CmdExecutionError:
             output.error(
-                "Unable to check repository status. "
-                "Is there a Git repository here?"
+                "Unable to check repository status. Is there a Git repository here?"
             )
             raise
         else:
@@ -371,9 +361,7 @@ Your repository has outgoing changes on branch {branch}:
 
 I am refusing to deploy in this situation as the results will be unpredictable.
 Please push first.
-""".format(
-                    branch=self.branch, outgoing=outgoing
-                )
+""".format(branch=self.branch, outgoing=outgoing)
             )
             raise DeploymentError()
 
@@ -422,13 +410,9 @@ class GitBundleRepository(GitRepository):
             output.error("Created invalid bundle (0 bytes):")
             output.annotate(err, red=True)
             raise DeploymentError()
-        output.annotate(
-            "Sending {} bytes of changes".format(change_size), debug=True
-        )
+        output.annotate("Sending {} bytes of changes".format(change_size), debug=True)
         rsync = execnet.RSync(bundle_file, verbose=False)
-        rsync.add_target(
-            host.gateway, host.remote_repository + "/batou-bundle.git"
-        )
+        rsync.add_target(host.gateway, host.remote_repository + "/batou-bundle.git")
         rsync.send()
         os.unlink(bundle_file)
         output.annotate("Unbundling changes", debug=True)

@@ -13,12 +13,8 @@ def test_simple_appenv(root):
     root.component.deploy()
 
     assert os.path.exists(os.path.join(root.component.workdir, "bin"))
-    assert os.path.exists(
-        os.path.join(root.component.workdir, "bin", "python3")
-    )
-    assert os.path.exists(
-        os.path.join(root.component.workdir, ".appenv", "current")
-    )
+    assert os.path.exists(os.path.join(root.component.workdir, "bin", "python3"))
+    assert os.path.exists(os.path.join(root.component.workdir, ".appenv", "current"))
 
     hashes = os.listdir(os.path.join(root.component.workdir, ".appenv"))
     assert len(hashes) == 2
@@ -29,12 +25,8 @@ def test_simple_appenv(root):
     root.component.deploy()
 
     assert os.path.exists(os.path.join(root.component.workdir, "bin"))
-    assert os.path.exists(
-        os.path.join(root.component.workdir, "bin", "python3")
-    )
-    assert os.path.exists(
-        os.path.join(root.component.workdir, ".appenv", "current")
-    )
+    assert os.path.exists(os.path.join(root.component.workdir, "bin", "python3"))
+    assert os.path.exists(os.path.join(root.component.workdir, ".appenv", "current"))
 
     hashes2 = os.listdir(os.path.join(root.component.workdir, ".appenv"))
     assert hashes2 == hashes
@@ -48,12 +40,8 @@ def test_simple_appenv(root):
     root.component.deploy()
 
     assert os.path.exists(os.path.join(root.component.workdir, "bin"))
-    assert os.path.exists(
-        os.path.join(root.component.workdir, "bin", "python3")
-    )
-    assert os.path.exists(
-        os.path.join(root.component.workdir, ".appenv", "current")
-    )
+    assert os.path.exists(os.path.join(root.component.workdir, "bin", "python3"))
+    assert os.path.exists(os.path.join(root.component.workdir, ".appenv", "current"))
 
     hashes3 = os.listdir(os.path.join(root.component.workdir, ".appenv"))
     assert hashes3 != hashes
@@ -89,8 +77,6 @@ def test_appenv_custom_pip_version(root):
     root.component += appenv
     root.component.deploy()
     pip = appenv.cmd(
-        os.path.join(
-            root.component.workdir, "{{component.env_dir}}/bin/pip --version"
-        )
+        os.path.join(root.component.workdir, "{{component.env_dir}}/bin/pip --version")
     )
     assert f"pip {pip_version}" in pip[0]

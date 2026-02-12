@@ -43,7 +43,6 @@ class VirtualEnv(Component):
 
 
 class VirtualEnvPyBase(Component):
-
     venv_version = None
     venv_checksum = None
     venv_options = ()
@@ -55,8 +54,7 @@ class VirtualEnvPyBase(Component):
         expected_version = tuple(int(x) for x in self.parent.version.split("."))
         version_specificity = len(expected_version)
         self.assert_cmd(
-            'bin/python -c "import sys; '
-            'assert sys.version_info[:{}] == {}"'.format(
+            'bin/python -c "import sys; assert sys.version_info[:{}] == {}"'.format(
                 version_specificity, repr(expected_version)
             )
         )
@@ -75,9 +73,7 @@ class VirtualEnvPyBase(Component):
                 'bin/python -c "'
                 "import pkg_resources; "
                 "assert pkg_resources.require('{}')[0].parsed_version == "
-                "pkg_resources.parse_version('{}')\"".format(
-                    pkg.package, pkg.version
-                )
+                "pkg_resources.parse_version('{}')\"".format(pkg.package, pkg.version)
             )
         except CmdExecutionError:
             raise batou.UpdateNeeded()
@@ -109,8 +105,9 @@ class VirtualEnvPyBase(Component):
             options += ("--no-deps",)
         options = " ".join(options)
         self.cmd(
-            "bin/pip --timeout={} install {} "
-            '"{}=={}"'.format(pkg.timeout, options, pkg.package, pkg.version),
+            'bin/pip --timeout={} install {} "{}=={}"'.format(
+                pkg.timeout, options, pkg.package, pkg.version
+            ),
             env=pkg.env if pkg.env else {},
         )
 
@@ -126,18 +123,15 @@ class VirtualEnvPyBase(Component):
         # XXX does not implement timeout. could we just do this on
         # 'cmd' instead?
         self.cmd(
-            "bin/easy_install {} "
-            '"{}=={}"'.format(options, pkg.package, pkg.version),
+            'bin/easy_install {} "{}=={}"'.format(options, pkg.package, pkg.version),
             env=pkg.env if pkg.env else {},
         )
 
 
 class VirtualEnvPy2_7(VirtualEnvPyBase):
-
     venv_version = "16.7.10"
     venv_checksum = (
-        "sha256:e88fdcb08b0ecb11da97868f463dd"
-        "06275923f50d87f4b9c8b2fc0994eec40f4"
+        "sha256:e88fdcb08b0ecb11da97868f463dd06275923f50d87f4b9c8b2fc0994eec40f4"
     )
     venv_options = ()
 
@@ -192,8 +186,7 @@ class VirtualEnvDownload(Component):
     namevar = "version"
     checksum = None
     download_url = (
-        "https://github.com/pypa/virtualenv/archive/"
-        "{{component.version}}.tar.gz"
+        "https://github.com/pypa/virtualenv/archive/{{component.version}}.tar.gz"
     )
 
     def configure(self):

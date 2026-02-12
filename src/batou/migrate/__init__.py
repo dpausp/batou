@@ -11,9 +11,7 @@ CONFIG_FILE_NAME = ".batou.json"
 MIGRATION_MODULE = "batou.migrate"
 
 
-def output_migration_step(
-    title: str, text: str, status: str = "manual"
-) -> None:
+def output_migration_step(title: str, text: str, status: str = "manual") -> None:
     """Print the information of migration step in a formatted way."""
     if status == "manual":
         label = "🔧"
@@ -42,9 +40,7 @@ def read_config() -> int:
 def get_migration_steps() -> List[int]:
     """Return the sorted list of all known migration steps."""
     migration_files = (
-        importlib_resources.files(MIGRATION_MODULE)
-        .joinpath("migrations")
-        .iterdir()
+        importlib_resources.files(MIGRATION_MODULE).joinpath("migrations").iterdir()
     )
     migration_files = [x.name for x in migration_files]
     return sorted(
@@ -63,9 +59,7 @@ def migrate(base_version: int) -> int:
     if not steps:
         return base_version
     for step in steps:
-        module = importlib.import_module(
-            f"{MIGRATION_MODULE}.migrations.{step}"
-        )
+        module = importlib.import_module(f"{MIGRATION_MODULE}.migrations.{step}")
         output.line(f"Version: {step}", bold=True, icon="⚪")
         output.line("")
         module.migrate(output_migration_step)

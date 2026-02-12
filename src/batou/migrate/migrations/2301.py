@@ -33,9 +33,7 @@ changes manually.
 
 def _get_environment_names():
     return [
-        x.stem
-        for x in (Path.cwd() / "environments").iterdir()
-        if x.suffix == ".cfg"
+        x.stem for x in (Path.cwd() / "environments").iterdir() if x.suffix == ".cfg"
     ]
 
 
@@ -43,9 +41,7 @@ def _migrate_environment(name: str) -> None:
     cwd = Path.cwd()
     environments = cwd / "environments"
     (environments / name).mkdir(exist_ok=True)
-    (environments / f"{name}.cfg").rename(
-        environments / name / "environment.cfg"
-    )
+    (environments / f"{name}.cfg").rename(environments / name / "environment.cfg")
     secrets_file = cwd / "secrets" / f"{name}.cfg"
     if secrets_file.exists():
         secrets_file.rename(environments / name / "secrets.cfg")

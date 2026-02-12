@@ -30,7 +30,6 @@ class Provisioner(object):
 
 
 class FCDevVM(Provisioner):
-
     target_host = None
     aliases = ()
     memory = None
@@ -138,8 +137,7 @@ fi
                 f_target.write(f_packaged.read())
         os.chmod(local_insecure_key, 0o600)
 
-        self._known_ssh_hosts[host.name] = (
-            """
+        self._known_ssh_hosts[host.name] = """
 Host {hostname} {aliases}
     HostName {hostname}
     ProxyJump {target_host}
@@ -148,12 +146,11 @@ Host {hostname} {aliases}
     StrictHostKeyChecking no
     UserKnownHostsFile {known_hosts}
 """.format(
-                hostname=host.name,
-                aliases=" ".join(host._aliases),
-                target_host=self.target_host,
-                known_hosts=KNOWN_HOSTS_FILE,
-                insecure_private_key=local_insecure_key,
-            )
+            hostname=host.name,
+            aliases=" ".join(host._aliases),
+            target_host=self.target_host,
+            known_hosts=KNOWN_HOSTS_FILE,
+            insecure_private_key=local_insecure_key,
         )
 
         # Gather all known hosts together - otherwise we can only access
@@ -270,9 +267,7 @@ Host {hostname} {aliases}
                 key = f"COMPONENT_{root_name}_{name}"
                 key = key.upper()
                 env[key] = str(value)
-            for name, value in host.environment.overrides.get(
-                root_name, {}
-            ).items():
+            for name, value in host.environment.overrides.get(root_name, {}).items():
                 key = f"COMPONENT_{root_name}_{name}"
                 key = key.upper()
                 env[key] = str(value)
@@ -295,10 +290,7 @@ Host {hostname} {aliases}
             )
 
         seed_nixos_file = f"environments/{host.environment.name}/provision.nix"
-        if (
-            os.path.exists(seed_nixos_file)
-            and "provision.nix" not in seed_script
-        ):
+        if os.path.exists(seed_nixos_file) and "provision.nix" not in seed_script:
             output.annotate(f"    Including {seed_nixos_file}")
             seed_script = (
                 textwrap.dedent(
@@ -347,12 +339,8 @@ Host {hostname} {aliases}
                 raise
             else:
                 if "__FC_MANAGE_DEFECT_INDICATOR__" in stdout:
-                    stdout = stdout.replace(
-                        "__FC_MANAGE_DEFECT_INDICATOR__", ""
-                    )
-                    output.section(
-                        "Errors detected during provisioning", red=True
-                    )
+                    stdout = stdout.replace("__FC_MANAGE_DEFECT_INDICATOR__", "")
+                    output.section("Errors detected during provisioning", red=True)
                     output.line("STDOUT")
                     output.annotate(stdout)
                     output.line("STDERR")
@@ -373,10 +361,7 @@ Host {hostname} {aliases}
                 # it.
                 if output.enable_debug:
                     output.annotate(
-                        (
-                            f"Not deleting provision script "
-                            f"{f.name} in debug mode!"
-                        ),
+                        (f"Not deleting provision script {f.name} in debug mode!"),
                         red=True,
                     )
                     os.unlink(f.name)

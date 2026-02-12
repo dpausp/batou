@@ -40,9 +40,7 @@ def git_main_branch() -> str:
     with tempfile.TemporaryDirectory() as tmpdir:
         subprocess.check_call(["git", "-C", tmpdir, "init", "."])
         return (
-            subprocess.check_output(
-                ["git", "-C", tmpdir, "branch", "--show-current"]
-            )
+            subprocess.check_output(["git", "-C", tmpdir, "branch", "--show-current"])
             .decode("ascii")
             .strip()
         )

@@ -144,9 +144,7 @@ x = 1
 
 
 def test_write_and_read_age_diffable(encrypted_file):
-    encrypted = DiffableAGEEncryptedFile(
-        pathlib.Path(encrypted_file), writeable=True
-    )
+    encrypted = DiffableAGEEncryptedFile(pathlib.Path(encrypted_file), writeable=True)
     content = b"""\
 [batou]
 members = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACZ8++sQADp8fztgumfw2i+WSgzMHB7MgSpkM2y5pHi batou-ci-test-key

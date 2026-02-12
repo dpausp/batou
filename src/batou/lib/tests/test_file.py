@@ -562,9 +562,7 @@ def test_json_diff(output, root):
 
 
 def test_json_diff_not_for_sensitive(output, root):
-    p = JSONContent(
-        "target.json", data={"asdf": 1, "bsdf": 2}, sensitive_data=True
-    )
+    p = JSONContent("target.json", data={"asdf": 1, "bsdf": 2}, sensitive_data=True)
     root.component += p
 
     with open(p.path, "w") as f:
@@ -645,9 +643,7 @@ def test_json_content_delayed_source_causes_predicting_verify_to_raise(root):
 def test_json_content_source_with_override(root):
     with open(root.defdir + "/source.json", "w", encoding="utf-8") as f:
         f.write(
-            json.dumps(
-                {"database": {"address": "localhost", "password": "topsecret"}}
-            )
+            json.dumps({"database": {"address": "localhost", "password": "topsecret"}})
         )
 
     p = JSONContent(
@@ -745,9 +741,7 @@ def test_yaml_diff(output, root):
 
 
 def test_yaml_diff_not_for_sensitive(output, root):
-    p = YAMLContent(
-        "target.yaml", data={"asdf": 1, "bsdf": 2}, sensitive_data=True
-    )
+    p = YAMLContent("target.yaml", data={"asdf": 1, "bsdf": 2}, sensitive_data=True)
     root.component += p
 
     with open(p.path, "w") as f:
@@ -907,9 +901,7 @@ def test_mode_converts_to_numeric(root):
     with pytest.raises(batou.ConfigurationError) as e:
         mode = Mode(path)
         root.component += mode
-    assert (
-        str(e.value) == "`mode` is required and `None` is not a valid value.`"
-    )
+    assert str(e.value) == "`mode` is required and `None` is not a valid value.`"
 
     mode = Mode(path, mode="rwx------")
     root.component += mode
@@ -1164,9 +1156,7 @@ def test_syncdirectory_needs_update_on_nonexisting_target(root):
 
 
 def test_directory_passes_args_to_syncdirectory(root):
-    d = Directory(
-        "target", source="source", verify_opts="-abc", sync_opts="-xyz"
-    )
+    d = Directory("target", source="source", verify_opts="-abc", sync_opts="-xyz")
     d.prepare(root.component)
     sd = d._
     assert isinstance(sd, SyncDirectory)

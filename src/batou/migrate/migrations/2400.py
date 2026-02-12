@@ -34,7 +34,7 @@ def _migrate_environment(name: str) -> None:
     if secrets_cfg.exists():
         secrets_cfg.rename(str(secrets_cfg) + ".gpg")
         for secret_file in environment_dir.iterdir():
-            if secret_file.name.startswith(
-                "secret-"
-            ) and not secret_file.name.endswith(".gpg"):
+            if secret_file.name.startswith("secret-") and not secret_file.name.endswith(
+                ".gpg"
+            ):
                 secret_file.rename(str(secret_file) + ".gpg")

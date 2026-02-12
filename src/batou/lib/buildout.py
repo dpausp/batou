@@ -7,7 +7,6 @@ from batou.lib.python import Package, VirtualEnv
 
 
 class Buildout(Component):
-
     timeout = None
     use_default = True
     config = None
@@ -74,20 +73,14 @@ class Buildout(Component):
         # XXX we can't be sure that all config objects are files!
         installed = Presence(".installed.cfg")
         self |= installed
-        installed.assert_component_is_current(
-            [Presence("bin/buildout")] + self.config
-        )
-        self.assert_file_is_current(
-            ".batou.buildout.success", [".installed.cfg"]
-        )
+        installed.assert_component_is_current([Presence("bin/buildout")] + self.config)
+        self.assert_file_is_current(".batou.buildout.success", [".installed.cfg"])
         self.assert_no_subcomponent_changes()
 
     def update(self):
         with safe_environment(self.build_env):
             self.cmd(
-                'bin/buildout -t {} -c "{}"'.format(
-                    self.timeout, self.config_file_name
-                )
+                'bin/buildout -t {} -c "{}"'.format(self.timeout, self.config_file_name)
             )
             self.touch(".batou.buildout.success")
 

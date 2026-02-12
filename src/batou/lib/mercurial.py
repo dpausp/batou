@@ -8,7 +8,6 @@ from batou.utils import CmdExecutionError
 
 
 class Clone(Component):
-
     namevar = "url"
     target = "."
     revision = None
@@ -35,9 +34,7 @@ class Clone(Component):
 
             if self.has_outgoing_changesets():
                 output.annotate(
-                    "Hg clone at {} has outgoing changesets.".format(
-                        self.target
-                    ),
+                    "Hg clone at {} has outgoing changesets.".format(self.target),
                     red=True,
                 )
 
@@ -55,8 +52,7 @@ class Clone(Component):
                 if self.current_revision(long_rev) != self.revision:
                     raise UpdateNeeded()
             if self.branch and (
-                self.current_branch() != self.branch
-                or self.has_incoming_changesets()
+                self.current_branch() != self.branch or self.has_incoming_changesets()
             ):
                 raise UpdateNeeded()
 
@@ -117,15 +113,11 @@ class Clone(Component):
                     )
                 )
                 return
-            self.cmd(
-                self.expand("hg pull --rev {{component.revision_or_branch}}")
-            )
+            self.cmd(self.expand("hg pull --rev {{component.revision_or_branch}}"))
             for filepath in self.untracked_files():
                 os.unlink(os.path.join(self.target, filepath))
             self.cmd(
-                self.expand(
-                    "hg update --clean --rev {{component.revision_or_branch}}"
-                )
+                self.expand("hg update --clean --rev {{component.revision_or_branch}}")
             )
 
     def untracked_files(self):
@@ -138,8 +130,7 @@ class Clone(Component):
             if not os.path.exists(".hg"):
                 return None
             stdout, stderr = self.cmd(
-                'hg log -r %s --template "{date|hgdate}\n"'
-                % self.current_revision()
+                'hg log -r %s --template "{date|hgdate}\n"' % self.current_revision()
             )
             timestamp, offset = stdout.split()
             return float(timestamp) - float(offset)

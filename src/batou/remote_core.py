@@ -179,9 +179,7 @@ class Deployment(object):
 
         if self.os_env:
             os.environ.update(self.os_env)
-        self.environment = Environment(
-            self.env_name, self.timeout, self.platform
-        )
+        self.environment = Environment(self.env_name, self.timeout, self.platform)
         self.environment.deployment = self
         self.environment.load()
         self.environment.overrides = self.overrides
@@ -358,18 +356,12 @@ def git_unbundle_code():
     os.chdir(target)
     out, err = cmd("git remote -v")
     if b"batou-bundle" not in out:
-        cmd(
-            "git remote add {origin} batou-bundle.git".format(origin=git_origin)
-        )
+        cmd("git remote add {origin} batou-bundle.git".format(origin=git_origin))
     cmd("git fetch {origin}".format(origin=git_origin))
 
 
 def git_update_working_copy(branch):
-    cmd(
-        "git reset --hard {origin}/{branch}".format(
-            origin=git_origin, branch=branch
-        )
-    )
+    cmd("git reset --hard {origin}/{branch}".format(origin=git_origin, branch=branch))
     id, _ = cmd("git rev-parse HEAD")
     return id.strip().decode("ascii")
 

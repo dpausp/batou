@@ -11,7 +11,6 @@ def ServiceCheck(description, **kw):
 
 
 class Service(HookComponent):
-
     namevar = "description"
     key = "batou.lib.nagios:Service"
 
@@ -40,7 +39,6 @@ class Service(HookComponent):
 
 
 class NRPEService(Service):
-
     name = None
     servicegroups = "nrpe"
 
@@ -65,9 +63,7 @@ class NagiosServer(Component):
 
     """
 
-    nagios_cfg = os.path.join(
-        os.path.dirname(__file__), "resources", "nagios.cfg"
-    )
+    nagios_cfg = os.path.join(os.path.dirname(__file__), "resources", "nagios.cfg")
 
     # Additional static content that will be appended to the generated file.
     static = ""
@@ -98,7 +94,7 @@ class NRPEHost(Component):
         self.services.sort(key=lambda x: x.name)
 
         self += File(
-            self.expand("/etc/nagios/nrpe/local/" "{{host.service_user}}.cfg"),
+            self.expand("/etc/nagios/nrpe/local/{{host.service_user}}.cfg"),
             source=self.nrpe_cfg,
             mode=0o644,
         )

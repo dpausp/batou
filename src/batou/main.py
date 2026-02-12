@@ -19,23 +19,17 @@ from batou._output import TerminalBackend, output
 def main(args: Optional[list] = None) -> None:
     os.chdir(os.environ["APPENV_BASEDIR"])
     version = (
-        importlib_resources.files("batou")
-        .joinpath("version.txt")
-        .read_text()
-        .strip()
+        importlib_resources.files("batou").joinpath("version.txt").read_text().strip()
     )
     parser = argparse.ArgumentParser(
         description=(
-            "batou v{}: multi-(host|component|environment|version|platform)"
-            " deployment"
+            "batou v{}: multi-(host|component|environment|version|platform) deployment"
         ).format(version),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.set_defaults(func=parser.print_usage)
 
-    parser.add_argument(
-        "-d", "--debug", action="store_true", help="Enable debug mode."
-    )
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
 
     subparsers = parser.add_subparsers()
 
@@ -73,8 +67,7 @@ def main(args: Optional[list] = None) -> None:
         "-P",
         "--predict-only",
         action="store_true",
-        help="Only predict what updates would happen. "
-        "Do not change anything.",
+        help="Only predict what updates would happen. Do not change anything.",
     )
     p.add_argument(
         "-L",
@@ -140,9 +133,7 @@ def main(args: Optional[list] = None) -> None:
         default=os.environ.get("EDITOR", "vi"),
         help="Invoke EDITOR to edit (default: $EDITOR or vi)",
     )
-    p.add_argument(
-        "environment", help="Environment to edit secrets for.", type=str
-    )
+    p.add_argument("environment", help="Environment to edit secrets for.", type=str)
     p.add_argument(
         "edit_file",
         nargs="?",
@@ -155,9 +146,7 @@ def main(args: Optional[list] = None) -> None:
     )
     p.set_defaults(func=batou.secrets.manage.summary)
 
-    p = sp.add_parser(
-        "add", help="Add a user's key to one or more secret files."
-    )
+    p = sp.add_parser("add", help="Add a user's key to one or more secret files.")
     p.set_defaults(func=p.print_usage)
     p.add_argument("keyid", help="The user's key ID or email address")
     p.add_argument(

@@ -51,7 +51,7 @@ class UnknownEnvironmentError(ValueError):
         self.names = names
 
     def __str__(self):
-        return f'Unknown environment(s): {", ".join(self.names)}'
+        return f"Unknown environment(s): {', '.join(self.names)}"
 
 
 class ConfigSection(dict):
@@ -82,8 +82,7 @@ class Config(object):
         if section not in self:
             raise KeyError(section)
         return ConfigSection(
-            (x, self.config.get(section, x))
-            for x in self.config.options(section)
+            (x, self.config.get(section, x)) for x in self.config.options(section)
         )
 
     def __iter__(self):
@@ -193,10 +192,7 @@ class Environment(object):
         batou.utils.resolve_v6_override.clear()
 
         config_file = (
-            pathlib.Path(self.base_dir)
-            / "environments"
-            / self.name
-            / "environment.cfg"
+            pathlib.Path(self.base_dir) / "environments" / self.name / "environment.cfg"
         )
         if not config_file.exists():
             raise MissingEnvironment.from_context(self)
@@ -238,9 +234,7 @@ class Environment(object):
                 continue
             if not section.startswith("component:"):
                 if section not in ["hosts", "environment", "vfs", "resolver"]:
-                    self.exceptions.append(
-                        SuperfluousSection.from_context(section)
-                    )
+                    self.exceptions.append(SuperfluousSection.from_context(section))
                 continue
             root_name = section.replace("component:", "")
             if root_name not in self.components:
@@ -259,9 +253,7 @@ class Environment(object):
         if self.connect_method == "local":
             self.target_directory = self.repository.root
 
-        self.deployment_base = os.path.relpath(
-            self.base_dir, self.repository.root
-        )
+        self.deployment_base = os.path.relpath(self.base_dir, self.repository.root)
 
     def load_secrets(self):
         self.secret_provider = SecretProvider.from_environment(self)
@@ -334,9 +326,7 @@ class Environment(object):
                 elif ":" in ip:
                     v6[key] = ip
                 else:
-                    self.exceptions.append(
-                        InvalidIPAddressError.from_context(ip)
-                    )
+                    self.exceptions.append(InvalidIPAddressError.from_context(ip))
 
         batou.utils.resolve_override.update(v4)
         batou.utils.resolve_v6_override.update(v6)
@@ -359,9 +349,7 @@ class Environment(object):
         self._load_hosts_single_section(config)
         self._load_hosts_multi_section(config)
 
-        simplified_mapping = {
-            k: v for k, v in self.hostname_mapping.items() if k != v
-        }
+        simplified_mapping = {k: v for k, v in self.hostname_mapping.items() if k != v}
         mapping_file = self._environment_path("hostmap.json")
         if simplified_mapping:
             self._ensure_environment_dir()
@@ -378,15 +366,11 @@ class Environment(object):
                 hostname,
                 self,
                 config={
-                    "ignore": (
-                        "True" if literal_hostname.startswith("!") else "False"
-                    )
+                    "ignore": ("True" if literal_hostname.startswith("!") else "False")
                 },
             )
             self.hosts[host.name] = host
-            self._load_host_components(
-                host, config["hosts"].as_list(literal_hostname)
-            )
+            self._load_host_components(host, config["hosts"].as_list(literal_hostname))
 
     def _load_hosts_multi_section(self, config):
         for section in config:
@@ -398,23 +382,17 @@ class Environment(object):
 
             # The name can now have been remapped.
             if host.name in self.hosts:
-                self.exceptions.append(
-                    DuplicateHostError.from_context(host.name)
-                )
+                self.exceptions.append(DuplicateHostError.from_context(host.name))
 
             self.hosts[host.name] = host
 
-            self._load_host_components(
-                host, config[section].as_list("components")
-            )
+            self._load_host_components(host, config[section].as_list("components"))
 
     def _load_host_components(self, host, component_list):
         components = parse_host_components(component_list)
         for component, settings in list(components.items()):
             try:
-                self.add_root(
-                    component, host, settings["features"], settings["ignore"]
-                )
+                self.add_root(component, host, settings["features"], settings["ignore"])
             except KeyError:
                 self.exceptions.append(
                     MissingComponent.from_context(component, host.name)
@@ -462,9 +440,7 @@ class Environment(object):
             if root.host == host and root.name == component_name:
                 return root
         raise KeyError(
-            "Component {} not configured for host {}".format(
-                component_name, host.name
-            )
+            "Component {} not configured for host {}".format(component_name, host.name)
         )
 
     def prepare_connect(self):
@@ -522,9 +498,7 @@ class Environment(object):
                     # to report gracefully.
                     ex_type, ex, tb = sys.exc_info()
                     exceptions.append(
-                        UnknownComponentConfigurationError.from_context(
-                            root, e, tb
-                        )
+                        UnknownComponentConfigurationError.from_context(root, e, tb)
                     )
                 else:
                     # warnings: does not fail the deployment
@@ -535,10 +509,8 @@ class Environment(object):
                             unprepared_components.append(component)
                     if unprepared_components:
                         # TODO: activate in future
-                        unused_exception = (
-                            UnusedComponentsInitialized.from_context(
-                                unprepared_components, root
-                            )
+                        unused_exception = UnusedComponentsInitialized.from_context(
+                            unprepared_components, root
                         )
                         # exceptions.append(unused_exception)
                         output.warn(str(unused_exception))
@@ -592,9 +564,7 @@ class Environment(object):
 
                 # We did not manage to improve on our last working set, so we
                 # give up.
-                exceptions.append(
-                    NonConvergingWorkingSet.from_context(unconfigured)
-                )
+                exceptions.append(NonConvergingWorkingSet.from_context(unconfigured))
                 break
 
             working_set = retry
@@ -612,9 +582,7 @@ class Environment(object):
         # provided but never used. We're rather picky here and report this as
         # an error.
         if self.resources.unused:
-            exceptions.append(
-                UnusedResources.from_context(self.resources.unused)
-            )
+            exceptions.append(UnusedResources.from_context(self.resources.unused))
 
         for root in order:
             root.log_finish_configure()

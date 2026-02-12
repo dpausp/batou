@@ -11,7 +11,6 @@ from batou.utils import cmd
 
 
 class Extract(Component):
-
     namevar = "archive"
 
     create_target_dir = True
@@ -26,9 +25,7 @@ class Extract(Component):
             if candidate.can_handle(self.archive):
                 break
         else:
-            raise ValueError(
-                "No handler found for archive '{}'.".format(self.archive)
-            )
+            raise ValueError("No handler found for archive '{}'.".format(self.archive))
         extractor = candidate(
             self.archive,
             target=self.target,
@@ -46,7 +43,6 @@ class Extract(Component):
 
 
 class Extractor(Component):
-
     namevar = "archive"
 
     _supports_strip = False
@@ -76,8 +72,9 @@ class Extractor(Component):
                 self.target = self.extract_base_name(self.archive)
             if not self.target:
                 raise AttributeError(
-                    "Target not given and not derivable from archive name "
-                    "({}).".format(self.archive)
+                    "Target not given and not derivable from archive name ({}).".format(
+                        self.archive
+                    )
                 )
             d = Directory(self.target, leading=True)
             self += d
@@ -100,9 +97,7 @@ class Extractor(Component):
                 # directories that might be outside of our control as their
                 # ctimes won't change when extracting over them.
                 continue
-            self.assert_file_is_current(
-                filename, [self.archive], key="st_ctime"
-            )
+            self.assert_file_is_current(filename, [self.archive], key="st_ctime")
 
     @property
     def namevar_for_breadcrumb(self):
@@ -110,7 +105,6 @@ class Extractor(Component):
 
 
 class Unzip(Extractor):
-
     suffixes = (".zip",)
 
     def get_names_from_archive(self):
@@ -118,30 +112,21 @@ class Unzip(Extractor):
             return f.namelist()
 
     def update(self):
-        self.cmd(
-            self.expand(
-                "unzip -o {{component.archive}} -d {{component.target}}"
-            )
-        )
+        self.cmd(self.expand("unzip -o {{component.archive}} -d {{component.target}}"))
 
 
 class Untar(Extractor):
-
     suffixes = (".tar.gz", ".tar", ".tar.bz2", ".tgz", "tar.xz")
     exclude = ("._*",)
     _supports_strip = True
 
     def configure(self):
         super(Untar, self).configure()
-        self.exclude = " ".join(
-            "--exclude='{}'".format(x) for x in self.exclude
-        )
+        self.exclude = " ".join("--exclude='{}'".format(x) for x in self.exclude)
 
     def get_names_from_archive(self):
         # Note, this does not work combined with strip ... :/
-        stdout, stderr = self.cmd(
-            "tar tf {{component.archive}} {{component.exclude}}"
-        )
+        stdout, stderr = self.cmd("tar tf {{component.archive}} {{component.exclude}}")
         return stdout.splitlines()
 
     def update(self):
@@ -201,7 +186,6 @@ class DMGVolume(object):
 
 
 class DMGExtractor(Extractor):
-
     suffixes = (".dmg",)
 
     def __enter__(self):

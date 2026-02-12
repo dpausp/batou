@@ -31,9 +31,7 @@ def test_configurationerrors_can_be_sorted(root):
         )
     )
     errors.append(
-        MissingOverrideAttributes.from_context(
-            root.component, ["asdf", "bsdfg"]
-        )
+        MissingOverrideAttributes.from_context(root.component, ["asdf", "bsdfg"])
     )
 
     errors.append(
@@ -49,9 +47,7 @@ def test_configurationerrors_can_be_sorted(root):
         _, exc_value, exc_traceback = sys.exc_info()
 
     errors.append(
-        UnknownComponentConfigurationError.from_context(
-            root, exc_value, exc_traceback
-        )
+        UnknownComponentConfigurationError.from_context(root, exc_value, exc_traceback)
     )
 
     errors.append(UnusedResources.from_context({"asdf": {root: 1}}))

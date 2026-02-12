@@ -5,7 +5,6 @@ from batou.utils import flatten
 
 
 class Subscription(object):
-
     # Dirty on the subscription means: I am OK to be dirty and _not_
     # get updated. The default is False: I want to be updated.
 
@@ -17,9 +16,7 @@ class Subscription(object):
         self.dirty = dirty
 
     def __hash__(self):
-        return hash(
-            (self.root, self.strict, self.host, self.reverse, self.dirty)
-        )
+        return hash((self.root, self.strict, self.host, self.reverse, self.dirty))
 
 
 class Resources(object):
@@ -91,9 +88,7 @@ class Resources(object):
             results = flatten(list(self.resources.get(key, {}).values()))
         return results
 
-    def require(
-        self, root, key, host=None, strict=True, reverse=False, dirty=False
-    ):
+    def require(self, root, key, host=None, strict=True, reverse=False, dirty=False):
         """Return resource values and record component dependency."""
         s = Subscription(root, strict, host, reverse, dirty)
         self.subscribers.setdefault(key, set()).add(s)
@@ -108,11 +103,7 @@ class Resources(object):
             # Removing this resource requires invalidating components that
             # depend on this resource and have already been configured so we
             # need to mark them as dirty if they want to be clean.
-            s = [
-                s.root
-                for s in self._subscriptions(key, root.host)
-                if not s.dirty
-            ]
+            s = [s.root for s in self._subscriptions(key, root.host) if not s.dirty]
             self.dirty_dependencies.update(s)
 
     def copy_resources(self):
@@ -170,9 +161,7 @@ class Resources(object):
     def unsatisfied_components(self):
         components = set()
         for resource, host in self.unsatisfied:
-            components.update(
-                [s.root for s in self._subscriptions(resource, host)]
-            )
+            components.update([s.root for s in self._subscriptions(resource, host)])
         return components
 
     @property

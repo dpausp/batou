@@ -84,9 +84,7 @@ class ConfigureErrors(ReportingException):
                 )
                 output.tabular(
                     "Not reporting",
-                    ", ".join(
-                        self.all_reporting_hostnames - reporting_hostnames
-                    ),
+                    ", ".join(self.all_reporting_hostnames - reporting_hostnames),
                     red=True,
                 )
 
@@ -134,9 +132,7 @@ class Deployment(object):
 
     @property
     def local_consistency_check(self):
-        return (
-            self.consistency_only and self.environment.check_and_predict_local
-        )
+        return self.consistency_only and self.environment.check_and_predict_local
 
     def load(self):
         output.section("Preparing")
@@ -154,9 +150,7 @@ class Deployment(object):
             self.jobs = int(self.environment.jobs)
         else:
             self.jobs = 1
-        output.step(
-            "main", "Number of jobs: %s" % self.jobs, debug=True, icon="⚙️"
-        )
+        output.step("main", "Number of jobs: %s" % self.jobs, debug=True, icon="⚙️")
 
         # This is located here to avoid duplicating the verification check
         # when loading the repository on the remote environment object.
@@ -194,9 +188,7 @@ class Deployment(object):
             if host.ignore:
                 output.step(
                     hostname,
-                    "Connection ignored ({}/{})".format(
-                        i, len(self.environment.hosts)
-                    ),
+                    "Connection ignored ({}/{})".format(i, len(self.environment.hosts)),
                     bold=False,
                     red=True,
                     icon="⏭️",
@@ -236,9 +228,7 @@ class Deployment(object):
             # collects all errors into (reporting_hostname, error) tuples
         # if there are no connections, then we append a ConfigurationError
         if not self.connections:
-            raise ConfigurationError.from_context(
-                "No host found in environment."
-            )
+            raise ConfigurationError.from_context("No host found in environment.")
         # if there are no errors, we're done
         if not all_errors:
             return
@@ -258,12 +248,10 @@ class Deployment(object):
         # we can merge them into a list of (reporting_hostname, affected_hostnames, error) tuples
         merged_errors = []
         for equivalence_class in errors_by_equivalence_class:
-            reporting_hostnames = set(
-                hostname for hostname, _ in equivalence_class
+            reporting_hostnames = set(hostname for hostname, _ in equivalence_class)
+            merged_error, affected_hostnames = type(equivalence_class[0][1]).merge(
+                [e for _, e in equivalence_class]
             )
-            merged_error, affected_hostnames = type(
-                equivalence_class[0][1]
-            ).merge([e for _, e in equivalence_class])
             merged_errors.append(
                 (
                     reporting_hostnames,
@@ -295,9 +283,7 @@ class Deployment(object):
         elif info["ignore"]:
             output.step(
                 hostname,
-                "Skipping component {} ... (Component ignored)".format(
-                    component
-                ),
+                "Skipping component {} ... (Component ignored)".format(component),
                 icon="⏭️",
                 red=True,
             )
@@ -361,9 +347,7 @@ class Deployment(object):
             node.summarize()
 
         if self.consistency_only:
-            output.annotate(
-                f"Consistency check took {self.timer.humanize('total')}"
-            )
+            output.annotate(f"Consistency check took {self.timer.humanize('total')}")
         else:
             output.annotate(
                 f"Deployment took {self.timer.humanize('total', 'connect', 'deploy')}"
@@ -454,9 +438,7 @@ def main(
                     else:
                         output.line("")
                         output.error("Unexpected exception")
-                        tb = traceback.TracebackException.from_exception(
-                            exception
-                        )
+                        tb = traceback.TracebackException.from_exception(exception)
                         for line in tb.format():
                             output.line("\t" + line.strip(), red=True)
 

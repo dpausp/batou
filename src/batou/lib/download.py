@@ -14,7 +14,6 @@ except ImportError:
 
 
 class Download(Component):
-
     namevar = "uri"
 
     target = None  # Filename where the download will be stored.
@@ -26,8 +25,7 @@ class Download(Component):
             self.target = urllib.parse.urlsplit(self.uri).path.split("/")[-1]
         if not self.target:
             raise KeyError(
-                "No target is given and the URI does not allow "
-                "deriving a filename."
+                "No target is given and the URI does not allow deriving a filename."
             )
         if not self.checksum:
             raise ValueError("No checksum given.")
@@ -36,9 +34,7 @@ class Download(Component):
     def verify(self):
         if not os.path.exists(self.target):
             raise batou.UpdateNeeded()
-        if self.checksum != batou.utils.hash(
-            self.target, self.checksum_function
-        ):
+        if self.checksum != batou.utils.hash(self.target, self.checksum_function):
             raise batou.UpdateNeeded()
 
     def update(self):
@@ -49,9 +45,7 @@ class Download(Component):
             self._update_urllib()
 
         target_checksum = batou.utils.hash(self.target, self.checksum_function)
-        assert (
-            self.checksum == target_checksum
-        ), """\
+        assert self.checksum == target_checksum, """\
 Checksum mismatch!
 expected: %s
 got: %s""" % (

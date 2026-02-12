@@ -89,22 +89,16 @@ class RPCWrapper(object):
                 elif type == "batou-unknown-error":
                     output.error(message[1])
                     raise RuntimeError(
-                        "{}: Remote exception encountered.".format(
-                            self.host.fqdn
-                        )
+                        "{}: Remote exception encountered.".format(self.host.fqdn)
                     )
                 elif type == "batou-error":
                     # Remote put out the details already.
                     raise RuntimeError(
-                        "{}: Remote exception encountered.".format(
-                            self.host.fqdn
-                        )
+                        "{}: Remote exception encountered.".format(self.host.fqdn)
                     )
                 else:
                     raise RuntimeError(
-                        "{}: Unknown message type {}".format(
-                            self.host.fqdn, type
-                        )
+                        "{}: Unknown message type {}".format(self.host.fqdn, type)
                     )
 
         return call
@@ -114,7 +108,6 @@ _no_value_marker = object()
 
 
 class Host(object):
-
     service_user = None
     require_sudo = None
     ignore = False
@@ -146,9 +139,7 @@ class Host(object):
         else:
             self.require_sudo = environment.require_sudo
 
-        self.remap = ast.literal_eval(
-            config.get("provision-dynamic-hostname", "False")
-        )
+        self.remap = ast.literal_eval(config.get("provision-dynamic-hostname", "False"))
         self._provisioner = config.get("provisioner")
         self._provision_info = {}
         if self.provisioner:
@@ -212,9 +203,7 @@ class Host(object):
 
 class LocalHost(Host):
     def connect(self):
-        self.gateway = execnet.makegateway(
-            "popen//python={}".format(sys.executable)
-        )
+        self.gateway = execnet.makegateway("popen//python={}".format(sys.executable))
         self.channel = self.gateway.remote_exec(remote_core)
 
     def start(self):
@@ -253,7 +242,6 @@ class LocalHost(Host):
 
 
 class RemoteHost(Host):
-
     gateway = None
 
     def _makegateway(self, interpreter):
@@ -293,9 +281,7 @@ class RemoteHost(Host):
         except IOError:
             raise RuntimeError(
                 "Could not start batou on host `{}`. "
-                "The output above may contain more information. ".format(
-                    self.fqdn
-                )
+                "The output above may contain more information. ".format(self.fqdn)
             )
 
         if self.service_user is not None and self.require_sudo is None:

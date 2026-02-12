@@ -42,9 +42,7 @@ def add_user(keyid, environments, **kw):
             if keyid not in members:
                 members.append(keyid)
             config.set("batou", "members", ",\n".join(members).split("\n"))
-            environment.secret_provider.write_config(
-                str(config).encode("utf-8")
-            )
+            environment.secret_provider.write_config(str(config).encode("utf-8"))
 
 
 def remove_user(keyid, environments, **kw):
@@ -63,9 +61,7 @@ def remove_user(keyid, environments, **kw):
             if keyid in members:
                 members.remove(keyid)
             config.set("batou", "members", ",\n".join(members).split("\n"))
-            environment.secret_provider.write_config(
-                str(config).encode("utf-8")
-            )
+            environment.secret_provider.write_config(str(config).encode("utf-8"))
 
 
 def reencrypt(environments, **kw):

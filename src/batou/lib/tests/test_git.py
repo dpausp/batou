@@ -55,9 +55,7 @@ def test_directly_after_clone_nothing_is_merged(root, repos_path):
             dir=repos_path
         )
     )
-    root.component += batou.lib.git.Clone(
-        repos_path, target="clone", branch="other"
-    )
+    root.component += batou.lib.git.Clone(repos_path, target="clone", branch="other")
     root.component.deploy()
     assert os.path.isfile(
         os.path.join(root.environment.workdir_base, "mycomponent/clone/bar")
@@ -65,18 +63,12 @@ def test_directly_after_clone_nothing_is_merged(root, repos_path):
 
 
 @pytest.mark.slow
-def test_setting_branch_updates_on_incoming_changes(
-    root, repos_path, git_main_branch
-):
+def test_setting_branch_updates_on_incoming_changes(root, repos_path, git_main_branch):
     root.component += batou.lib.git.Clone(
         repos_path, target="clone", branch=git_main_branch
     )
     root.component.deploy()
-    cmd(
-        'cd {dir}; touch bar; git add .; git commit -m "commit"'.format(
-            dir=repos_path
-        )
-    )
+    cmd('cd {dir}; touch bar; git add .; git commit -m "commit"'.format(dir=repos_path))
     root.component.deploy()
     assert os.path.isfile(
         os.path.join(root.environment.workdir_base, "mycomponent/clone/bar")
@@ -86,19 +78,13 @@ def test_setting_branch_updates_on_incoming_changes(
 @pytest.mark.slow
 def test_setting_revision_updates_on_incoming_changes(root, repos_path):
     cmd(
-        'cd {dir}; touch bar; git add .; git commit -m "commit2"'.format(
-            dir=repos_path
-        )
+        'cd {dir}; touch bar; git add .; git commit -m "commit2"'.format(dir=repos_path)
     )
     commit1, _ = cmd("cd {dir}; git rev-parse HEAD^".format(dir=repos_path))
-    root.component += batou.lib.git.Clone(
-        repos_path, target="clone", revision=commit1
-    )
+    root.component += batou.lib.git.Clone(repos_path, target="clone", revision=commit1)
     root.component.deploy()
     cmd(
-        'cd {dir}; touch qux; git add .; git commit -m "commit3"'.format(
-            dir=repos_path
-        )
+        'cd {dir}; touch qux; git add .; git commit -m "commit3"'.format(dir=repos_path)
     )
     root.component.deploy()  # Our main assertion: Nothing breaks here
     assert not os.path.isfile(
@@ -112,9 +98,7 @@ def test_branch_does_switch_branch(root, repos_path):
         "cd {dir}; touch bar; git add .; git checkout -b bar;"
         'git commit -m "commit branch"'.format(dir=repos_path)
     )
-    root.component += batou.lib.git.Clone(
-        repos_path, target="clone", branch="bar"
-    )
+    root.component += batou.lib.git.Clone(repos_path, target="clone", branch="bar")
     root.component.deploy()
     stdout, stderr = cmd(
         "cd {workdir}/clone; git rev-parse --abbrev-ref HEAD".format(
@@ -126,37 +110,26 @@ def test_branch_does_switch_branch(root, repos_path):
 
 @pytest.mark.slow
 def test_tag_does_switch_tag(root, repos_path):
+    cmd("""cd {dir}; git tag -a v1.0 -m "version 1.0" """.format(dir=repos_path))
     cmd(
-        """cd {dir}; git tag -a v1.0 -m "version 1.0" """.format(dir=repos_path)
+        'cd {dir}; touch bar; git add .;git commit -m "commit branch"'.format(
+            dir=repos_path
+        )
     )
-    cmd(
-        "cd {dir}; touch bar; git add .;"
-        'git commit -m "commit branch"'.format(dir=repos_path)
-    )
-    cmd(
-        """cd {dir}; git tag -a v1.1 -m "version 1.1" """.format(dir=repos_path)
-    )
+    cmd("""cd {dir}; git tag -a v1.1 -m "version 1.1" """.format(dir=repos_path))
 
     for tag in ("v1.0", "v1.1"):
-        root.component += batou.lib.git.Clone(
-            repos_path, target="clone", tag=tag
-        )
+        root.component += batou.lib.git.Clone(repos_path, target="clone", tag=tag)
         root.component.deploy()
         stdout, stderr = cmd(
-            "cd {workdir}/clone; git describe --tags".format(
-                workdir=root.workdir
-            )
+            "cd {workdir}/clone; git describe --tags".format(workdir=root.workdir)
         )
         assert tag == stdout.strip()
 
 
 @pytest.mark.slow
-def test_has_changes_counts_changes_to_tracked_files(
-    root, repos_path, git_main_branch
-):
-    clone = batou.lib.git.Clone(
-        repos_path, target="clone", branch=git_main_branch
-    )
+def test_has_changes_counts_changes_to_tracked_files(root, repos_path, git_main_branch):
+    clone = batou.lib.git.Clone(repos_path, target="clone", branch=git_main_branch)
     root.component += clone
     root.component.deploy()
     assert not clone.has_changes()
@@ -169,9 +142,7 @@ def test_has_changes_counts_changes_to_tracked_files(
 def test_has_changes_counts_untracked_files_as_changes(
     root, repos_path, git_main_branch
 ):
-    clone = batou.lib.git.Clone(
-        repos_path, target="clone", branch=git_main_branch
-    )
+    clone = batou.lib.git.Clone(repos_path, target="clone", branch=git_main_branch)
     root.component += clone
     root.component.deploy()
     assert not clone.has_changes()
@@ -180,20 +151,14 @@ def test_has_changes_counts_untracked_files_as_changes(
 
 
 @pytest.mark.slow
-def test_clean_clone_updates_on_incoming_changes(
-    root, repos_path, git_main_branch
-):
+def test_clean_clone_updates_on_incoming_changes(root, repos_path, git_main_branch):
     root.component += batou.lib.git.Clone(
         repos_path,
         target="clone",
         branch=git_main_branch,
     )
     root.component.deploy()
-    cmd(
-        'cd {dir}; touch bar; git add .; git commit -m "commit"'.format(
-            dir=repos_path
-        )
-    )
+    cmd('cd {dir}; touch bar; git add .; git commit -m "commit"'.format(dir=repos_path))
     root.component.deploy()
     assert os.path.isfile(root.component.map("clone/bar"))
 
@@ -206,11 +171,7 @@ def test_no_clobber_changes_protected_on_update_with_incoming(
         repos_path, target="clone", branch=git_main_branch
     )
     root.component.deploy()
-    cmd(
-        'cd {dir}; touch bar; git add .; git commit -m "commit"'.format(
-            dir=repos_path
-        )
-    )
+    cmd('cd {dir}; touch bar; git add .; git commit -m "commit"'.format(dir=repos_path))
     cmd("cd {dir}/clone; echo foobar >foo".format(dir=root.workdir))
     with pytest.raises(RuntimeError) as e:
         root.component.deploy()
@@ -243,11 +204,7 @@ def test_no_clobber_untracked_files_are_kept_on_update(
         repos_path, target="clone", branch=git_main_branch
     )
     root.component.deploy()
-    cmd(
-        "cd {dir}/clone; mkdir bar; echo foobar >bar/baz".format(
-            dir=root.workdir
-        )
-    )
+    cmd("cd {dir}/clone; mkdir bar; echo foobar >bar/baz".format(dir=root.workdir))
     with pytest.raises(RuntimeError) as e:
         root.component.deploy()
     assert e.value.args[0] == "Refusing to clobber dirty work directory."
@@ -263,11 +220,7 @@ def test_clobber_changes_lost_on_update_with_incoming(
         repos_path, target="clone", branch=git_main_branch, clobber=True
     )
     root.component.deploy()
-    cmd(
-        'cd {dir}; touch bar; git add .; git commit -m "commit"'.format(
-            dir=repos_path
-        )
-    )
+    cmd('cd {dir}; touch bar; git add .; git commit -m "commit"'.format(dir=repos_path))
     cmd("cd {dir}/clone; echo foobar >foo".format(dir=root.workdir))
     root.component.deploy()
     assert os.path.exists(root.component.map("clone/bar"))
@@ -297,11 +250,7 @@ def test_clobber_untracked_files_are_removed_on_update(
         repos_path, target="clone", branch=git_main_branch, clobber=True
     )
     root.component.deploy()
-    cmd(
-        "cd {dir}/clone; mkdir bar; echo foobar >bar/baz".format(
-            dir=root.workdir
-        )
-    )
+    cmd("cd {dir}/clone; mkdir bar; echo foobar >bar/baz".format(dir=root.workdir))
     root.component.deploy()
     assert not os.path.exists(root.component.map("clone/bar/baz"))
 
@@ -326,18 +275,15 @@ def test_clean_clone_vcs_update_false_leaves_changes_intact(
 
 
 @pytest.mark.slow
-def test_changed_remote_is_updated(
-    root, repos_path, repos_path2, git_main_branch
-):
-    git = batou.lib.git.Clone(
-        repos_path, target="clone", branch=git_main_branch
-    )
+def test_changed_remote_is_updated(root, repos_path, repos_path2, git_main_branch):
+    git = batou.lib.git.Clone(repos_path, target="clone", branch=git_main_branch)
     root.component += git
 
     # Fresh, unrelated repo
     cmd(
-        "cd {dir}; echo baz >bar; git add .;"
-        'git commit -m "commit"'.format(dir=repos_path2)
+        'cd {dir}; echo baz >bar; git add .;git commit -m "commit"'.format(
+            dir=repos_path2
+        )
     )
 
     root.component.deploy()
@@ -348,9 +294,7 @@ def test_changed_remote_is_updated(
 
 
 @pytest.mark.slow
-def test_clone_into_workdir_works(
-    root, repos_path, repos_path2, git_main_branch
-):
+def test_clone_into_workdir_works(root, repos_path, repos_path2, git_main_branch):
     git = batou.lib.git.Clone(repos_path, branch=git_main_branch)
     with open(root.component.map("asdf"), "w") as f:
         f.write("foo")

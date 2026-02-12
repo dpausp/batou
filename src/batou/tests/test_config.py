@@ -57,9 +57,7 @@ def test_production_environment_is_loaded(env_prod):
     assert host1.name == "host1"
     assert host1.fqdn == "host1.example.com"
     assert host1.service_user == "alice"
-    host1_components = [
-        x.name for x in env_prod.root_components if x.host is host1
-    ]
+    host1_components = [x.name for x in env_prod.root_components if x.host is host1]
     assert host1_components == ["zope"]
 
 
@@ -71,9 +69,7 @@ def test_dev_environment_is_loaded(env):
     localhost = env.hosts["localhost"]
     assert localhost.name == "localhost"
     assert localhost.fqdn == "localhost"
-    root_components = set(
-        [x.name for x in env.root_components if x.host is localhost]
-    )
+    root_components = set([x.name for x in env.root_components if x.host is localhost])
     assert root_components == set(["zeo", "zope"])
 
     zeo = env.get_root("zeo", env.hosts["localhost"])

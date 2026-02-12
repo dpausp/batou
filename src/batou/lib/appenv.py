@@ -6,7 +6,6 @@ from batou.lib.file import File, Symlink, ensure_path_nonexistent
 
 
 class VirtualEnv(Component):
-
     namevar = "python_version"
     pip_version = None
 
@@ -19,8 +18,7 @@ class VirtualEnv(Component):
         if "__PYVENV_LAUNCHER__" in os.environ:
             del os.environ["__PYVENV_LAUNCHER__"]
         self.cmd(
-            "python{{component.python_version}} -m venv "
-            "{{component.parent.env_dir}}"
+            "python{{component.python_version}} -m venv {{component.parent.env_dir}}"
         )
         if self.pip_version:
             self.cmd(
@@ -29,8 +27,7 @@ class VirtualEnv(Component):
             )
         else:
             self.cmd(
-                "{{component.parent.env_dir}}/bin/python -m pip "
-                "install --upgrade pip"
+                "{{component.parent.env_dir}}/bin/python -m pip install --upgrade pip"
             )
 
 
@@ -48,15 +45,12 @@ class LockedRequirements(Component):
 
 
 class CleanupUnused(Component):
-
     cleanup = ()
 
     def verify(self):
         if not os.path.exists(".appenv/"):
             return
-        protected = set(
-            [self.parent.env_hash, self.parent.last_env_hash, "current"]
-        )
+        protected = set([self.parent.env_hash, self.parent.last_env_hash, "current"])
         self.cleanup = set(os.listdir(".appenv/")) - protected
         assert not self.cleanup
 
@@ -96,9 +90,7 @@ class AppEnv(Component):
         self.env_ready = os.path.join(self.env_dir, "appenv.ready")
 
         self += VirtualEnv(self.python_version, pip_version=self.pip_version)
-        self += File(
-            os.path.join(self.env_dir, "requirements.lock"), content=lockfile
-        )
+        self += File(os.path.join(self.env_dir, "requirements.lock"), content=lockfile)
         self += LockedRequirements()
 
         # If we got here, then we can place the ready marker

@@ -6,7 +6,6 @@ from batou.lib.file import Directory
 
 
 class Checkout(Component):
-
     namevar = "url"
     target = "."
     revision = None
@@ -27,9 +26,7 @@ class Checkout(Component):
         with self.chdir(self.target):
             if not os.path.exists(".svn"):
                 self.cmd(
-                    self.expand(
-                        "svn co {{component.url}} . -r {{component.revision}}"
-                    )
+                    self.expand("svn co {{component.url}} . -r {{component.revision}}")
                 )
             else:
                 self.cmd(self.expand("svn revert -R ."))

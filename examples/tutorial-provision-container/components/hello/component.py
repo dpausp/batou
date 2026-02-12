@@ -4,7 +4,6 @@ from batou.utils import Address
 
 
 class Hello(Component):
-
     password = "averysecretpassword"
 
     def configure(self):
@@ -12,7 +11,6 @@ class Hello(Component):
         self += File(
             "Hello",
             content=(
-                "Hello World! {{host.aliases.my}} "
-                "= {{component.address.listen}} "
+                "Hello World! {{host.aliases.my}} = {{component.address.listen}} "
             ),
         )

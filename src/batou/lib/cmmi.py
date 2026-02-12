@@ -28,8 +28,7 @@ class Configure(Component):
         with self.chdir(self.path):
             self.cmd(
                 self.expand(
-                    "./configure --prefix={{component.prefix}} "
-                    "{{component.args}}"
+                    "./configure --prefix={{component.prefix}} {{component.args}}"
                 ),
                 env=self.build_environment,
             )
@@ -37,7 +36,6 @@ class Configure(Component):
 
 
 class Make(Component):
-
     namevar = "path"
     build_environment = None
 

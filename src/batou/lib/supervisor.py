@@ -13,7 +13,6 @@ from batou.utils import Address, CmdExecutionError
 
 
 class Program(Component):
-
     program_section = """
 [program:{{component.name}}]
 command = {{component.command}} {{component.args}}
@@ -60,9 +59,7 @@ redirect_stderr = true
         if not self.directory:
             self.directory = self.workdir
         if self.command_absolute:
-            self.command = os.path.normpath(
-                os.path.join(self.workdir, self.command)
-            )
+            self.command = os.path.normpath(os.path.join(self.workdir, self.command))
 
         if "startsecs" not in self.options:
             self.options["startsecs"] = 5
@@ -73,8 +70,7 @@ redirect_stderr = true
         )
 
         self.config = self.expand(
-            "{{component.supervisor.program_config_dir.path}}/"
-            "{{component.name}}.conf"
+            "{{component.supervisor.program_config_dir.path}}/{{component.name}}.conf"
         )
         self += File(self.config, content=self.expand(self.program_section))
 
@@ -105,14 +101,10 @@ redirect_stderr = true
                 time.sleep(1)
                 if self.is_running():
                     return
-            raise RuntimeError(
-                'Program "{}" did not start up'.format(self.name)
-            )
+            raise RuntimeError('Program "{}" did not start up'.format(self.name))
 
     def is_running(self):
-        out, err = self.ctl(
-            "status {}".format(self.name), ignore_returncode=True
-        )
+        out, err = self.ctl("status {}".format(self.name), ignore_returncode=True)
         return "RUNNING" in out
 
     # Keep track whether
@@ -126,9 +118,7 @@ redirect_stderr = true
             return
         # Only try once. Keep going anyway.
         self._evaded = True
-        output.annotate(
-            "\u2623 Stopping {} for cold deployment".format(self.name)
-        )
+        output.annotate("\u2623 Stopping {} for cold deployment".format(self.name))
         try:
             self.ctl("stop {}".format(self.name))
         except Exception:
@@ -136,7 +126,6 @@ redirect_stderr = true
 
 
 class Eventlistener(Program):
-
     program_section = """
 [eventlistener:{{component.name}}]
 command = {{component.command}} {{component.args}}
@@ -167,7 +156,6 @@ process_name={{component.name}}
 
 
 class Supervisor(Component):
-
     address = Attribute(Address, default=ConfigString("localhost:9001"))
     buildout_version = Attribute(default="3.0.1")
     setuptools_version = Attribute(default="68.0.0")
@@ -267,7 +255,6 @@ class RunningHelper(Component):
 
 
 class RunningSupervisor(RunningHelper):
-
     action = None
     reload_timeout = 60
 

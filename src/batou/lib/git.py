@@ -38,8 +38,7 @@ class Clone(Component):
     def configure(self):
         if not exactly_one(self.revision, self.branch, self.tag):
             raise ValueError(
-                "Clone(%s) needs exactly one of revision, branch or tag"
-                % self.url
+                "Clone(%s) needs exactly one of revision, branch or tag" % self.url
             )
         self.target = self.map(self.target)
         self += Directory(self.target)
@@ -65,9 +64,7 @@ class Clone(Component):
 
             if self.has_outgoing_changesets():
                 output.annotate(
-                    "Git clone at {} has outgoing changesets.".format(
-                        self.target
-                    )
+                    "Git clone at {} has outgoing changesets.".format(self.target)
                 )
 
             if self.has_changes():
@@ -87,15 +84,12 @@ class Clone(Component):
                         ),
                         red=True,
                     )
-                    raise RuntimeError(
-                        "Refusing to clobber dirty work directory."
-                    )
+                    raise RuntimeError("Refusing to clobber dirty work directory.")
 
             if self.revision and self.current_revision() != self.revision:
                 raise UpdateNeeded()
             if self.branch and (
-                self.current_branch() != self.branch
-                or self.has_incoming_changesets()
+                self.current_branch() != self.branch or self.has_incoming_changesets()
             ):
                 raise UpdateNeeded()
             if self.tag and (
@@ -148,9 +142,7 @@ class Clone(Component):
         just_cloned = False
         if self._force_clone:
             ensure_empty_directory(self.target)
-            self.cmd(
-                self.expand("git clone {{component.url}} {{component.target}}")
-            )
+            self.cmd(self.expand("git clone {{component.url}} {{component.target}}"))
             just_cloned = True
         with self.chdir(self.target):
             for filepath in self.untracked_files():
@@ -158,9 +150,7 @@ class Clone(Component):
             if not just_cloned:
                 self.cmd("git fetch")
             if self.branch:
-                self.cmd(
-                    self.expand("git reset --hard origin/{{component.branch}}")
-                )
+                self.cmd(self.expand("git reset --hard origin/{{component.branch}}"))
             elif self.tag:
                 self.cmd(self.expand("git fetch --tags"))
                 self.cmd(self.expand("git reset --hard {{component.tag}}"))
@@ -172,13 +162,9 @@ class Clone(Component):
             self.cmd("git submodule update --init --recursive")
 
     def untracked_files(self):
-        stdout, stderr = self.cmd(
-            "git status --porcelain --untracked-files=all"
-        )
+        stdout, stderr = self.cmd("git status --porcelain --untracked-files=all")
         items = (line.split(None, 1) for line in stdout.splitlines())
-        untracked_items = [
-            filepath for status, filepath in items if status == "??"
-        ]
+        untracked_items = [filepath for status, filepath in items if status == "??"]
 
         # from the manpage of git-status: If a filename contains whitespace
         # or other nonprintable characters, that field will be quoted

@@ -35,9 +35,7 @@ class SecretProvider:
         Returns an instance of the secret provider.
         """
         environment_path = (
-            pathlib.Path(environment.base_dir)
-            / "environments"
-            / str(environment.name)
+            pathlib.Path(environment.base_dir) / "environments" / str(environment.name)
         )
         secret_provider_candidates: List[SecretProvider] = []
 
@@ -87,9 +85,7 @@ class SecretProvider:
                 f"Found age-diffable secrets for environment {environment.name}.",
                 debug=True,
             )
-            secret_provider_candidates.append(
-                DiffableAGESecretProvider(environment)
-            )
+            secret_provider_candidates.append(DiffableAGESecretProvider(environment))
         else:
             raise ValueError(
                 f"Invalid secret provider {extension}.",
@@ -142,12 +138,8 @@ class SecretProvider:
                 self.environment.exceptions.append(
                     SuperfluousSecretsSection.from_context(component_name)
                 )
-            overrides = self.environment.overrides.setdefault(
-                component_name, {}
-            )
-            for key, value in secret_blob.component_overrides[
-                component_name
-            ].items():
+            overrides = self.environment.overrides.setdefault(component_name, {})
+            for key, value in secret_blob.component_overrides[component_name].items():
                 keys_added = set()
                 if key in keys_added:
                     self.environment.exceptions.append(
@@ -212,9 +204,7 @@ class SecretProvider:
             f"Changing secret provider from {old_secret_provider.secret_provider_str} to {new_secret_provider.secret_provider_str}."
         )
         new_secret_provider.write_config_new(str(config).encode("utf-8"))
-        new_secret_provider.write_secret_files(
-            old_secret_provider.read_secret_files()
-        )
+        new_secret_provider.write_secret_files(old_secret_provider.read_secret_files())
         self.environment.secret_provider = new_secret_provider
         old_secret_provider.purge(new_secret_provider.iter_secret_files())
         output.annotate(
@@ -321,9 +311,7 @@ class ConfigFileSecretProvider(SecretProvider):
         for content in secret_files.values():
             secret_data.update(content.splitlines())
 
-        return SecretBlob(
-            host_data, component_overrides, secret_data, secret_files
-        )
+        return SecretBlob(host_data, component_overrides, secret_data, secret_files)
 
     def iter_secret_files(self, writeable=False) -> Dict[str, EncryptedFile]:
         raise NotImplementedError("iter_secret_files() not implemented.")
@@ -461,9 +449,7 @@ class GPGSecretProvider(ConfigFileSecretProvider):
         recipients = re.split(r"(\n|,)+", recipients_opt.value)
         recipients = [r.strip() for r in recipients if r.strip()]
         if not recipients or len(recipients) == 0 or recipients[0] == "":
-            raise ValueError(
-                "Please add at least one recipient to the secrets file."
-            )
+            raise ValueError("Please add at least one recipient to the secrets file.")
         self.config_file.write(
             str(config).encode("utf-8"),
             recipients,
@@ -502,9 +488,7 @@ def process_age_recipients(members, environment_path):
             # it's a url to a key file, so we need to download it
             # and add it to the key meta file
             if key.startswith("http://"):
-                raise ValueError(
-                    "Downloading public keys over http is insecure!"
-                )
+                raise ValueError("Downloading public keys over http is insecure!")
             key_meta_file_content += f"# ssh key file from {key}\n"
             if debug:
                 print(f"Downloading key file from `{key}`")
@@ -613,9 +597,7 @@ class AGESecretProvider(ConfigFileSecretProvider):
         recipients = re.split(r"(\n|,)+", recipients_opt.value)
         recipients = [r.strip() for r in recipients if r.strip()]
         if not recipients or len(recipients) == 0 or recipients[0] == "":
-            raise ValueError(
-                "Please add at least one recipient to the secrets file."
-            )
+            raise ValueError("Please add at least one recipient to the secrets file.")
         recipients, keys_changed = process_age_recipients(
             recipients,
             pathlib.Path(self.environment.base_dir)

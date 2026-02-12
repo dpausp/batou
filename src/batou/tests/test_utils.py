@@ -205,9 +205,7 @@ def test_address_lookup_failure_v4():
 
 def test_address_lookup_failure_v6():
     with pytest.raises(batou.GetAddressInfoError) as excinfo:
-        a = Address(
-            "does-not-exist.invalid:1234", require_v4=False, require_v6=True
-        )
+        a = Address("does-not-exist.invalid:1234", require_v4=False, require_v6=True)
         a.listen_v6
     assert_resolver_error(excinfo)
 
@@ -234,15 +232,11 @@ def test_address_optional_when_name_cannot_be_looked_up_at_all():
 
 
 def test_address_required_false_prohibited_to_use():
-    a = Address(
-        "does-not-exist.example.com:1234", require_v4=True, require_v6=False
-    )
+    a = Address("does-not-exist.example.com:1234", require_v4=True, require_v6=False)
     with pytest.raises(batou.IPAddressConfigurationError):
         a.listen_v6
 
-    a = Address(
-        "does-not-exist.example.com:1234", require_v4=False, require_v6=True
-    )
+    a = Address("does-not-exist.example.com:1234", require_v4=False, require_v6=True)
     with pytest.raises(batou.IPAddressConfigurationError):
         a.listen
 
@@ -370,9 +364,7 @@ class NotifyTests(unittest.TestCase):
 
     @mock.patch("subprocess.call")
     def test_macos_notify_gets_escaped(self, event_mocked):
-        notify_text = (
-            "This is a test with a 'single quote' and a \"double quote\"."
-        )
+        notify_text = "This is a test with a 'single quote' and a \"double quote\"."
         notify_macosx(notify_text, notify_text)
         self.assertEqual(
             event_mocked.call_args.args,
@@ -429,9 +421,7 @@ class Checksum(unittest.TestCase):
     )
 
     def test_hash_md5(self):
-        self.assertEqual(
-            "ce0324fa445475e76182c0d114615c7b", hash(self.fixture, "md5")
-        )
+        self.assertEqual("ce0324fa445475e76182c0d114615c7b", hash(self.fixture, "md5"))
 
     def test_hash_sha1(self):
         self.assertEqual(
