@@ -116,7 +116,7 @@ def install_remote_fd_tracking_hook():
             _track_fd_close(fd.fileno())
             return original_close()
 
-        fd.close = tracked_close  # type: ignore[method-assign]
+        fd.close = tracked_close
         return fd
 
     builtins.open = tracked_open  # type: ignore[method-assign]

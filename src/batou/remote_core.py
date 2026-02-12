@@ -191,7 +191,7 @@ class Deployment(object):
         init_remote_fd_tracking(self.debug_settings.track_fds)
 
         self.environment = Environment(self.env_name, self.timeout, self.platform)
-        self.environment.deployment = self  # type: ignore[attr-defined]
+        self.environment.deployment = self
         self.environment.load()
         self.environment.overrides = self.overrides
 
@@ -421,7 +421,7 @@ def deploy(root, predict_only=False):
 
     install_remote_fd_tracking_hook()
     if deployment is not None:
-        deployment.deploy(root, predict_only)  # type: ignore[attr-defined]
+        deployment.deploy(root, predict_only)
 
     # Report FD tracking stats using debug package function
     stats = get_remote_fd_tracking_stats()
@@ -442,7 +442,7 @@ def deploy(root, predict_only=False):
 def root_dependencies():
     deps = {}
     if deployment is not None:
-        env = deployment.environment  # type: ignore[attr-defined]
+        env = deployment.environment
         if env is not None and hasattr(env, "root_dependencies"):
             for item in env.root_dependencies().items():
                 (root, dependencies) = item
