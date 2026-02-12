@@ -4,7 +4,6 @@ from mock import Mock
 
 import batou
 import batou.utils
-from batou.component import Component, RootComponent
 from batou.environment import Config, Environment
 from batou.host import Host
 

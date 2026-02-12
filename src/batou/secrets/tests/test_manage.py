@@ -16,7 +16,7 @@ from ..manage import (
     remove_user,
     summary,
 )
-from .test_secrets import cleartext_file, encrypted_file
+from .test_secrets import cleartext_file
 
 
 @pytest.mark.parametrize("func", (add_user, remove_user))

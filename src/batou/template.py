@@ -11,7 +11,6 @@ Jinja2::
 
 # There is a weird bug going on with Jinja2 on Python3.6 where this
 # test fails if Jinja tries to import ctypes itself ... o_O
-import ctypes
 import io
 
 import jinja2

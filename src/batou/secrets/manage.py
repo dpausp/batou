@@ -1,10 +1,9 @@
 import pathlib
 import sys
 
-from configupdater import ConfigUpdater
 
 from batou import AgeCallError, GPGCallError
-from batou.environment import Environment, UnknownEnvironmentError
+from batou.environment import Environment
 from batou.secrets.encryption import get_encrypted_file
 
 

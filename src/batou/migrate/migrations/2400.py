@@ -30,7 +30,7 @@ def _get_environment_names():
 def _migrate_environment(name: str) -> None:
     cwd = Path.cwd()
     environment_dir = cwd / "environments" / name
-    secrets_cfg = environment_dir / f"secrets.cfg"
+    secrets_cfg = environment_dir / "secrets.cfg"
     if secrets_cfg.exists():
         secrets_cfg.rename(str(secrets_cfg) + ".gpg")
         for secret_file in environment_dir.iterdir():

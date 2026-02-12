@@ -5,7 +5,6 @@
 # detects the secret provider based on the file suffix.
 
 import glob
-import os
 import shutil
 import sys
 

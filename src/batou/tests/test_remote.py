@@ -1,4 +1,3 @@
-import os
 
 import mock
 import pytest
@@ -6,7 +5,7 @@ import pytest
 from batou.deploy import Deployment
 from batou.environment import Environment
 from batou.host import RemoteHost
-from batou.utils import CmdExecutionError, cmd
+from batou.utils import cmd
 
 
 @pytest.mark.slow

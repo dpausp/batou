@@ -514,7 +514,7 @@ class Environment(object):
                 except ConfigurationError as e:
                     # A known exception which we can report gracefully later.
                     exceptions.append(e)
-                except SilentConfigurationError as e:
+                except SilentConfigurationError:
                     # A silent exception which we can ignore.
                     pass
                 except Exception as e:

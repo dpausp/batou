@@ -12,7 +12,6 @@ from typing import Dict, List, Optional
 from configupdater import ConfigUpdater
 
 from batou import AgeCallError, FileLockedError, GPGCallError
-from batou._output import output
 
 debug = False
 

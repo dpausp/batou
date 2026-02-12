@@ -5,15 +5,12 @@ import pathlib
 import shutil
 import tempfile
 
-import mock
 import pytest
 
 import batou
-from batou.secrets import GPGSecretProvider
 from batou.secrets.encryption import (
     AGEEncryptedFile,
     DiffableAGEEncryptedFile,
-    EncryptedFile,
     GPGEncryptedFile,
 )
 

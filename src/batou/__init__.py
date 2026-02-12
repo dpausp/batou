@@ -505,12 +505,12 @@ class UnusedComponentsInitialized(ConfigurationError):
             out_str += f"\n    {component}: {' -> '.join(self.breadcrumbs[i])}"
             out_str += f"\n        initialized in {self.init_file_paths[i]}:{self.init_line_numbers[i]}"
         out_str += f"\nRoot: {self.root_name}"
-        out_str += f"\nAdd the components to the environment using `self += component`."
+        out_str += "\nAdd the components to the environment using `self += component`."
         return out_str
 
     def report(self):
         output.error(
-            f"Some components were initialized but never added to the environment:"
+            "Some components were initialized but never added to the environment:"
         )
         for i, component in enumerate(self.unused_components):
             output.line(
@@ -521,7 +521,7 @@ class UnusedComponentsInitialized(ConfigurationError):
                 red=True,
             )
         output.line(
-            f"Add the components to the environment using `self += component`.",
+            "Add the components to the environment using `self += component`.",
             red=True,
         )
         output.tabular("Root", self.root_name, red=True)
@@ -548,18 +548,18 @@ class ComponentWithUpdateWithoutVerify(ConfigurationError):
         for idx, component in enumerate(self.components):
             out_str += f"\n    {component}"
             out_str += f"\nRoot: {self.roots[idx]}"
-        out_str += f"\nThe update() method may not be called by batou if the verify() method is missing."
+        out_str += "\nThe update() method may not be called by batou if the verify() method is missing."
         return out_str
 
     def report(self):
         output.error(
-            f"Some components have an update method but no verify method:"
+            "Some components have an update method but no verify method:"
         )
         for component in self.components:
             output.line(f"    {component}", red=True)
         output.tabular("Root", self.root_name, red=True)
         output.line(
-            f"The update() method may not be called by batou if the verify() method is missing.",
+            "The update() method may not be called by batou if the verify() method is missing.",
             red=True,
         )
 

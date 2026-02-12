@@ -2,7 +2,6 @@
 import collections
 import os.path
 
-import jinja2
 import mock
 import pytest
 

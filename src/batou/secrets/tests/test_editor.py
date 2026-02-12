@@ -1,5 +1,4 @@
 import os
-import pathlib
 import sys
 
 import pytest
@@ -8,7 +7,6 @@ from batou.environment import Environment
 from batou.secrets.edit import Editor
 from batou.tests.ellipsis import Ellipsis
 
-from .test_secrets import encrypted_file
 
 
 def test_edit_gpg(tmpdir):

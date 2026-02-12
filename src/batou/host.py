@@ -7,7 +7,7 @@ import execnet.gateway_io
 import yaml
 
 import batou.utils
-from batou import DeploymentError, SilentConfigurationError, output, remote_core
+from batou import output, remote_core
 from batou.utils import BagOfAttributes
 
 # Keys in os.environ which get propagated to the remote side:

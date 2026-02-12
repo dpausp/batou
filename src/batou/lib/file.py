@@ -48,7 +48,7 @@ def ensure_path_nonexistent(path: str) -> None:
     with tempfile.TemporaryDirectory(dir=parent_dir) as temp_dir:
         try:
             os.rename(path, os.path.join(temp_dir, path_basename))
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             # The file was not there in the first place, we're done.
             pass
 
