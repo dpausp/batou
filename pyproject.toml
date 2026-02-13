@@ -89,6 +89,17 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "C4"]
 ignore = ["E501"]
 
 # =============================================================================
+# ty type-checking configuration
+# =============================================================================
+
+[tool.ty.src]
+exclude = [
+    "**/tests/**",
+    "**/test_*.py",
+    "**/*_test.py",
+]
+
+# =============================================================================
 # ty type-checking overrides
 # Batou uses dynamic attribute patterns (configure() sets attributes used in verify()/update())
 # that ty cannot statically verify. These overrides silence false positives.
