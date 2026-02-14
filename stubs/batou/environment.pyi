@@ -1,25 +1,17 @@
+from collections import defaultdict
+from collections.abc import Iterator
+from pathlib import Path
+from typing import (
+    Any,
+)
+
 from batou.component import (
-    Component,
     ComponentDefinition,
     RootComponent,
 )
 from batou.host import (
     Host,
-    LocalHost,
-    RemoteHost,
 )
-from pathlib import Path
-from typing import (
-    Any,
-    DefaultDict,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
-from collections.abc import Iterator
 
 def parse_host_components(components: list[str]) -> dict[str, dict[str, Any]]: ...
 
@@ -29,8 +21,8 @@ class Config:
     def __init__(self, path: Path | None): ...
     def __iter__(self) -> Iterator[str]: ...
     def get(
-        self, section: str, default: Optional[ConfigSection] = ...
-    ) -> Optional[ConfigSection]: ...
+        self, section: str, default: ConfigSection | None = ...
+    ) -> ConfigSection | None: ...
 
 class ConfigSection(dict):
     def as_list(self, option: str) -> list[str]: ...
@@ -112,7 +104,7 @@ class Environment:
     def prepare_connect(self): ...
     def root_dependencies(
         self, host: str | None = ...
-    ) -> DefaultDict[RootComponent, set[RootComponent]]: ...
+    ) -> defaultdict[RootComponent, set[RootComponent]]: ...
 
 class UnknownEnvironmentError(ValueError):
     names: list

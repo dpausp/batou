@@ -1,13 +1,9 @@
-from batou.environment import Environment
-from batou.host import RemoteHost
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
 )
+
+from batou.environment import Environment
+from batou.host import RemoteHost
 
 def cmd(c: str, *args, **kw) -> tuple[str, str]: ...
 def find_line_with(prefix: str, output: str) -> str | None: ...
@@ -21,14 +17,7 @@ class Repository:
     @classmethod
     def from_environment(
         cls, environment: Environment
-    ) -> Union[
-        RSyncRepository,
-        RSyncDevRepository,
-        RSyncExtRepository,
-        NullRepository,
-        MercurialRepository,
-        GitRepository,
-    ]: ...
+    ) -> RSyncRepository | RSyncDevRepository | RSyncExtRepository | NullRepository | MercurialRepository | GitRepository: ...
     def update(self, host: RemoteHost): ...
     def verify(self): ...
 

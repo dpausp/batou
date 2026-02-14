@@ -1,7 +1,5 @@
 from typing import (
     Any,
-    List,
-    Union,
 )
 
 def ensure_empty_directory(path: str): ...

@@ -1,12 +1,8 @@
-from batou._output import NullBackend
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
 )
+
+from batou._output import NullBackend
 
 def _hg_current_id() -> str: ...
 def build_batou(): ...

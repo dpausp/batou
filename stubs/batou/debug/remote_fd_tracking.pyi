@@ -1,9 +1,5 @@
 from pathlib import Path
 from posix import DirEntry
-from typing import (
-    Dict,
-    Union,
-)
 
 def _track_fd_close(fd: int): ...
 def _track_fd_open(fd: int, path: DirEntry | str | Path, mode: str = ...): ...

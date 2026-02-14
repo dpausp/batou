@@ -1,8 +1,7 @@
+from collections.abc import Iterator
 from typing import (
     Any,
-    List,
 )
-from collections.abc import Iterator
 
 class DMGExtractor:
     def __enter__(self): ...

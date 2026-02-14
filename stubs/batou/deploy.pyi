@@ -1,8 +1,5 @@
+
 from batou.environment import Environment
-from typing import (
-    Optional,
-    Union,
-)
 
 def main(
     environment: str,

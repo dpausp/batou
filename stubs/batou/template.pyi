@@ -1,16 +1,14 @@
 from io import StringIO
-from jinja2.environment import Template
 from typing import (
     Any,
-    Dict,
-    Optional,
-    Type,
 )
+
+from jinja2.environment import Template
 
 class Jinja2Engine:
     env: Any
     cache_enabled: bool
-    _instance: Optional[Jinja2Engine]
+    _instance: Jinja2Engine | None
     _max_cache_size: int
     _enable_cache: bool
 

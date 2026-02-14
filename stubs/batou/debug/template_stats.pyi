@@ -1,5 +1,5 @@
+
 from batou.component import Component
-from typing import Dict
 
 class TemplateStats:
     def __init__(self): ...

@@ -1,39 +1,14 @@
-from batou.environment import Environment
-from batou.host import (
-    Host,
-    LocalHost,
-    RemoteHost,
-)
-from batou.lib.cron import (
-    CronTab,
-    DebianInstallCrontab,
-    FCInstallCrontab,
-)
-from batou.lib.debian import (
-    LogrotateCronjob,
-    RebootCronjob,
-    Supervisor as DebianSupervisor,
-)
-from batou.lib.file import (
-    File,
-    Mode,
-    Presence,
-)
-from batou.lib.logrotate import GoceptNetRotatedLogrotate
-from batou.lib.service import Service
-from batou.lib.supervisor import Supervisor
-from batou.utils import Address
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
 )
-from collections.abc import Callable, Iterator
+
+from batou.environment import Environment
+from batou.host import (
+    Host,
+)
+from batou.utils import Address
 
 class ConfigString(str):
     """A string value that will be handled as if it was read from a config file."""
@@ -56,18 +31,18 @@ class Attribute:
 class Component:
     namevar: str | None
     workdir: str | None
-    _: Optional[Component]
+    _: Component | None
     changed: bool
     _prepared: bool
-    parent: Union[Component, RootComponent]
+    parent: Component | RootComponent
     sub_components: list[Component]
     timer: Any
 
-    def __add__(self, component: Optional[Component]) -> Component: ...
+    def __add__(self, component: Component | None) -> Component: ...
     def __enter__(self): ...
     def __exit__(self, exc_type: None, exc_value: None, tb: None): ...
     def __init__(self, namevar: str | Path | None = ..., **kw): ...
-    def __or__(self, component: Optional[Component]) -> Component: ...
+    def __or__(self, component: Component | None) -> Component: ...
     def __repr__(self) -> str: ...
     def __setup_event_handlers__(self): ...
     def __trigger_event__(self, event: str, predict_only: bool): ...
@@ -77,14 +52,14 @@ class Component:
     def _breadcrumb(self) -> str: ...
     @property
     def _breadcrumbs(self) -> str: ...
-    def _get_platform(self) -> Optional[Component]: ...
+    def _get_platform(self) -> Component | None: ...
     def _overrides(self, overrides: dict[str, Any] = ...): ...
     def _template_args(
-        self, component: Optional[Component] = ..., **kw
+        self, component: Component | None = ..., **kw
     ) -> dict[str, Any]: ...
     def assert_cmd(self, *args, **kw): ...
     def assert_component_is_current(
-        self, requirements: Union[Component, list[Component]] = ..., **kw
+        self, requirements: Component | list[Component] = ..., **kw
     ): ...
     def assert_file_is_current(
         self, reference: str, requirements: list[str] = ..., **kw
@@ -109,7 +84,7 @@ class Component:
     @property
     def environment(self) -> Environment: ...
     def expand(
-        self, string: str, component: Optional[Component] = ..., **kw
+        self, string: str, component: Component | None = ..., **kw
     ) -> str: ...
     @property
     def host(self) -> Host: ...
@@ -117,7 +92,7 @@ class Component:
     def map(self, path: Path | str) -> str: ...
     @property
     def namevar_for_breadcrumb(self) -> str | None: ...
-    def prepare(self, parent: Union[Component, RootComponent]): ...
+    def prepare(self, parent: Component | RootComponent): ...
     def provide(self, key: str, value: Any): ...
     @property
     def recursive_sub_components(self) -> Iterator[Component]: ...

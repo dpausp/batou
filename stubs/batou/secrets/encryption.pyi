@@ -1,8 +1,3 @@
-from typing import (
-    List,
-    Tuple,
-    Union,
-)
 
 def expect(fd: int, expected: bytes) -> tuple[bool, bytes]: ...
 def get_identities() -> list[str]: ...

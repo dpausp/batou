@@ -1,11 +1,8 @@
-from batou.debug.settings import DebugSettings
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
 )
+
+from batou.debug.settings import DebugSettings
 
 class FileDescriptorTracker:
     enabled: bool
@@ -19,7 +16,7 @@ class FileDescriptorTracker:
     remote_opens: dict[str, int]
     _open_fds: dict[int, tuple[str, str, str]]
     _fd_tracking_logs: list[tuple[str, int, str, str, str]]
-    _instance: Optional[FileDescriptorTracker]
+    _instance: FileDescriptorTracker | None
 
     def __init__(self, environment_name: str, debug_settings: DebugSettings): ...
     def _install_local_hook(self): ...

@@ -1,16 +1,11 @@
+from collections import defaultdict
+from typing import (
+    Any,
+)
+
 from batou.component import RootComponent
 from batou.host import (
     Host,
-    RemoteHost,
-)
-from typing import (
-    Any,
-    DefaultDict,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
 )
 
 class Resources:
@@ -24,7 +19,7 @@ class Resources:
     def get(self, key: str, host: Host | None = ...) -> list[Any]: ...
     def get_dependency_graph(
         self,
-    ) -> DefaultDict[RootComponent, set[RootComponent]]: ...
+    ) -> defaultdict[RootComponent, set[RootComponent]]: ...
     def provide(self, root: RootComponent, key: str, value: Any): ...
     def require(
         self,

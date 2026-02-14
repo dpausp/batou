@@ -1,18 +1,15 @@
-from pydantic_settings import BaseSettings
 from typing import (
     Annotated,
     Any,
-    Dict,
-    List,
     Literal,
-    Optional,
-    Union,
 )
+
+from pydantic_settings import BaseSettings
 
 def _int_to_literal(value: int | str) -> int | str: ...
 def get_debug_settings() -> DebugSettings: ...
 def reset_debug_settings(): ...
-def set_debug_settings(value: Optional[DebugSettings]): ...
+def set_debug_settings(value: DebugSettings | None): ...
 
 class DebugSettings(BaseSettings):
     """Batou expert/debug configuration settings from environment variables."""

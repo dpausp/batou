@@ -1,10 +1,10 @@
-from batou.environment import Environment
-from execnet.gateway_bootstrap import HostNotFound
 from typing import (
     Any,
-    List,
-    Union,
 )
+
+from execnet.gateway_bootstrap import HostNotFound
+
+from batou.environment import Environment
 
 def main(environment: str, platform: None, timeout: None): ...
 

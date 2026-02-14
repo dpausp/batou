@@ -1,19 +1,13 @@
+from pathlib import Path
+
+from configupdater.configupdater import ConfigUpdater
+
 from batou.environment import Environment
 from batou.secrets.encryption import (
     AGEEncryptedFile,
     DiffableAGEEncryptedFile,
     EncryptedFile,
     GPGEncryptedFile,
-)
-from configupdater.configupdater import ConfigUpdater
-from pathlib import Path
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
 )
 
 def process_age_recipients(

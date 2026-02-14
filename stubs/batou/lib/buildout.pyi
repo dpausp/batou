@@ -1,6 +1,5 @@
 from typing import (
     Any,
-    Dict,
 )
 
 def safe_environment(environment: dict[Any, Any]): ...

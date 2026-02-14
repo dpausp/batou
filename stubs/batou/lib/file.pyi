@@ -1,9 +1,7 @@
+from collections.abc import Iterator
 from typing import (
     Any,
-    List,
-    Tuple,
 )
-from collections.abc import Iterator
 
 def convert_mode(string: str) -> int: ...
 def ensure_path_nonexistent(path: str) -> None: ...

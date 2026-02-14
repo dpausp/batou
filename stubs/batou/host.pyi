@@ -1,17 +1,16 @@
+from collections.abc import Callable
+from typing import (
+    Any,
+)
+
+from execnet.xspec import XSpec
+
 from batou.component import RootComponent
 from batou.environment import (
     ConfigSection,
     Environment,
 )
 from batou.utils import BagOfAttributes
-from execnet.xspec import XSpec
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-)
-from collections.abc import Callable
 
 def new_ssh_args(spec: XSpec) -> list[str]: ...
 

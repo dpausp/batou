@@ -1,18 +1,11 @@
+from collections import defaultdict
+from collections.abc import Callable
 from typing import (
     Any,
-    DefaultDict,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
 )
-from collections.abc import Callable, Generator, Iterator
 
 # Type alias for graph structures
-Graph = DefaultDict[Any, set[Any]]
+Graph = defaultdict[Any, set[Any]]
 
 def call_with_optional_args(func: Callable, **kw) -> Any: ...
 def cmd(
@@ -59,13 +52,13 @@ class Address:
     def __lt__(self, other: object) -> bool: ...
     def __str__(self) -> str: ...
     @property
-    def listen(self) -> Optional[NetLoc]: ...
+    def listen(self) -> NetLoc | None: ...
     @listen.setter
-    def listen(self, value: Optional[NetLoc]): ...
+    def listen(self, value: NetLoc | None): ...
     @property
-    def listen_v6(self) -> Optional[NetLoc]: ...
+    def listen_v6(self) -> NetLoc | None: ...
     @listen_v6.setter
-    def listen_v6(self, value: Optional[NetLoc]): ...
+    def listen_v6(self, value: NetLoc | None): ...
 
 class BagOfAttributes(dict):
     def __getattr__(self, key: str) -> Any: ...

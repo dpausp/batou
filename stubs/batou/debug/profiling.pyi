@@ -1,6 +1,3 @@
-from typing import (
-    Dict,
-)
 from collections.abc import Callable
 
 def enable_profiling(host_name: str, profile_lines: int, func: Callable) -> str: ...

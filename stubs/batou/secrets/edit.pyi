@@ -1,5 +1,5 @@
+
 from batou.environment import Environment
-from typing import Optional
 
 class Editor:
     def __init__(
