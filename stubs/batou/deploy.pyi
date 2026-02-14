@@ -21,11 +21,11 @@ def main(
 class Deployment:
     def __init__(
         self,
-        environment: Union[Environment, str],
-        platform: Optional[str],
-        timeout: Optional[int],
+        environment: Environment | str,
+        platform: str | None,
+        timeout: int | None,
         dirty: bool,
-        jobs: Optional[int],
+        jobs: int | None,
         consistency_only: bool = ...,
         predict_only: bool = ...,
         check_and_predict_local: bool = ...,

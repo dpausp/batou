@@ -1,9 +1,9 @@
 from typing import (
     Any,
-    Iterator,
     List,
     Tuple,
 )
+from collections.abc import Iterator
 
 
 def convert_mode(string: str) -> int: ...
@@ -18,7 +18,7 @@ def limited_buffer(
     lead: int,
     separator: str = ...,
     logdir: str = ...
-) -> Tuple[List[str], bool, str]: ...
+) -> tuple[list[str], bool, str]: ...
 
 
 class Content:

@@ -9,9 +9,9 @@ from typing import (
     Union,
 )
 
-def cmd(c: str, *args, **kw) -> Tuple[str, str]: ...
-def find_line_with(prefix: str, output: str) -> Optional[str]: ...
-def hg_cmd(hgcmd: str) -> List[Dict[str, Any]]: ...
+def cmd(c: str, *args, **kw) -> tuple[str, str]: ...
+def find_line_with(prefix: str, output: str) -> str | None: ...
+def hg_cmd(hgcmd: str) -> list[dict[str, Any]]: ...
 
 class Repository:
     environment: Environment
@@ -22,12 +22,12 @@ class Repository:
     def from_environment(
         cls, environment: Environment
     ) -> Union[
-        "RSyncRepository",
-        "RSyncDevRepository",
-        "RSyncExtRepository",
-        "NullRepository",
-        "MercurialRepository",
-        "GitRepository",
+        RSyncRepository,
+        RSyncDevRepository,
+        RSyncExtRepository,
+        NullRepository,
+        MercurialRepository,
+        GitRepository,
     ]: ...
     def update(self, host: RemoteHost): ...
     def verify(self): ...
@@ -36,7 +36,7 @@ class NullRepository(Repository):
     pass
 
 class FilteredRSync:
-    IGNORE_LIST: Tuple[str, ...]
+    IGNORE_LIST: tuple[str, ...]
 
     def __init__(self, *args, **kw): ...
     def add_target(self, gateway: Any, target: str): ...
@@ -48,8 +48,8 @@ class RSyncRepository(Repository):
     def verify(self): ...
 
 class RSyncExtRepository(Repository):
-    IGNORE_LIST: Tuple[str, ...]
-    SYNC_OPTS: List[str]
+    IGNORE_LIST: tuple[str, ...]
+    SYNC_OPTS: list[str]
 
     def update(self, host: RemoteHost): ...
     def verify(self): ...
@@ -59,7 +59,7 @@ class RSyncDevRepository(RSyncExtRepository):
     def verify(self): ...
 
 class MercurialRepository(Repository):
-    root: Optional[str]
+    root: str | None
     branch: str
     subdir: str
 
@@ -76,7 +76,7 @@ class MercurialBundleRepository(MercurialRepository):
     def _ship(self, host: RemoteHost): ...
 
 class GitRepository(Repository):
-    root: Optional[str]
+    root: str | None
     branch: str
     subdir: str
     remote: str

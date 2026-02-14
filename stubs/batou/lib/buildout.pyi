@@ -4,7 +4,7 @@ from typing import (
 )
 
 
-def safe_environment(environment: Dict[Any, Any]): ...
+def safe_environment(environment: dict[Any, Any]): ...
 
 
 class Buildout:

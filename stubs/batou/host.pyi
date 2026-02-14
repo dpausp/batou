@@ -7,40 +7,40 @@ from batou.utils import BagOfAttributes
 from execnet.xspec import XSpec
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Optional,
 )
+from collections.abc import Callable
 
-def new_ssh_args(spec: XSpec) -> List[str]: ...
+def new_ssh_args(spec: XSpec) -> list[str]: ...
 
 class Host:
-    service_user: Optional[str]
-    require_sudo: Optional[bool]
+    service_user: str | None
+    require_sudo: bool | None
     ignore: bool
-    platform: Optional[str]
-    _provisioner: Optional[str]
-    _provision_info: Dict[str, Any]
+    platform: str | None
+    _provisioner: str | None
+    _provision_info: dict[str, Any]
     remap: bool
     _name: str
     aliases: BagOfAttributes
-    data: Dict[str, Any]
-    rpc: "RPCWrapper"
+    data: dict[str, Any]
+    rpc: RPCWrapper
     environment: Environment
 
     def __init__(
         self, name: str, environment: Environment, config: ConfigSection = ...
     ): ...
     @property
-    def components(self) -> Dict[str, RootComponent]: ...
+    def components(self) -> dict[str, RootComponent]: ...
     def deploy_component(self, component: str, predict_only: bool): ...
     @property
     def fqdn(self) -> str: ...
     @property
     def name(self) -> str: ...
     @property
-    def provisioner(self) -> Optional[Any]: ...
+    def provisioner(self) -> Any | None: ...
     def root_dependencies(self): ...
     def summarize(self): ...
 
@@ -61,7 +61,7 @@ class RPCWrapper:
     def __init__(self, host: Host): ...
 
 class RemoteHost(Host):
-    gateway: Optional[Any]
+    gateway: Any | None
     channel: Any
     remote_repository: Any
     remote_base: str
