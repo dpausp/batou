@@ -1,3 +1,4 @@
+from batou.environment import Environment
 from batou.secrets.encryption import (
     AGEEncryptedFile,
     DiffableAGEEncryptedFile,
@@ -5,7 +6,7 @@ from batou.secrets.encryption import (
     GPGEncryptedFile,
 )
 from configupdater.configupdater import ConfigUpdater
-from pathlib._local import PosixPath
+from pathlib import Path
 from typing import (
     Dict,
     List,
@@ -15,9 +16,9 @@ from typing import (
     Union,
 )
 
-
-def process_age_recipients(members: List[str], environment_path: PosixPath) -> Tuple[List[str], bool]: ...
-
+def process_age_recipients(
+    members: List[str], environment_path: Path
+) -> Tuple[List[str], bool]: ...
 
 class AGESecretProvider:
     def __init__(self, environment: Environment): ...
@@ -26,14 +27,12 @@ class AGESecretProvider:
     def iter_secret_files(self, writeable: bool = ...) -> Dict[str, EncryptedFile]: ...
     def write_config(self, content: bytes, force_reencrypt: bool = ...): ...
 
-
 class ConfigFileSecretProvider:
     def _get_recipients(self) -> List[str]: ...
     @property
     def config(self) -> ConfigUpdater: ...
     def edit(
-        self,
-        edit_file: Optional[str] = ...
+        self, edit_file: Optional[str] = ...
     ) -> Union[GPGEncryptedFile, AGEEncryptedFile, DiffableAGEEncryptedFile]: ...
     def read(self) -> SecretBlob: ...
     def read_secret_files(self) -> Dict[str, bytes]: ...
@@ -41,10 +40,8 @@ class ConfigFileSecretProvider:
     def write_file(self, file: EncryptedFile, content: bytes): ...
     def write_secret_files(self, secret_files: Dict[str, bytes]): ...
 
-
 class DiffableAGESecretProvider:
     def __init__(self, environment: Environment): ...
-
 
 class GPGSecretProvider:
     def __init__(self, environment: Environment): ...
@@ -53,11 +50,9 @@ class GPGSecretProvider:
     def iter_secret_files(self, writeable: bool = ...) -> Dict[str, EncryptedFile]: ...
     def write_config(self, content: bytes, force_reencrypt: bool = ...): ...
 
-
 class NoSecretProvider:
     def __init__(self, environment: Environment): ...
     def read(self) -> SecretBlob: ...
-
 
 class SecretBlob:
     def __init__(
@@ -65,9 +60,8 @@ class SecretBlob:
         host_data: Dict[str, Dict[str, str]],
         component_overrides: Dict[str, Dict[str, str]],
         secret_data: Set[str],
-        secret_files: Dict[str, str]
+        secret_files: Dict[str, str],
     ): ...
-
 
 class SecretProvider:
     def __init__(self, environment: Environment): ...

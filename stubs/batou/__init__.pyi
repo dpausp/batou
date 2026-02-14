@@ -1,12 +1,13 @@
 from batou.component import (
+    Component,
     ComponentDefinition,
     RootComponent,
 )
 from batou.environment import Environment
-from batou.lib.cron import CronTab
 from batou.utils import CycleError
 from traceback import StackSummary
 from typing import (
+    Any,
     Dict,
     List,
     Optional,
@@ -15,155 +16,254 @@ from typing import (
     Union,
 )
 
-
-def prepare_error(error: Union[KeyError, ValueError, IndexError]) -> str: ...
-
-
-def prepare_traceback(tb: None) -> str: ...
-
-
+def prepare_error(error: Exception) -> str: ...
+def prepare_traceback(tb: Any) -> str: ...
 def prepare_traceback_from_stack(stack: StackSummary) -> str: ...
 
+class ReportingException(Exception):
+    affected_hostname: Optional[str]
 
-class ComponentLoadingError:
-    @classmethod
-    def from_context(cls, filename: str, exception: ValueError, tb: None) -> ComponentLoadingError: ...
     def report(self): ...
-
-
-class ConfigurationError:
-    def __str__(self) -> str: ...
+    def should_merge(self, other: "ReportingException") -> bool: ...
     @classmethod
-    def from_context(cls, message: str, component: Optional[CronTab] = ...) -> ConfigurationError: ...
-    def report(self): ...
-    @property
-    def sort_key(self) -> Tuple[int, str]: ...
+    def merge(
+        cls, selfs: List["ReportingException"]
+    ) -> Tuple["ReportingException", Optional[Set[str]]]: ...
 
+class AgeCallError(ReportingException):
+    command: str
+    exitcode: str
+    output: str
 
-class ConversionError:
-    @property
-    def sort_key(self) -> Tuple[int, str, str, str]: ...
-
-
-class CycleErrorDetected:
-    @classmethod
-    def from_context(cls, error: Union[ValueError, CycleError, str]) -> CycleErrorDetected: ...
-
-
-class DuplicateComponent:
     @classmethod
     def from_context(
-        cls,
-        a: ComponentDefinition,
-        b: ComponentDefinition
-    ) -> DuplicateComponent: ...
+        cls, command: List[str], exitcode: int, output: bytes
+    ) -> "AgeCallError": ...
+    def report(self): ...
+
+class AttributeExpansionError(ReportingException):
+    component_breadcrumbs: str
+    value_repr: str
+    error_str: str
+    key: str
+
+    @property
+    def sort_key(self) -> Tuple[int, str, str, str]: ...
+    @classmethod
+    def from_context(
+        cls, component: Component, key: str, value: Any, error: Exception
+    ) -> "AttributeExpansionError": ...
+
+class ComponentLoadingError(ReportingException):
+    filename: str
+    exception_str: str
+    traceback: str
+
+    @classmethod
+    def from_context(
+        cls, filename: str, exception: Exception, tb: Any
+    ) -> "ComponentLoadingError": ...
+    def report(self): ...
+
+class ComponentUsageError(ReportingException):
+    message: str
+    traceback: str
+
+    @property
+    def sort_key(self) -> Tuple[int, str]: ...
+    @classmethod
+    def from_context(cls, message: str) -> "ComponentUsageError": ...
+
+class ComponentWithUpdateWithoutVerify(ReportingException):
+    components: List[str]
+    roots: List[str]
+
+    @classmethod
+    def from_context(
+        cls, components: List[Component], roots: List[RootComponent]
+    ) -> "ComponentWithUpdateWithoutVerify": ...
+
+class ConfigurationError(ReportingException):
+    message: str
+    has_component: bool
+    component_root_name: Optional[str]
+
+    def __str__(self) -> str: ...
+    @classmethod
+    def from_context(
+        cls, message: str, component: Optional[Component] = ...
+    ) -> "ConfigurationError": ...
+    def report(self): ...
     @property
     def sort_key(self) -> Tuple[int, str]: ...
 
+class ConversionError(ConfigurationError):
+    component_breadcrumbs: str
+    conversion_name: str
+    value_repr: str
+    error_str: str
+    key: str
 
-class DuplicateHostError:
-    @classmethod
-    def from_context(cls, hostname: str) -> DuplicateHostError: ...
     @property
-    def sort_key(self): ...
+    def sort_key(self) -> Tuple[int, str, str, str, str]: ...
+    # Note: from_context has different signature but this is intentional
 
+class CycleErrorDetected(ConfigurationError):
+    error_str: str
+    # Note: from_context has different signature but this is intentional
 
-class DuplicateHostMapping:
-    @classmethod
-    def from_context(cls, hostname: str, a: str, b: str) -> DuplicateHostMapping: ...
+class DeploymentError(ReportingException):
+    def report(self): ...
+
+class DuplicateComponent(ConfigurationError):
+    a_name: str
+    a_filename: str
+    b_filename: str
+
+    @property
+    def sort_key(self) -> Tuple[int, str]: ...
+    # Note: from_context has different signature but this is intentional
+
+class DuplicateHostError(ConfigurationError):
+    @property
+    def sort_key(self) -> Tuple[int, str]: ...
+    # Note: from_context has different signature but this is intentional
+
+class DuplicateHostMapping(ConfigurationError):
+    a: str
+    b: str
+
     @property
     def sort_key(self) -> Tuple[int, str, str, str]: ...
+    # Note: from_context has different signature but this is intentional
 
+class DuplicateOverride(ConfigurationError):
+    component_name: str
+    attribute: str
+    # Note: from_context has different signature but this is intentional
 
-class DuplicateOverride:
+class DuplicateSecretsComponentAttribute(ConfigurationError):
+    component_name: str
+    attribute: str
+    # Note: from_context has different signature but this is intentional
+
+class FileLockedError(ReportingException):
+    filename: str
+
     @classmethod
-    def from_context(cls, component_name: str, attribute: str) -> DuplicateOverride: ...
+    def from_context(cls, filename: str) -> "FileLockedError": ...
     def report(self): ...
 
+class GetAddressInfoError(ReportingException):
+    hostname: str
+    error: str
 
-class GPGCallError:
     @classmethod
-    def from_context(cls, command: List[str], exitcode: int, output: bytes) -> GPGCallError: ...
+    def from_context(cls, hostname: str, error: str) -> "GetAddressInfoError": ...
 
+class GPGCallError(ReportingException):
+    command: str
+    exitcode: str
+    output: str
 
-class InvalidIPAddressError:
     @classmethod
-    def from_context(cls, address: str) -> InvalidIPAddressError: ...
-
-
-class MissingComponent:
-    @classmethod
-    def from_context(cls, component_name: str, hostname: str) -> MissingComponent: ...
+    def from_context(
+        cls, command: List[str], exitcode: int, output: bytes
+    ) -> "GPGCallError": ...
     def report(self): ...
 
+class IPAddressConfigurationError(ConfigurationError):
+    address: Any
+    kind: int
+    # Note: from_context has different signature but this is intentional
 
-class MissingEnvironment:
-    @classmethod
-    def from_context(cls, environment: Environment) -> MissingEnvironment: ...
+class InvalidIPAddressError(ConfigurationError):
+    address: str
+    # Note: from_context has different signature but this is intentional
 
+class MissingComponent(ConfigurationError):
+    component_name: str
+    # Note: from_context has different signature but this is intentional
 
-class MissingOverrideAttributes:
+class MissingEnvironment(ConfigurationError):
+    environment_name: str
+    # Note: from_context has different signature but this is intentional
+
+class MissingOverrideAttributes(ConfigurationError):
+    component_breadcrumbs: str
+    attributes: List[str]
+
     @property
     def sort_key(self) -> Tuple[int, str, str]: ...
+    # Note: from_context has different signature but this is intentional
 
+class NonConvergingWorkingSet(ConfigurationError):
+    roots_len: int
+    root_names: str
+    # Note: from_context has different signature but this is intentional
 
-class NonConvergingWorkingSet:
+class RepositoryDifferentError(DeploymentError):
+    local: str
+    remote: str
+    # Note: from_context has different signature but this is intentional
+
+class SilentConfigurationError(Exception):
+    pass
+
+class SuperfluousComponentSection(ConfigurationError):
+    component_name: str
+    # Note: from_context has different signature but this is intentional
+
+class SuperfluousSecretsSection(ConfigurationError):
+    component_name: str
+
+    def __str__(self) -> str: ...
+    # Note: from_context has different signature but this is intentional
+
+class SuperfluousSection(ConfigurationError):
+    section: str
+    # Note: from_context has different signature but this is intentional
+
+class TemplatingError(ReportingException):
+    exception_str: str
+    template_identifier: str
+
     @classmethod
     def from_context(
-        cls,
-        roots: Union[List[RootComponent], Set[RootComponent]]
-    ) -> NonConvergingWorkingSet: ...
+        cls, exception: Exception, template_identifier: str
+    ) -> "TemplatingError": ...
 
+class UnknownComponentConfigurationError(ConfigurationError):
+    root_name: str
+    root_host_name: str
+    exception_repr: str
+    traceback: str
 
-class RepositoryDifferentError:
-    @classmethod
-    def from_context(cls, local: str, remote: str) -> RepositoryDifferentError: ...
-
-
-class SuperfluousComponentSection:
-    @classmethod
-    def from_context(cls, component_name: str) -> SuperfluousComponentSection: ...
-    def report(self): ...
-
-
-class SuperfluousSecretsSection:
-    def __str__(self) -> str: ...
-    @classmethod
-    def from_context(cls, component_name: str) -> SuperfluousSecretsSection: ...
-    def report(self): ...
-
-
-class SuperfluousSection:
-    @classmethod
-    def from_context(cls, section: str) -> SuperfluousSection: ...
-    def report(self): ...
-
-
-class UnknownComponentConfigurationError:
     @property
     def sort_key(self) -> Tuple[int, str, int]: ...
+    # Note: from_context has different signature but this is intentional
 
+class UnknownHostSecretsSection(ConfigurationError):
+    hostname: str
+    # Note: from_context has different signature but this is intentional
 
-class UnknownHostSecretsSection:
-    @classmethod
-    def from_context(cls, hostname: str) -> UnknownHostSecretsSection: ...
+class UnsatisfiedResources(ConfigurationError):
+    unsatisfied_resources: List[Tuple[str, Optional[str], List[str]]]
+    # Note: from_context has different signature but this is intentional
 
+class UnusedComponentsInitialized(ConfigurationError):
+    unused_components: List[str]
+    breadcrumbs: List[List[str]]
+    init_file_paths: List[str]
+    init_line_numbers: List[int]
+    root_name: str
 
-class UnsatisfiedResources:
-    @classmethod
-    def from_context(
-        cls,
-        resources: Union[Dict[Tuple[str, None], List[RootComponent]], Dict[Tuple[str, None], Set[RootComponent]], Dict[Union[Tuple[str, str], Tuple[str, None]], Set[RootComponent]], Dict[Tuple[str, str], Set[RootComponent]]]
-    ) -> UnsatisfiedResources: ...
-
-
-class UnusedComponentsInitialized:
     def __str__(self) -> str: ...
+    # Note: from_context has different signature but this is intentional
 
+class UnusedResources(ConfigurationError):
+    unused_resources: List[Tuple[str, str, str]]
+    # Note: from_context has different signature but this is intentional
 
-class UnusedResources:
-    @classmethod
-    def from_context(
-        cls,
-        resources: Dict[str, Union[Dict[RootComponent, int], Dict[RootComponent, List[int]]]]
-    ) -> UnusedResources: ...
+class UpdateNeeded(AssertionError):
+    pass

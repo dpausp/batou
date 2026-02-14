@@ -1,17 +1,33 @@
+from pydantic_settings import BaseSettings
 from typing import (
+    Annotated,
     Any,
     Dict,
     List,
+    Literal,
+    Optional,
     Union,
 )
 
+def _int_to_literal(value: Union[int, str]) -> Union[int, str]: ...
+def get_debug_settings() -> "DebugSettings": ...
+def reset_debug_settings(): ...
+def set_debug_settings(value: Optional["DebugSettings"]): ...
 
-def _int_to_literal(value: Union[int, str]) -> int: ...
+class DebugSettings(BaseSettings):
+    """Batou expert/debug configuration settings from environment variables."""
 
+    # Diff control
+    show_diff: Literal["full", "summary", "none"]
+    show_secret_diffs: bool
 
-def get_debug_settings() -> DebugSettings: ...
+    # FD tracking
+    track_fds: Annotated[Literal[0, 1, 2], Any]
+    fd_output_dir: str
 
+    # Profiling
+    profile: bool
+    profile_lines: int
 
-class DebugSettings:
     def describe(self) -> List[Dict[str, Any]]: ...
     def show(self): ...
