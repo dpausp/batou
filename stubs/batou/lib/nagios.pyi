@@ -1,6 +1,5 @@
 def ServiceCheck(description: str, **kw) -> NRPEService: ...
 
-
 class NRPEService:
     @property
     def check_command(self) -> str: ...
@@ -8,10 +7,8 @@ class NRPEService:
     @property
     def nrpe_command(self) -> str: ...
 
-
 class NagiosServer:
     def configure(self): ...
-
 
 class Service:
     @property

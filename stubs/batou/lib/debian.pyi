@@ -1,6 +1,5 @@
 class LogrotateCronjob:
     def configure(self): ...
 
-
 class RebootCronjob:
     def configure(self): ...

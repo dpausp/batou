@@ -4,7 +4,6 @@ from typing import (
     Union,
 )
 
-
 def main(
     environment: str,
     platform: None,
@@ -14,9 +13,8 @@ def main(
     predict_only: bool,
     check_and_predict_local: bool,
     jobs: None,
-    provision_rebuild: bool
+    provision_rebuild: bool,
 ): ...
-
 
 class Deployment:
     def __init__(
@@ -29,7 +27,7 @@ class Deployment:
         consistency_only: bool = ...,
         predict_only: bool = ...,
         check_and_predict_local: bool = ...,
-        provision_rebuild: bool = ...
+        provision_rebuild: bool = ...,
     ): ...
     def _connections(self): ...
     def connect(self): ...

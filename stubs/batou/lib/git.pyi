@@ -4,12 +4,8 @@ from typing import (
     Union,
 )
 
-
 def ensure_empty_directory(path: str): ...
-
-
 def exactly_one(*args) -> bool: ...
-
 
 class Clone:
     def configure(self): ...

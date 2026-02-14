@@ -3,9 +3,7 @@ from typing import (
     Dict,
 )
 
-
 def safe_environment(environment: dict[Any, Any]): ...
-
 
 class Buildout:
     def configure(self): ...

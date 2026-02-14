@@ -4,7 +4,6 @@ from typing import (
     Union,
 )
 
-
 class Clone:
     def configure(self): ...
     def current_branch(self) -> str: ...
