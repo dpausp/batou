@@ -1,0 +1,10 @@
+class CronJob:
+    def format(self) -> str: ...
+
+
+class CronTab:
+    def configure(self): ...
+
+
+class PurgeCronTab:
+    def configure(self): ...

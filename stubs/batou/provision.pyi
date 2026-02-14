@@ -1,0 +1,11 @@
+from typing import Dict
+
+
+class FCDevVM:
+    def __init__(self, name: str): ...
+    @classmethod
+    def from_config_section(cls, name: str, section: Dict[str, str]) -> FCDevVM: ...
+
+
+class Provisioner:
+    def __init__(self, name: str): ...

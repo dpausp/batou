@@ -1,0 +1,13 @@
+from typing import (
+    Callable,
+    Dict,
+)
+
+
+def enable_profiling(host_name: str, profile_lines: int, func: Callable) -> str: ...
+
+
+class RemoteProfiler:
+    def __init__(self, host_name: str, profile_lines: int = ..., output_dir: str = ...): ...
+    def get_profiling_results(self) -> Dict[str, str]: ...
+    def profile_execution(self, func: Callable) -> str: ...

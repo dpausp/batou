@@ -1,0 +1,13 @@
+from typing import (
+    Any,
+    Dict,
+)
+
+
+def safe_environment(environment: Dict[Any, Any]): ...
+
+
+class Buildout:
+    def configure(self): ...
+    def update(self): ...
+    def verify(self): ...
