@@ -17,7 +17,14 @@ class Repository:
     @classmethod
     def from_environment(
         cls, environment: Environment
-    ) -> RSyncRepository | RSyncDevRepository | RSyncExtRepository | NullRepository | MercurialRepository | GitRepository: ...
+    ) -> (
+        RSyncRepository
+        | RSyncDevRepository
+        | RSyncExtRepository
+        | NullRepository
+        | MercurialRepository
+        | GitRepository
+    ): ...
     def update(self, host: RemoteHost): ...
     def verify(self): ...
 

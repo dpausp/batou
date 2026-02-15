@@ -1,4 +1,3 @@
-
 class FCDevVM:
     def __init__(self, name: str): ...
     @classmethod

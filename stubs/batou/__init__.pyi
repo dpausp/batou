@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from traceback import StackSummary
-from typing import (
-    Any,
-)
+from typing import Any
 
 from batou.component import (
     Component,
-    RootComponent,
 )
+
+__version__: str
+output: Any  # from _output module
 
 def prepare_error(error: Exception) -> str: ...
 def prepare_traceback(tb: Any) -> str: ...
@@ -33,18 +35,16 @@ class AgeCallError(ReportingException):
     ) -> AgeCallError: ...
     def report(self): ...
 
-class AttributeExpansionError(ReportingException):
+class AttributeExpansionError(ConfigurationError):
     component_breadcrumbs: str
     value_repr: str
+    error: str
     error_str: str
     key: str
 
     @property
     def sort_key(self) -> tuple[int, str, str, str]: ...
-    @classmethod
-    def from_context(
-        cls, component: Component, key: str, value: Any, error: Exception
-    ) -> AttributeExpansionError: ...
+    # Note: from_context signature differs from parent but this is intentional
 
 class ComponentLoadingError(ReportingException):
     filename: str
@@ -57,23 +57,19 @@ class ComponentLoadingError(ReportingException):
     ) -> ComponentLoadingError: ...
     def report(self): ...
 
-class ComponentUsageError(ReportingException):
+class ComponentUsageError(ConfigurationError):
     message: str
     traceback: str
 
     @property
     def sort_key(self) -> tuple[int, str]: ...
-    @classmethod
-    def from_context(cls, message: str) -> ComponentUsageError: ...
+    # Note: from_context signature differs from parent but this is intentional
 
-class ComponentWithUpdateWithoutVerify(ReportingException):
+class ComponentWithUpdateWithoutVerify(ConfigurationError):
     components: list[str]
     roots: list[str]
 
-    @classmethod
-    def from_context(
-        cls, components: list[Component], roots: list[RootComponent]
-    ) -> ComponentWithUpdateWithoutVerify: ...
+    # Note: from_context signature differs from parent but this is intentional
 
 class ConfigurationError(ReportingException):
     message: str

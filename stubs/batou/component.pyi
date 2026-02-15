@@ -1,23 +1,46 @@
+from __future__ import annotations
+
+import contextlib
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import (
-    Any,
-)
+from typing import Any
+from weakref import WeakKeyDictionary
 
 from batou.environment import Environment
-from batou.host import (
-    Host,
-)
-from batou.utils import Address
+from batou.host import Host
+from batou.utils import Timer
+
+# Sentinel object for no default
+NO_DEFAULT: object
 
 class ConfigString(str):
     """A string value that will be handled as if it was read from a config file."""
 
+class ComponentDefinition:
+    filename: str
+    name: str
+    factory: Callable[[], Component]
+    defdir: str
+
+    def __init__(
+        self,
+        factory: Callable[[], Component],
+        filename: str | None = ...,
+        defdir: str | None = ...,
+    ): ...
+
 class Attribute:
+    conversion: Callable | type | str
+    default: Any
+    expand: bool
+    map: bool
+    instances: WeakKeyDictionary
+    names: dict[type, str]
+
     def __get__(self, obj: Any | None, objtype: type | None = ...) -> Any: ...
     def __init__(
         self,
-        conversion: type[int] | str | type[Address] | type[str] | Callable = ...,
+        conversion: Callable | type | str = ...,
         default: Any = ...,
         expand: bool = ...,
         map: bool = ...,
@@ -36,7 +59,14 @@ class Component:
     _prepared: bool
     parent: Component | RootComponent
     sub_components: list[Component]
-    timer: Any
+    timer: Timer
+    _instances: list[Component]
+    _template_engine: Any
+    _platform_component: Component | None
+    _event_handlers: dict[str, list[Callable]]
+    _init_file_path: str
+    _init_line_number: int
+    _init_breadcrumbs: list[str]
 
     def __add__(self, component: Component | None) -> Component: ...
     def __enter__(self): ...
@@ -66,7 +96,7 @@ class Component:
     ): ...
     def assert_no_changes(self): ...
     def assert_no_subcomponent_changes(self): ...
-    def chdir(self, path: str): ...
+    def chdir(self, path: str) -> contextlib.AbstractContextManager[None]: ...
     def checksum(self, value: bytes | None = ...) -> str: ...
     def cmd(
         self,
@@ -83,12 +113,11 @@ class Component:
     def deploy(self, predict_only: bool = ...): ...
     @property
     def environment(self) -> Environment: ...
-    def expand(
-        self, string: str, component: Component | None = ..., **kw
-    ) -> str: ...
+    def expand(self, string: str, component: Component | None = ..., **kw) -> str: ...
     @property
     def host(self) -> Host: ...
     def last_updated(self, **kw): ...
+    def log(self, msg: str, *args) -> None: ...
     def map(self, path: Path | str) -> str: ...
     @property
     def namevar_for_breadcrumb(self) -> str | None: ...
@@ -114,6 +143,10 @@ class Component:
     ) -> Any: ...
     @property
     def root(self) -> RootComponent: ...
+    def template(self, filename: str, component: Component | None = ...) -> str: ...
+    def touch(self, path: str) -> None: ...
+    def update(self) -> None: ...
+    def verify(self) -> None: ...
 
 class HookComponent(Component):
     key: str
@@ -151,3 +184,9 @@ class RootComponent:
     def log(self, msg: str, *args): ...
     def log_finish_configure(self): ...
     def prepare(self): ...
+
+def platform(name: str, component: type[Component]) -> Callable[[type], type]: ...
+def handle_event(event: str, scope: str = ...) -> Callable[[Callable], Callable]: ...
+def check_event_scope(scope: str, source: Component, target: Component) -> bool: ...
+def load_components_from_file(filename: str) -> dict[str, ComponentDefinition]: ...
+def batou_generated_header(component: Component) -> str: ...

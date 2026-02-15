@@ -1,4 +1,3 @@
-
 from batou.environment import Environment
 
 class Editor:
