@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from configupdater.configupdater import ConfigUpdater
 
@@ -58,7 +59,10 @@ class SecretBlob:
     ): ...
 
 class SecretProvider:
+    secret_provider_str: Literal["gpg", "age", "age-diffable", "none"]
     def __init__(self, environment: Environment): ...
     @classmethod
-    def from_environment(cls, environment: Environment) -> SecretProvider: ...
+    def from_environment(
+        cls, environment: Environment
+    ) -> SecretProvider: ...  # extension: Literal[".gpg", ".age", ".age-diffable"]
     def inject_secrets(self): ...

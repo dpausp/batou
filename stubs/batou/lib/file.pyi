@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, Literal
 
 from batou.component import Component
 
@@ -17,7 +15,7 @@ def limited_buffer(
 
 class File(Component):
     namevar: str
-    ensure: str
+    ensure: Literal["file", "directory", "symlink"]
     content: str | None
     source: str
     is_template: bool
@@ -113,7 +111,11 @@ class ManagedContentBase(FileComponent):
     def configure(self): ...
     def render(self): ...
     def update(self): ...
-    def verify(self, predicting: bool = ...): ...
+    def verify(
+        self,
+        predicting: bool = ...,
+        show_diff: Literal["full", "summary", "none"] = ...,
+    ): ...
 
 class Content(ManagedContentBase):
     is_template: bool

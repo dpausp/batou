@@ -3,6 +3,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import (
     Any,
+    Literal,
 )
 
 from batou.component import (
@@ -50,8 +51,20 @@ class Environment:
     require_sudo: bool | None
     host_domain: str | None
     branch: str | None
-    connect_method: str | None
-    update_method: str | None
+    connect_method: Literal["local", "ssh", "vagrant", "kitchen"] | None
+    update_method: (
+        Literal[
+            "rsync",
+            "rsync-ext",
+            "rsync-dev",
+            "hg-bundle",
+            "hg-pull",
+            "git-bundle",
+            "git-pull",
+            "local",
+        ]
+        | None
+    )
     vfs_sandbox: Any
     target_directory: str | None
     jobs: int | None

@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 import subprocess
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from typing import Any
+from typing import Any, Literal
 
 # Type alias for graph structures
 Graph = defaultdict[Any, set[Any]]
@@ -52,15 +50,15 @@ def topological_sort(graph: Graph) -> list[Any]: ...
 
 class Address:
     connect: NetLoc
-    require_v4: bool | str
-    require_v6: bool | str
+    require_v4: Literal[True, False, "optional"]
+    require_v6: Literal[True, False, "optional"]
 
     def __init__(
         self,
         connect_address: str,
         port: int | str | None = ...,
-        require_v4: bool | str | object = ...,
-        require_v6: bool | str | object = ...,
+        require_v4: Literal[True, False, "optional"] = ...,
+        require_v6: Literal[True, False, "optional"] = ...,
     ): ...
     def __eq__(self, other: object) -> bool: ...
     def __lt__(self, other: object) -> bool: ...

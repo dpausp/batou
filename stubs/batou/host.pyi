@@ -1,7 +1,5 @@
 from collections.abc import Callable
-from typing import (
-    Any,
-)
+from typing import Any
 
 from execnet.xspec import XSpec
 
@@ -12,7 +10,9 @@ from batou.environment import (
 )
 from batou.utils import BagOfAttributes
 
-def new_ssh_args(spec: XSpec) -> list[str]: ...
+def new_ssh_args(
+    spec: XSpec,
+) -> list[str]: ...  # spec.type is Literal["vagrant", "kitchen", "ssh"]
 
 class Host:
     service_user: str | None

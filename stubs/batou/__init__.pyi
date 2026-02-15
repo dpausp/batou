@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from traceback import StackSummary
 from typing import Any
