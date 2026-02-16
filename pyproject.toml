@@ -38,10 +38,12 @@ dependencies = [
     "py>=1.11.0",
     "pyyaml",
     "remote-pdb",
+    "rtoml>=0.11.0",
 ]
 
 [project.scripts]
 batou = "batou.main:main"
+batou-migrate-toml = "batou.migrate_toml:main"
 
 [project.entry-points."zc.buildout"]
 requirements = "batou.buildout:Requirements"

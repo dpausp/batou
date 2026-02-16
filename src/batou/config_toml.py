@@ -1,0 +1,316 @@
+"""TOML + Pydantic configuration for batou environments.
+
+This module provides type-safe configuration loading with excellent error messages.
+It converts TOML to the legacy INI-style format for backwards compatibility.
+
+TOML Format Examples:
+
+    # Simple host mapping (like INI)
+    [hosts]
+    localhost = "hello"
+    host2 = "myapp"
+
+    # Detailed host config
+    [host.localhost]
+    components = ["hello", "other"]
+    data-ram = 4
+    data-roles = ["web", "db"]
+
+    # Component overrides
+    [components.myapp]
+    database_host = "db.example.com"
+    database_port = 5432
+"""
+
+from typing import Annotated, Any, Literal
+
+import rtoml
+from pydantic import BaseModel, BeforeValidator, Field, ValidationError, field_validator
+
+
+class EnvironmentSettings(BaseModel):
+    """[environment] section - global environment settings."""
+
+    model_config = {"extra": "forbid"}
+
+    host_domain: str | None = None
+    platform: str | None = None
+    service_user: str | None = None
+    update_method: Literal[
+        "rsync", "rsync-ext", "git-bundle", "git-pull", "hg-bundle", "hg-pull"
+    ] = "rsync"
+    connect_method: Literal["local", "ssh", "vagrant", "kitchen"] = "ssh"
+    branch: str | None = None
+    timeout: int = 120
+    target_directory: str | None = None
+    require_sudo: bool | None = None
+    jobs: int = 1
+    repository_url: str | None = None
+    repository_root: str | None = None
+
+    @field_validator("timeout")
+    @classmethod
+    def validate_timeout(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("timeout must be a positive integer")
+        return v
+
+
+class HostConfig(BaseModel):
+    """Detailed host configuration - [host.hostname] sections."""
+
+    model_config = {"extra": "allow"}  # Allow data-* attributes
+
+    components: list[str] = []
+    platform: str | None = None
+
+    def get_data_attributes(self) -> dict[str, str]:
+        """Get all data-* attributes for legacy format."""
+        result = {}
+        for key, value in self.model_dump(
+            exclude={"components", "platform"}, exclude_none=True
+        ).items():
+            result[key] = _value_to_legacy_string(value)
+        return result
+
+
+def _normalize_hosts(v: dict[str, Any]) -> dict[str, HostConfig]:
+    """Normalize hosts from TOML format to HostConfig.
+
+    Supports two formats:
+    1. Simple: {"hostname": "component_name"} -> {"hostname": HostConfig(components=["component_name"])}
+    2. Detailed: {"hostname": {"components": [...]}} -> preserved
+    """
+    result = {}
+    for hostname, value in v.items():
+        if isinstance(value, str):
+            # Simple format: hostname = "component"
+            result[hostname] = HostConfig(components=[value])
+        elif isinstance(value, dict):
+            # Detailed format
+            result[hostname] = HostConfig.model_validate(value)
+        else:
+            raise ValueError(
+                f"Invalid host config for '{hostname}': expected string or dict"
+            )
+    return result
+
+
+# Annotated type for flexible hosts parsing
+HostsDict = Annotated[dict[str, HostConfig], BeforeValidator(_normalize_hosts)]
+
+
+class EnvironmentConfig(BaseModel):
+    """Complete environment configuration from TOML."""
+
+    model_config = {"extra": "forbid"}
+
+    environment: EnvironmentSettings = Field(default_factory=EnvironmentSettings)
+    hosts: HostsDict = {}
+    host: dict[str, HostConfig] = {}  # Alternative: [host.hostname] sections
+    components: dict[str, dict[str, Any]] = {}
+    resolver: dict[str, str | list[str]] = {}
+    vfs: dict[str, str] | None = None
+    provisioners: dict[str, dict[str, Any]] = {}
+
+    def get_all_hosts(self) -> dict[str, HostConfig]:
+        """Merge hosts and host sections."""
+        result = dict(self.hosts)
+        result.update(self.host)
+        return result
+
+
+class ConfigLoadError(Exception):
+    """Error loading TOML configuration."""
+
+    def __init__(self, message: str, details: str | None = None):
+        self.message = message
+        self.details = details
+        super().__init__(message)
+
+    def __str__(self) -> str:
+        if self.details:
+            return f"{self.message}\n{self.details}"
+        return self.message
+
+
+def load_toml_config(content: str, source: str = "<toml>") -> EnvironmentConfig:
+    """Load and validate TOML configuration.
+
+    Args:
+        content: TOML string content
+        source: Source identifier for error messages
+
+    Returns:
+        Validated EnvironmentConfig
+
+    Raises:
+        ConfigLoadError: If TOML is invalid or validation fails
+    """
+    # Parse TOML
+    try:
+        data = rtoml.loads(content)
+    except Exception as e:
+        raise ConfigLoadError(f"Invalid TOML syntax in {source}", str(e))
+
+    # Validate with Pydantic
+    try:
+        return EnvironmentConfig.model_validate(data)
+    except ValidationError as e:
+        errors = _format_validation_errors(e)
+        raise ConfigLoadError(f"Configuration validation failed in {source}", errors)
+
+
+def _format_validation_errors(e: ValidationError) -> str:
+    """Format Pydantic validation errors for display."""
+    lines = []
+    for error in e.errors():
+        loc = ".".join(str(x) for x in error["loc"])
+        msg = error["msg"]
+        lines.append(f"  {loc}: {msg}")
+    return "\n".join(lines)
+
+
+def to_legacy_format(config: EnvironmentConfig) -> dict[str, dict[str, str]]:
+    """Convert Pydantic config to legacy INI-style format.
+
+    Returns a dict compatible with the Config class interface:
+    {
+        "environment": {"host_domain": "...", ...},
+        "hosts": {"host1": "component1", ...},
+        "component:myapp": {"setting": "value", ...},
+        "host:host1": {"data-ram": "4", "components": "comp1\\ncomp2"},
+        "resolver": {"hostname": "1.2.3.4\\n::1"},
+    }
+    """
+    legacy: dict[str, dict[str, str]] = {}
+
+    # [environment]
+    env_dict = config.environment.model_dump(exclude_none=True)
+    if env_dict:
+        legacy["environment"] = {k: str(v) for k, v in env_dict.items()}
+
+    # Get merged hosts
+    all_hosts = config.get_all_hosts()
+
+    # [hosts] - simple hostname -> component mapping (first component only)
+    hosts_section: dict[str, str] = {}
+    for hostname, hostcfg in all_hosts.items():
+        if hostcfg.components:
+            hosts_section[hostname] = hostcfg.components[0]
+    if hosts_section:
+        legacy["hosts"] = hosts_section
+
+    # [host:hostname] - detailed host config
+    for hostname, hostcfg in all_hosts.items():
+        host_section: dict[str, str] = {}
+
+        # Components as newline-separated string
+        if hostcfg.components:
+            host_section["components"] = "\n".join(hostcfg.components)
+
+        # Platform if set
+        if hostcfg.platform:
+            host_section["platform"] = hostcfg.platform
+
+        # All other fields (including data-*)
+        for key, value in hostcfg.get_data_attributes().items():
+            host_section[key] = value
+
+        if (
+            len(host_section) > 1
+            or "components" not in host_section
+            or len(hostcfg.components) > 1
+        ):
+            # Only add [host:xxx] section if there's more than just the first component
+            legacy[f"host:{hostname}"] = host_section
+
+    # [component:name] - component overrides
+    for comp_name, comp_config in config.components.items():
+        if comp_config:
+            legacy[f"component:{comp_name}"] = {
+                k: _value_to_legacy_string(v) for k, v in comp_config.items()
+            }
+
+    # [resolver] - DNS overrides
+    if config.resolver:
+        resolver_section: dict[str, str] = {}
+        for hostname, ips in config.resolver.items():
+            if isinstance(ips, list):
+                resolver_section[hostname] = "\n".join(ips)
+            else:
+                resolver_section[hostname] = ips
+        legacy["resolver"] = resolver_section
+
+    # [vfs]
+    if config.vfs:
+        legacy["vfs"] = config.vfs
+
+    # [provisioner:name]
+    for prov_name, prov_config in config.provisioners.items():
+        if prov_config:
+            legacy[f"provisioner:{prov_name}"] = {
+                k: _value_to_legacy_string(v) for k, v in prov_config.items()
+            }
+
+    return legacy
+
+
+def _value_to_legacy_string(value: Any) -> str:
+    """Convert a value to legacy INI-style string format."""
+    if isinstance(value, bool):
+        return "True" if value else "False"
+    elif isinstance(value, list):
+        return "\n".join(str(v) for v in value)
+    elif isinstance(value, dict):
+        # Nested dict - convert to YAML for the horror show
+        # (users should prefer proper TOML structure)
+        import yaml
+
+        return yaml.dump(value, default_flow_style=False)
+    else:
+        return str(value)
+
+
+class DictConfigSection(dict):
+    """A dict that also supports as_list() like ConfigSection."""
+
+    def as_list(self, option: str) -> list[str]:
+        """Parse a value as a list (comma or newline separated)."""
+        result = self[option]
+        if "," in result:
+            result = [x.strip() for x in result.split(",")]
+        elif "\n" in result:
+            result = [x.strip() for x in result.split("\n")]
+            result = [x for x in result if x]
+        else:
+            result = [result]
+        return result
+
+
+class DictConfig:
+    """Config-like interface for legacy dict format.
+
+    Compatible with the existing Config class interface.
+    """
+
+    def __init__(self, data: dict[str, dict[str, str]]):
+        self._data = {k: DictConfigSection(v) for k, v in data.items()}
+
+    def __contains__(self, section: str) -> bool:
+        return section in self._data
+
+    def __getitem__(self, section: str) -> DictConfigSection:
+        return self._data[section]
+
+    def __iter__(self):
+        return iter(self._data.keys())
+
+    def get(
+        self, section: str, default: dict[str, str] | None = None
+    ) -> DictConfigSection | dict[str, str]:
+        return self._data.get(section, default or {})
+
+    def options(self, section: str) -> list[str]:
+        """Return keys in a section (for ConfigParser compatibility)."""
+        return list(self._data.get(section, {}).keys())

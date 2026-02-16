@@ -194,10 +194,38 @@ class Environment(object):
         batou.utils.resolve_override.clear()
         batou.utils.resolve_v6_override.clear()
 
+        # Try TOML first, fall back to INI
+        toml_file = (
+            pathlib.Path(self.base_dir)
+            / "environments"
+            / self.name
+            / "environment.toml"
+        )
         config_file = (
             pathlib.Path(self.base_dir) / "environments" / self.name / "environment.cfg"
         )
-        if not config_file.exists():
+
+        if toml_file.exists():
+            # Load TOML with Pydantic validation
+            from batou.config_toml import (
+                load_toml_config,
+                to_legacy_format,
+                DictConfig,
+                ConfigLoadError,
+            )
+
+            try:
+                content = toml_file.read_text()
+                pydantic_config = load_toml_config(content, str(toml_file))
+                legacy_data = to_legacy_format(pydantic_config)
+                config = DictConfig(legacy_data)
+                self._toml_config = pydantic_config  # Keep for future use
+            except ConfigLoadError as e:
+                self.exceptions.append(ConfigurationError.from_context(str(e)))
+                return
+        elif config_file.exists():
+            config = Config(config_file)
+        else:
             raise MissingEnvironment.from_context(self)
 
         mapping_file = self._environment_path("hostmap.json")
@@ -221,8 +249,6 @@ class Environment(object):
                 self.exceptions.append(
                     ComponentLoadingError.from_context(filename, e, tb)
                 )
-
-        config = Config(config_file)
 
         self.load_environment(config)
         self.load_provisioners(config)
