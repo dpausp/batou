@@ -155,9 +155,17 @@ class EnvironmentConfig(BaseModel):
 class ConfigLoadError(Exception):
     """Error loading TOML configuration."""
 
-    def __init__(self, message: str, details: str | None = None):
+    def __init__(
+        self,
+        message: str,
+        details: str | None = None,
+        errors: list[dict] | None = None,
+        source_file: str | None = None,
+    ):
         self.message = message
         self.details = details
+        self.errors = errors or []
+        self.source_file = source_file
         super().__init__(message)
 
     def __str__(self) -> str:
@@ -189,8 +197,14 @@ def load_toml_config(content: str, source: str = "<toml>") -> EnvironmentConfig:
     try:
         return EnvironmentConfig.model_validate(data)
     except ValidationError as e:
-        errors = _format_validation_errors(e, content)
-        raise ConfigLoadError(f"Configuration validation failed in {source}", errors)
+        errors = _collect_validation_errors(e, content)
+        details = _format_validation_errors_from_list(errors)
+        raise ConfigLoadError(
+            f"Configuration validation failed in {source}",
+            details,
+            errors=errors,
+            source_file=source,
+        )
 
 
 def _find_line_for_key(content: str, location: str) -> int | None:
@@ -248,7 +262,101 @@ def _find_line_for_key(content: str, location: str) -> int | None:
                 if target_section is None or current_section == target_section:
                     return i
 
+    # If not found with exact section match, try to find key in matching section
+    # This handles cases where the key is nested (e.g., resolver."hostname")
+    if target_section:
+        in_target_section = False
+        for i, line in enumerate(lines, 1):
+            stripped = line.strip()
+
+            # Track section changes
+            if stripped.startswith("[") and stripped.endswith("]"):
+                section_name = stripped[1:-1].strip()
+                if section_name.startswith('"') and section_name.endswith('"'):
+                    section_name = section_name[1:-1]
+                in_target_section = section_name == target_section
+                continue
+
+            # Check for key in target section
+            if in_target_section and "=" in stripped:
+                key_part = stripped.split("=", 1)[0].strip()
+                if key_part.startswith('"') and key_part.endswith('"'):
+                    key_part = key_part[1:-1]
+                if key_part == target_key:
+                    return i
+
     return None
+
+
+def _collect_validation_errors(
+    e: ValidationError, content: str
+) -> list[dict[str, Any]]:
+    """Collect validation errors as structured data.
+
+    Args:
+        e: The ValidationError from Pydantic
+        content: Original TOML content for line number lookup
+
+    Returns:
+        List of error dicts with 'line', 'message', 'location', 'source_line'
+    """
+    import re
+
+    errors = []
+    for error in e.errors():
+        loc = ".".join(str(x) for x in error["loc"])
+        msg = error["msg"]
+        line_num = None
+        source_line = None
+
+        # Special handling for resolver errors - extract hostname from message
+        if loc == "resolver" and "for host '" in msg:
+            match = re.search(r"for host '([^']+)'", msg)
+            if match:
+                hostname = match.group(1)
+                line_num = _find_resolver_host_line(content, hostname)
+                if line_num:
+                    source_lines = content.split("\n")
+                    if line_num <= len(source_lines):
+                        source_line = source_lines[line_num - 1].strip()
+
+        # Try to find line number for other errors
+        if line_num is None:
+            line_num = _find_line_for_key(content, loc)
+            if line_num:
+                source_lines = content.split("\n")
+                if line_num <= len(source_lines):
+                    source_line = source_lines[line_num - 1].strip()
+
+        errors.append(
+            {
+                "line": line_num,
+                "message": msg,
+                "location": loc,
+                "source_line": source_line,
+            }
+        )
+
+    return errors
+
+
+def _format_validation_errors_from_list(errors: list[dict[str, Any]]) -> str:
+    """Format structured errors as string (for non-Rich output).
+
+    Args:
+        errors: List of error dicts from _collect_validation_errors
+
+    Returns:
+        Formatted error string
+    """
+    lines = []
+    for error in errors:
+        if error["line"] and error["source_line"]:
+            lines.append(f"  line {error['line']}: {error['message']}")
+            lines.append(f"    {error['source_line']}")
+        else:
+            lines.append(f"  {error['location']}: {error['message']}")
+    return "\n".join(lines)
 
 
 def _format_validation_errors(e: ValidationError, content: str = "") -> str:
@@ -261,10 +369,29 @@ def _format_validation_errors(e: ValidationError, content: str = "") -> str:
     Returns:
         Formatted error string
     """
+    import re
+
     lines = []
     for error in e.errors():
         loc = ".".join(str(x) for x in error["loc"])
         msg = error["msg"]
+
+        # Special handling for resolver errors - extract hostname from message
+        if loc == "resolver" and "for host '" in msg:
+            # Extract hostname from error message like:
+            # "Invalid IP address 'x' for host 'invalid.example.com': ..."
+            match = re.search(r"for host '([^']+)'", msg)
+            if match:
+                hostname = match.group(1)
+                # Look for the hostname key in [resolver] section
+                line_num = _find_resolver_host_line(content, hostname)
+                if line_num:
+                    source_lines = content.split("\n")
+                    if line_num <= len(source_lines):
+                        line_content = source_lines[line_num - 1].strip()
+                        lines.append(f"  line {line_num}: {msg}")
+                        lines.append(f"    {line_content}")
+                        continue
 
         # Try to find line number
         line_num = _find_line_for_key(content, loc) if content else None
@@ -282,6 +409,42 @@ def _format_validation_errors(e: ValidationError, content: str = "") -> str:
             lines.append(f"  {loc}: {msg}")
 
     return "\n".join(lines)
+
+
+def _find_resolver_host_line(content: str, hostname: str) -> int | None:
+    """Find the line number for a hostname in the resolver section.
+
+    Args:
+        content: Original TOML content
+        hostname: The hostname to find (e.g., 'api.example.com')
+
+    Returns:
+        1-indexed line number or None if not found
+    """
+    lines = content.split("\n")
+    in_resolver = False
+
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+
+        # Track section changes
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section_name = stripped[1:-1].strip()
+            if section_name.startswith('"') and section_name.endswith('"'):
+                section_name = section_name[1:-1]
+            in_resolver = section_name == "resolver"
+            continue
+
+        # Look for hostname key in resolver section
+        if in_resolver and "=" in stripped:
+            key_part = stripped.split("=", 1)[0].strip()
+            # Remove quotes from key if present
+            if key_part.startswith('"') and key_part.endswith('"'):
+                key_part = key_part[1:-1]
+            if key_part == hostname:
+                return i
+
+    return None
 
 
 def to_legacy_format(config: EnvironmentConfig) -> dict[str, dict[str, str]]:

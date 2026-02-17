@@ -101,6 +101,7 @@ class CheckCommand:
         self.start_time: float | None = None
         self.toml_config = None
         self._component_colors: dict[str, str] = {}
+        self._config_error: ConfigLoadError | None = None
 
     def execute(self) -> int:
         """Execute check command and return exit code."""
@@ -114,6 +115,10 @@ class CheckCommand:
             self.load_secrets()
             self.validate_configuration()
         except ConfigurationError as e:
+            # Check if this is a TOML config error - show with Rich
+            if self._config_error:
+                self.show_config_error(self._config_error)
+                e._shown_with_rich = True  # Mark as already displayed
             self.errors.append(e)
         except SilentConfigurationError:
             pass
@@ -166,8 +171,42 @@ class CheckCommand:
             content = toml_file.read_text()
             return load_toml_config(content, str(toml_file))
         except ConfigLoadError as e:
-            # Re-raise as ConfigurationError for proper error handling
-            raise ConfigurationError.from_context(str(e)) from e
+            # Store for Rich formatting later
+            self._config_error = e
+            raise ConfigurationError.from_context(e.message) from e
+
+    def show_config_error(self, error: ConfigLoadError):
+        """Display configuration validation errors with Rich formatting."""
+        from rich.panel import Panel
+
+        console.print()
+        console.print(
+            Panel(
+                f"[bold red]Configuration validation failed[/bold red]\n"
+                f"[dim]{error.source_file}[/dim]",
+                box=ROUNDED,
+                border_style="red",
+            )
+        )
+
+        for err in error.errors:
+            console.print()
+            # Line number and message
+            if err["line"]:
+                console.print(
+                    f"  [bold cyan]line {err['line']}[/bold cyan]: [yellow]{err['message']}[/yellow]"
+                )
+                # Show source line
+                if err["source_line"]:
+                    # Truncate long lines
+                    source = err["source_line"]
+                    if len(source) > 70:
+                        source = source[:67] + "..."
+                    console.print(f"    [dim]{source}[/dim]")
+            else:
+                console.print(
+                    f"  [bold]{err['location']}[/bold]: [yellow]{err['message']}[/yellow]"
+                )
 
     def _get_component_colors(self) -> dict[str, str]:
         """Assign consistent unique colors to components with overrides.
@@ -456,7 +495,12 @@ class CheckCommand:
     def report_results(self):
         """Report validation results."""
         if self.errors:
+            shown_errors = 0
             for error in self.errors:
+                # Skip if this was a ConfigLoadError already shown with Rich
+                if getattr(error, "_shown_with_rich", False):
+                    shown_errors += 1
+                    continue
                 output.line("")
                 if hasattr(error, "report"):
                     error.report()
@@ -464,9 +508,10 @@ class CheckCommand:
                     tb = traceback.TracebackException.from_exception(error)
                     for line in tb.format():
                         output.line("\t" + line.strip(), red=True)
+                shown_errors += 1
 
             output.section(
-                f"{len(self.errors)} ERRORS - CONFIGURATION FAILED",
+                f"{shown_errors} ERRORS - CONFIGURATION FAILED",
                 red=True,
             )
         else:
