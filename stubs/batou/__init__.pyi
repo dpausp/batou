@@ -1,4 +1,3 @@
-
 from traceback import StackSummary
 from typing import Any
 
@@ -16,11 +15,13 @@ def prepare_traceback_from_stack(stack: StackSummary) -> str: ...
 class ReportingException(Exception):
     affected_hostname: str | None
 
-    def report(self): ...
+    def __str__(self) -> str: ...  # noqa: PYI029
+    def report(self) -> None: ...
     def should_merge(self, other: ReportingException) -> bool: ...
     @classmethod
     def merge(
-        cls, selfs: list[ReportingException]
+        cls,
+        selfs: list[ReportingException],
     ) -> tuple[ReportingException, set[str] | None]: ...
 
 class AgeCallError(ReportingException):
@@ -30,7 +31,10 @@ class AgeCallError(ReportingException):
 
     @classmethod
     def from_context(
-        cls, command: list[str], exitcode: int, output: bytes
+        cls,
+        command: list[str],
+        exitcode: int,
+        output: bytes,
     ) -> AgeCallError: ...
     def report(self): ...
 
@@ -52,7 +56,10 @@ class ComponentLoadingError(ReportingException):
 
     @classmethod
     def from_context(
-        cls, filename: str, exception: Exception, tb: Any
+        cls,
+        filename: str,
+        exception: Exception,
+        tb: Any,
     ) -> ComponentLoadingError: ...
     def report(self): ...
 
@@ -75,10 +82,11 @@ class ConfigurationError(ReportingException):
     has_component: bool
     component_root_name: str | None
 
-    def __str__(self) -> str: ...
     @classmethod
     def from_context(
-        cls, message: str, component: Component | None = ...
+        cls,
+        message: str,
+        component: Component | None = ...,
     ) -> ConfigurationError: ...
     def report(self): ...
     @property
@@ -155,7 +163,10 @@ class GPGCallError(ReportingException):
 
     @classmethod
     def from_context(
-        cls, command: list[str], exitcode: int, output: bytes
+        cls,
+        command: list[str],
+        exitcode: int,
+        output: bytes,
     ) -> GPGCallError: ...
     def report(self): ...
 
@@ -194,8 +205,7 @@ class RepositoryDifferentError(DeploymentError):
     remote: str
     # Note: from_context has different signature but this is intentional
 
-class SilentConfigurationError(Exception):
-    pass
+class SilentConfigurationError(Exception): ...
 
 class SuperfluousComponentSection(ConfigurationError):
     component_name: str
@@ -204,7 +214,6 @@ class SuperfluousComponentSection(ConfigurationError):
 class SuperfluousSecretsSection(ConfigurationError):
     component_name: str
 
-    def __str__(self) -> str: ...
     # Note: from_context has different signature but this is intentional
 
 class SuperfluousSection(ConfigurationError):
@@ -217,7 +226,9 @@ class TemplatingError(ReportingException):
 
     @classmethod
     def from_context(
-        cls, exception: Exception, template_identifier: str
+        cls,
+        exception: Exception,
+        template_identifier: str,
     ) -> TemplatingError: ...
 
 class UnknownComponentConfigurationError(ConfigurationError):
@@ -245,12 +256,10 @@ class UnusedComponentsInitialized(ConfigurationError):
     init_line_numbers: list[int]
     root_name: str
 
-    def __str__(self) -> str: ...
     # Note: from_context has different signature but this is intentional
 
 class UnusedResources(ConfigurationError):
     unused_resources: list[tuple[str, str, str]]
     # Note: from_context has different signature but this is intentional
 
-class UpdateNeeded(AssertionError):
-    pass
+class UpdateNeeded(AssertionError): ...

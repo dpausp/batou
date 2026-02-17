@@ -18,8 +18,8 @@ class VirtualEnvDownload:
 class VirtualEnvPy:
     def update(self): ...
 
-class VirtualEnvPy2_7:
-    def configure(self): ...
+class VirtualEnvPy2_7:  # noqa: N801
+    def configure(self) -> None: ...
 
 class VirtualEnvPyBase:
     installer: Literal["pip", "easy_install"]

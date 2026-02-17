@@ -1,0 +1,91 @@
+# Ruff config for type stubs - hypermodern & strict
+# This directory uses Python 3.14 syntax
+
+target-version = "py314"
+# line-length: use project default (80)
+
+[lint]
+# Enable ALL the things
+select = [
+    "A",      # flake8-builtins
+    "ANN",    # flake8-annotations (stubs love this!)
+    "ARG",    # flake8-unused-arguments
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "C90",    # mccabe complexity
+    "COM",    # flake8-commas
+    "D",      # pydocstyle
+    "DTZ",    # flake8-datetimez
+    "E",      # pycodestyle errors
+    "EM",     # flake8-errmsg
+    "ERA",    # eradicate (commented-out code)
+    "EXE",    # flake8-executable
+    "F",      # pyflakes
+    "FA",     # flake8-future-annotations
+    "FBT",    # flake8-boolean-trap
+    "FLY",    # flynt
+    "FURB",   # refurb
+    "G",      # flake8-logging-format
+    "I",      # isort
+    "ICN",    # flake8-import-conventions
+    "INP",    # flake8-no-pep420
+    "INT",    # flake8-gettext
+    "ISC",    # flake8-implicit-str-concat
+    "LOG",    # flake8-logging
+    "N",      # pep8-naming
+    "NPY",    # numpy
+    "PD",     # pandas-vet
+    "PERF",   # perflint
+    "PGH",    # pygrep-hooks
+    "PIE",    # flake8-pie
+    "PL",     # pylint
+    "PT",     # flake8-pytest-style
+    "PTH",    # flake8-use-pathlib
+    "PYI",    # flake8-pyi (STUB-SPECIFIC!)
+    "Q",      # flake8-quotes
+    "RET",    # flake8-return
+    "RSE",    # flake8-raise
+    "RUF",    # ruff-specific
+    "S",      # flake8-bandit
+    "SIM",    # flake8-simplify
+    "SLF",    # flake8-self
+    "SLOT",   # flake8-slots
+    "T10",    # flake8-debugger
+    "T20",    # flake8-print
+    "TCH",    # flake8-type-checking
+    "TID",    # flake8-tidy-imports
+    "TRY",    # tryceratops
+    "UP",     # pyupgrade
+    "W",      # pycodestyle warnings
+    "YTT",    # flake8-2020
+]
+
+ignore = [
+    # Stubs don't have implementations
+    "ANN201",  # missing-return-type-undocumented-public-function
+    "ANN204",  # missing-return-type-special-method
+    "ANN401",  # dynamically-typed-any - necessary for tb (traceback) params
+    "D100",    # undocumented-public-module
+    "D101",    # undocumented-public-class
+    "D102",    # undocumented-public-method
+    "D103",    # undocumented-public-function
+    "D104",    # undocumented-public-package
+    "D105",    # undocumented-magic-method
+    "D106",    # undocumented-public-nested-class
+    "D107",    # undocumented-public-init
+    "ARG001",  # unused-function-argument (stubs define signatures)
+    "ARG002",  # unused-method-argument
+    "ERA001",  # commented-out code (stubs often have examples)
+    "N818",    # exception naming - batou convention (ReportingException, etc.)
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.isort]
+known-first-party = ["batou"]
+
+[lint.per-file-ignores]
+"**/*.pyi" = [
+    "PYI021",  # docstring-in-stub (we want examples!)
+]
