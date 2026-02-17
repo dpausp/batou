@@ -6,7 +6,6 @@ from batou.config_toml import (
     ConfigLoadError,
     DictConfig,
     DictConfigSection,
-    EnvironmentConfig,
     EnvironmentSettings,
     HostConfig,
     load_toml_config,

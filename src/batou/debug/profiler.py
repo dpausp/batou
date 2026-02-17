@@ -3,7 +3,7 @@
 from batou import output
 
 
-class Profiler(object):
+class Profiler:
     """Track and report profiling results for remote hosts.
 
     Following the same pattern as FileDescriptorTracker, this class

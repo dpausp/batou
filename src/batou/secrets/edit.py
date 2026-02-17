@@ -18,7 +18,7 @@ members =
 """
 
 
-class Editor(object):
+class Editor:
     def __init__(
         self,
         editor_cmd,
@@ -84,7 +84,7 @@ class Editor(object):
         elif cmd == "":
             raise ValueError("empty command")
         else:
-            raise ValueError("unknown command `{}`".format(cmd))
+            raise ValueError(f"unknown command `{cmd}`")
 
     def encrypt(self):
         if self.cleartext == self.original_cleartext:
@@ -113,11 +113,11 @@ class Editor(object):
             args = [self.editor_cmd + " " + clearfile.name]
 
             if debug:
-                print("Running editor with command: {}".format(args))
+                print(f"Running editor with command: {args}")
 
             subprocess.check_call(args, shell=True)
 
-            with open(clearfile.name, "r") as new_clearfile:
+            with open(clearfile.name) as new_clearfile:
                 self.cleartext = new_clearfile.read()
 
 

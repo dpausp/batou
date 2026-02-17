@@ -66,7 +66,7 @@ def self_id():
     return template.format(**locals())
 
 
-class MultiFile(object):
+class MultiFile:
     def __init__(self, files):
         self.files = files
 
@@ -85,8 +85,8 @@ def locked(filename, exit_on_failure=False):
     with open(filename, "a+") as lockfile:
         try:
             fcntl.lockf(lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError:
-            print("Could not acquire lock {}".format(filename), file=sys.stderr)
+        except OSError:
+            print(f"Could not acquire lock {filename}", file=sys.stderr)
             if exit_on_failure:
                 print(
                     "Another instance of batou is currently running and locked the lockfile.",
@@ -127,10 +127,7 @@ def notify_macosx(title, description):
         [
             "osascript",
             "-e",
-            'display notification "{}" with title "{}"'.format(
-                escape_macosx_string(description),
-                escape_macosx_string(title),
-            ),
+            f'display notification "{escape_macosx_string(description)}" with title "{escape_macosx_string(title)}"',
         ]
     )
 
@@ -157,15 +154,15 @@ def resolve(host, port=0, resolve_override=resolve_override):
     if host in resolve_override:
         address = resolve_override[host]
         output.annotate(
-            "resolved (v4) `{}` to {} (override)".format(host, address),
+            f"resolved (v4) `{host}` to {address} (override)",
             debug=True,
         )
     else:
-        output.annotate("resolving (v4) `{}`".format(host), debug=True)
+        output.annotate(f"resolving (v4) `{host}`", debug=True)
         responses = socket.getaddrinfo(host, int(port), socket.AF_INET)
-        output.annotate("resolved (v4) `{}` to {}".format(host, responses), debug=True)
+        output.annotate(f"resolved (v4) `{host}` to {responses}", debug=True)
         address = responses[0][4][0]
-        output.annotate("selected (v4) {}, {}".format(host, address), debug=True)
+        output.annotate(f"selected (v4) {host}, {address}", debug=True)
     return address
 
 
@@ -173,13 +170,13 @@ def resolve_v6(host, port=0, resolve_override=resolve_v6_override):
     if host in resolve_override:
         address = resolve_override[host]
         output.annotate(
-            "resolved (v6) `{}` to {} (override)".format(host, address),
+            f"resolved (v6) `{host}` to {address} (override)",
             debug=True,
         )
     else:
-        output.annotate("resolving (v6) `{}`".format(host), debug=True)
+        output.annotate(f"resolving (v6) `{host}`", debug=True)
         responses = socket.getaddrinfo(host, int(port), socket.AF_INET6)
-        output.annotate("resolved (v6) `{}` to {}".format(host, responses), debug=True)
+        output.annotate(f"resolved (v6) `{host}` to {responses}", debug=True)
         address = None
         for _, _, _, _, sockaddr in responses:
             addr = sockaddr[0]
@@ -188,8 +185,8 @@ def resolve_v6(host, port=0, resolve_override=resolve_v6_override):
             address = addr
             break
         if not address:
-            raise ValueError("No valid address found for `{}`.".format(host))
-        output.annotate("selected (v6) {}, {}".format(host, address), debug=True)
+            raise ValueError(f"No valid address found for `{host}`.")
+        output.annotate(f"selected (v6) {host}, {address}", debug=True)
     return address
 
 
@@ -197,7 +194,7 @@ ADDR_DEFAULT = object()  # sentinel
 
 
 @functools.total_ordering
-class Address(object):
+class Address:
     """An internet service address that can be listened and connected to.
 
     The constructor address is expected to be the address that can be
@@ -334,7 +331,7 @@ class Address(object):
 
 
 @functools.total_ordering
-class NetLoc(object):
+class NetLoc:
     """A network location specified by host and port.
 
     Network locations can automatically render an appropriate string
@@ -376,7 +373,7 @@ class NetLoc(object):
         return fmt.format(self=self)
 
     def __repr__(self):
-        return "<NetLoc `{}`>".format(self)
+        return f"<NetLoc `{self}`>"
 
     # These are not "correct" comparisons from a networking viewpoint.
     # However, they are useful to provide a predictable ordering to
@@ -492,14 +489,14 @@ def cmd(
         for arg in cmd:
             arg = arg.replace("'", "\\'")
             if " " in arg:
-                arg = "'{}'".format(arg)
+                arg = f"'{arg}'"
             quoted_args.append(arg)
         cmd = " ".join(quoted_args)
     if env is not None:
         add_to_env = env
         env = os.environ.copy()
         env.update(add_to_env)
-    output.annotate("cmd: {}".format(cmd), debug=True)
+    output.annotate(f"cmd: {cmd}", debug=True)
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -526,12 +523,12 @@ def get_output(command, default=None):
     return stdout or default
 
 
-class Timer(object):
+class Timer:
     def __init__(self, tag=None):
         self.durations = defaultdict(float)  # returns 0.0 for missing keys
         self.tag = tag
 
-    class TimerContext(object):
+    class TimerContext:
         def __init__(self, timer, note):
             self.timer = timer
             self.note = note
@@ -645,9 +642,9 @@ def format_duration(duration: Optional[float]) -> str:
     minutes, seconds = divmod(duration, 60)
 
     if minutes:
-        output = "{}m{}s".format(int(minutes), int(seconds))
+        output = f"{int(minutes)}m{int(seconds)}s"
     else:
-        output = "{:.2f}s".format(seconds)
+        output = f"{seconds:.2f}s"
 
     return output
 

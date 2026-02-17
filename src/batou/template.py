@@ -20,7 +20,7 @@ import jinja2
 from batou import TemplatingError, output
 
 
-class TemplateEngine(object):
+class TemplateEngine:
     """Abstract templating wrapper class.
 
     Use a subclass that connects to a specific template engine.
@@ -66,7 +66,7 @@ class Jinja2Engine(TemplateEngine):
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(Jinja2Engine, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._instance.env = jinja2.Environment(
                 line_statement_prefix="@@",
                 keep_trailing_newline=True,

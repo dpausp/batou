@@ -10,8 +10,8 @@ from batou.utils import cmd
 def repos_path(root):
     repos_path = os.path.join(root.environment.workdir_base, "upstream")
     cmd(
-        "mkdir {dir}; cd {dir}; hg init;"
-        'touch foo; hg add foo; hg commit -m "foo"'.format(dir=repos_path)
+        f"mkdir {repos_path}; cd {repos_path}; hg init;"
+        'touch foo; hg add foo; hg commit -m "foo"'
     )
     return repos_path
 
@@ -34,7 +34,7 @@ def test_setting_branch_updates_on_incoming_changes(root, repos_path):
         repos_path, target="clone", branch="default"
     )
     root.component.deploy()
-    cmd('cd {dir}; touch bar; hg addremove; hg ci -m "commit"'.format(dir=repos_path))
+    cmd(f'cd {repos_path}; touch bar; hg addremove; hg ci -m "commit"')
     root.component.deploy()
     assert os.path.isfile(
         os.path.join(root.environment.workdir_base, "mycomponent/clone/bar")
@@ -43,12 +43,12 @@ def test_setting_branch_updates_on_incoming_changes(root, repos_path):
 
 @pytest.mark.slow
 def test_branch_does_switch_branch(root, repos_path):
-    cmd('cd {dir}; hg branch bar; hg ci -m "commit branch"'.format(dir=repos_path))
+    cmd(f'cd {repos_path}; hg branch bar; hg ci -m "commit branch"')
     root.component += batou.lib.mercurial.Clone(
         repos_path, target="clone", branch="bar"
     )
     root.component.deploy()
-    stdout, stderr = cmd("cd {workdir}/clone; hg branch".format(workdir=root.workdir))
+    stdout, stderr = cmd(f"cd {root.workdir}/clone; hg branch")
     assert "bar" == stdout.strip()
 
 
@@ -60,10 +60,10 @@ def test_set_revision_does_not_pull_when_revision_matches(root, repos_path):
     revision = clone.current_revision()
     clone.revision = revision
     clone.branch = None
-    cmd('cd {dir}; touch bar; hg addremove; hg ci -m "commit"'.format(dir=repos_path))
+    cmd(f'cd {repos_path}; touch bar; hg addremove; hg ci -m "commit"')
     root.component.deploy()
     stdout, stderr = cmd(
-        "cd {workdir}/clone; LANG=C hg incoming".format(workdir=root.workdir)
+        f"cd {root.workdir}/clone; LANG=C hg incoming"
     )
     assert "changeset:   1" in stdout
 
@@ -89,8 +89,8 @@ def test_has_changes_counts_changes_to_tracked_files(root, repos_path):
     root.component += clone
     root.component.deploy()
     assert not clone.has_changes()
-    cmd("touch {}/clone/bar".format(root.workdir))
-    cmd("cd {}/clone; hg add bar".format(root.workdir))
+    cmd(f"touch {root.workdir}/clone/bar")
+    cmd(f"cd {root.workdir}/clone; hg add bar")
     assert clone.has_changes()
 
 
@@ -100,7 +100,7 @@ def test_has_changes_counts_untracked_files_as_changes(root, repos_path):
     root.component += clone
     root.component.deploy()
     assert not clone.has_changes()
-    cmd("touch {}/clone/bar".format(root.workdir))
+    cmd(f"touch {root.workdir}/clone/bar")
     assert clone.has_changes()
 
 
@@ -110,7 +110,7 @@ def test_clean_clone_updates_on_incoming_changes(root, repos_path):
         repos_path, target="clone", branch="default"
     )
     root.component.deploy()
-    cmd('cd {dir}; touch bar; hg addremove; hg ci -m "commit"'.format(dir=repos_path))
+    cmd(f'cd {repos_path}; touch bar; hg addremove; hg ci -m "commit"')
     root.component.deploy()
     assert os.path.isfile(root.component.map("clone/bar"))
 
@@ -121,8 +121,8 @@ def test_changes_lost_on_update_with_incoming(root, repos_path):
         repos_path, target="clone", branch="default"
     )
     root.component.deploy()
-    cmd('cd {dir}; touch bar; hg addremove; hg ci -m "commit"'.format(dir=repos_path))
-    cmd("cd {dir}/clone; echo foobar >foo".format(dir=root.workdir))
+    cmd(f'cd {repos_path}; touch bar; hg addremove; hg ci -m "commit"')
+    cmd(f"cd {root.workdir}/clone; echo foobar >foo")
     root.component.deploy()
     assert os.path.exists(root.component.map("clone/bar"))
     with open(root.component.map("clone/foo")) as f:
@@ -135,7 +135,7 @@ def test_untracked_files_are_removed_on_update(root, repos_path):
         repos_path, target="clone", branch="default"
     )
     root.component.deploy()
-    cmd("cd {dir}/clone; mkdir bar; echo foobar >bar/baz".format(dir=root.workdir))
+    cmd(f"cd {root.workdir}/clone; mkdir bar; echo foobar >bar/baz")
     root.component.deploy()
     assert not os.path.exists(root.component.map("clone/bar/baz"))
 
@@ -146,7 +146,7 @@ def test_changes_lost_on_update_without_incoming(root, repos_path):
         repos_path, target="clone", branch="default"
     )
     root.component.deploy()
-    cmd("cd {dir}/clone; echo foobar >foo".format(dir=root.workdir))
+    cmd(f"cd {root.workdir}/clone; echo foobar >foo")
     root.component.deploy()
     with open(root.component.map("clone/foo")) as f:
         assert not f.read()
@@ -159,11 +159,9 @@ def test_clean_clone_vcs_update_false_leaves_changes_intact(root, repos_path):
     )
     root.component.deploy()
     cmd(
-        'cd {dir}; echo foobar >foo; touch bar; hg addremove; hg ci -m "commit"'.format(
-            dir=repos_path
-        )
+        f'cd {repos_path}; echo foobar >foo; touch bar; hg addremove; hg ci -m "commit"'
     )
-    cmd("cd {dir}/clone; echo asdf >foo".format(dir=root.workdir))
+    cmd(f"cd {root.workdir}/clone; echo asdf >foo")
     root.component.deploy()
     with open(root.component.map("clone/foo")) as f:
         assert "asdf\n" == f.read()

@@ -21,7 +21,7 @@ deployment_base = ""
 # bootstrapping we define it here and then re-import in the _output module.
 
 
-class Output(object):
+class Output:
     """Manage the output of various parts of batou to achieve
     consistency wrt to formatting and display.
     """
@@ -123,7 +123,7 @@ class Output(object):
         self.step("WARN", message, yellow=True)
 
 
-class ChannelBackend(object):
+class ChannelBackend:
     def __init__(self, channel):
         self.channel = channel
 
@@ -140,7 +140,7 @@ class ChannelBackend(object):
         self._send("write", content, **format)
 
 
-class Deployment(object):
+class Deployment:
     """Thin layer to represent a deployment on an agent without
     using the actual deployment class.
 
@@ -257,7 +257,7 @@ class CmdError(Exception):
 
 def cmd(c, acceptable_returncodes=[0]):
     process = subprocess.Popen(
-        ["LANG=C LC_ALL=C LANGUAGE=C {}".format(c)],
+        [f"LANG=C LC_ALL=C LANGUAGE=C {c}"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -281,16 +281,16 @@ def ensure_repository(target, method):
 
     if method in ["hg-pull", "hg-bundle"]:
         if not os.path.exists(target + "/.hg"):
-            cmd("hg init {}".format(target))
+            cmd(f"hg init {target}")
     elif method in ["git-pull", "git-bundle"]:
         if not os.path.exists(target + "/.git"):
-            cmd("git init {}".format(target))
+            cmd(f"git init {target}")
     elif method in ["rsync", "rsync-ext", "rsync-dev"]:
         pass
     elif method == "local":
         pass
     else:
-        raise RuntimeError("Unknown repository method: {}".format(method))
+        raise RuntimeError(f"Unknown repository method: {method}")
 
     return target
 
@@ -326,7 +326,7 @@ def hg_pull_code(upstream):
     os.chdir(target)
     # Phase 1: update working copy
     # XXX manage certificates
-    cmd("hg pull {}".format(upstream))
+    cmd(f"hg pull {upstream}")
 
 
 def hg_unbundle_code():
@@ -338,7 +338,7 @@ def hg_unbundle_code():
 
 
 def hg_update_working_copy(branch):
-    cmd("hg up -C {}".format(branch))
+    cmd(f"hg up -C {branch}")
     return _hg_current_id()
 
 
@@ -372,14 +372,12 @@ def git_pull_code(upstream, branch):
         if name != git_origin:
             continue
         if remote != upstream:
-            cmd("git remote remove {origin}".format(origin=git_origin))
+            cmd(f"git remote remove {git_origin}")
         # The batou-pull remote is correctly configured.
         break
     else:
         cmd(
-            "git remote add {origin} {upstream}".format(
-                origin=git_origin, upstream=upstream
-            )
+            f"git remote add {git_origin} {upstream}"
         )
     cmd("git fetch batou-pull")
 
@@ -389,12 +387,12 @@ def git_unbundle_code():
     os.chdir(target)
     out, err = cmd("git remote -v")
     if b"batou-bundle" not in out:
-        cmd("git remote add {origin} batou-bundle.git".format(origin=git_origin))
-    cmd("git fetch {origin}".format(origin=git_origin))
+        cmd(f"git remote add {git_origin} batou-bundle.git")
+    cmd(f"git fetch {git_origin}")
 
 
 def git_update_working_copy(branch):
-    cmd("git reset --hard {origin}/{branch}".format(origin=git_origin, branch=branch))
+    cmd(f"git reset --hard {git_origin}/{branch}")
     id, _ = cmd("git rev-parse HEAD")
     return id.strip().decode("ascii")
 

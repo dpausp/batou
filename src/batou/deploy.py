@@ -22,7 +22,7 @@ class Connector(threading.Thread):
         self.host = host
         self.sem = sem
         self.exc_info = None
-        super(Connector, self).__init__(name=host.name)
+        super().__init__(name=host.name)
 
     def run(self):
         tries = 0
@@ -47,7 +47,7 @@ class Connector(threading.Thread):
             self.exc_info = sys.exc_info()
 
     def join(self):
-        super(Connector, self).join()
+        super().join()
         if self.exc_info:
             exc_type, exc_value, exc_tb = self.exc_info
             raise exc_value.with_traceback(exc_tb)
@@ -88,7 +88,7 @@ class ConfigureErrors(ReportingException):
                 )
 
         output.section(
-            "{} ERRORS - CONFIGURATION FAILED".format(len(self.errors)),
+            f"{len(self.errors)} ERRORS - CONFIGURATION FAILED",
             red=True,
         )
 
@@ -98,7 +98,7 @@ class ConfigureErrors(ReportingException):
         )
 
 
-class Deployment(object):
+class Deployment:
     _upstream = None
 
     def __init__(
@@ -144,7 +144,7 @@ class Deployment(object):
 
         output.step(
             "main",
-            "Loading environment `{}`...".format(self.environment.name),
+            f"Loading environment `{self.environment.name}`...",
             icon="📦",
         )
         self.environment.load()
@@ -193,7 +193,7 @@ class Deployment(object):
             if host.ignore:
                 output.step(
                     hostname,
-                    "Connection ignored ({}/{})".format(i, len(self.environment.hosts)),
+                    f"Connection ignored ({i}/{len(self.environment.hosts)})",
                     bold=False,
                     red=True,
                     icon="⏭️",
@@ -202,11 +202,7 @@ class Deployment(object):
             if not self.local_consistency_check:
                 output.step(
                     hostname,
-                    "Connecting via {} ({}/{})".format(
-                        self.environment.connect_method,
-                        i,
-                        len(hosts),
-                    ),
+                    f"Connecting via {self.environment.connect_method} ({i}/{len(hosts)})",
                     icon="🌐",
                 )
             c = Connector(host, sem)
@@ -281,21 +277,21 @@ class Deployment(object):
         if host.ignore:
             output.step(
                 hostname,
-                "Skipping component {} ... (Host ignored)".format(component),
+                f"Skipping component {component} ... (Host ignored)",
                 icon="⏭️",
                 red=True,
             )
         elif info["ignore"]:
             output.step(
                 hostname,
-                "Skipping component {} ... (Component ignored)".format(component),
+                f"Skipping component {component} ... (Component ignored)",
                 icon="⏭️",
                 red=True,
             )
         else:
             output.step(
                 hostname,
-                "Scheduling component {} ...".format(component),
+                f"Scheduling component {component} ...",
                 icon="⚪",
             )
             await self.loop.run_in_executor(
@@ -461,7 +457,7 @@ def main(
                         for line in tb.format():
                             output.line("\t" + line.strip(), red=True)
 
-                summary = "{} FAILED (during {})".format(ACTION, step)
+                summary = f"{ACTION} FAILED (during {step})"
                 output.section(summary, red=True)
 
                 notify(summary, str(exception))
@@ -469,5 +465,5 @@ def main(
 
         finally:
             deployment.disconnect()
-        output.section("{} FINISHED".format(ACTION), **SUCCESS_FORMAT)
-        notify("{} SUCCEEDED".format(ACTION), environment.name)
+        output.section(f"{ACTION} FINISHED", **SUCCESS_FORMAT)
+        notify(f"{ACTION} SUCCEEDED", environment.name)

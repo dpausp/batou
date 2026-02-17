@@ -14,7 +14,7 @@ def supervisor(root, request):
     root.component += supervisor
     root.component.deploy()
     yield supervisor
-    supervisor.cmd("{}/bin/supervisorctl shutdown".format(supervisor.workdir))
+    supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl shutdown")
 
 
 @pytest.mark.slow
@@ -29,7 +29,7 @@ def test_waits_for_start(root, supervisor):
     root.component.deploy()
     assert os.path.exists("%s/foo" % root.workdir)
 
-    supervisor.cmd("{}/check_supervisor".format(supervisor.workdir))
+    supervisor.cmd(f"{supervisor.workdir}/check_supervisor")
 
 
 @pytest.mark.slow
@@ -65,11 +65,11 @@ def test_starts_stopped_program(root, supervisor):
         options=dict(startsecs=2),
     )
     root.component.deploy()
-    supervisor.cmd("{}/bin/supervisorctl stop foo".format(supervisor.workdir))
+    supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl stop foo")
     root.component.deploy()
     assert (
         "RUNNING"
-        in supervisor.cmd("{}/bin/supervisorctl status foo".format(supervisor.workdir))[
+        in supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl status foo")[
             0
         ]
     )
@@ -89,7 +89,7 @@ def test_enable_false_reports_not_running_when_daemon_stopped(root):
 
 @pytest.mark.slow
 def test_enable_true_reports_not_running_when_daemon_stopped(root, supervisor):
-    supervisor.cmd("{}/bin/supervisorctl shutdown".format(supervisor.workdir))
+    supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl shutdown")
     # assert nothing raised
     root.component.deploy()
 

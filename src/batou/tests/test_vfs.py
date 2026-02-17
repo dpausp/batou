@@ -1,6 +1,5 @@
 import os.path
-
-from mock import Mock
+from unittest.mock import Mock
 
 from batou.vfs import Developer, Map
 

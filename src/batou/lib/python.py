@@ -31,7 +31,7 @@ class VirtualEnv(Component):
     @property
     def python(self):
         """Path to the generated python executable."""
-        return "bin/python{}".format(self.version)
+        return f"bin/python{self.version}"
 
     def configure(self):
         class_name = "VirtualEnvPy{}".format(self.version.replace(".", "_"))
@@ -39,7 +39,7 @@ class VirtualEnv(Component):
         self += self.venv
 
         if not self.executable:
-            self.executable = "python{}".format(self.version)
+            self.executable = f"python{self.version}"
 
 
 class VirtualEnvPyBase(Component):
@@ -54,9 +54,7 @@ class VirtualEnvPyBase(Component):
         expected_version = tuple(int(x) for x in self.parent.version.split("."))
         version_specificity = len(expected_version)
         self.assert_cmd(
-            'bin/python -c "import sys; assert sys.version_info[:{}] == {}"'.format(
-                version_specificity, repr(expected_version)
-            )
+            f'bin/python -c "import sys; assert sys.version_info[:{version_specificity}] == {repr(expected_version)}"'
         )
         # Is this Python (still) functional 'enough'
         # from a setuptools/distribute perspective?
@@ -72,8 +70,8 @@ class VirtualEnvPyBase(Component):
             self.cmd(
                 'bin/python -c "'
                 "import pkg_resources; "
-                "assert pkg_resources.require('{}')[0].parsed_version == "
-                "pkg_resources.parse_version('{}')\"".format(pkg.package, pkg.version)
+                f"assert pkg_resources.require('{pkg.package}')[0].parsed_version == "
+                f"pkg_resources.parse_version('{pkg.version}')\""
             )
         except CmdExecutionError:
             raise batou.UpdateNeeded()
@@ -87,7 +85,7 @@ class VirtualEnvPyBase(Component):
             try:
                 self.cmd(
                     'bin/python -c "import pkg_resources; '
-                    'import {0};{0}.__file__"'.format(pkg.package)
+                    f'import {pkg.package};{pkg.package}.__file__"'
                 )
             except CmdExecutionError:
                 raise batou.UpdateNeeded()
@@ -105,9 +103,7 @@ class VirtualEnvPyBase(Component):
             options += ("--no-deps",)
         options = " ".join(options)
         self.cmd(
-            'bin/pip --timeout={} install {} "{}=={}"'.format(
-                pkg.timeout, options, pkg.package, pkg.version
-            ),
+            f'bin/pip --timeout={pkg.timeout} install {options} "{pkg.package}=={pkg.version}"',
             env=pkg.env if pkg.env else {},
         )
 
@@ -123,7 +119,7 @@ class VirtualEnvPyBase(Component):
         # XXX does not implement timeout. could we just do this on
         # 'cmd' instead?
         self.cmd(
-            'bin/easy_install {} "{}=={}"'.format(options, pkg.package, pkg.version),
+            f'bin/easy_install {options} "{pkg.package}=={pkg.version}"',
             env=pkg.env if pkg.env else {},
         )
 
@@ -154,10 +150,10 @@ class VirtualEnvPy2_7(VirtualEnvPyBase):
     def verify(self):
         # Did we install an updated virtualenv package in between?
         self.assert_file_is_current("bin/python", [self.base.venv_cmd])
-        super(VirtualEnvPy2_7, self).verify()
+        super().verify()
 
     def update(self):
-        super(VirtualEnvPy2_7, self).update()
+        super().update()
         self.cmd(
             "{} {} {} --python={} {}".format(
                 self.parent.executable,
@@ -173,8 +169,8 @@ class VirtualEnvPy(VirtualEnvPyBase):
     """VirtualEnv for Python with `-m venv` (>=3.3)"""
 
     def update(self):
-        super(VirtualEnvPy, self).update()
-        self.cmd("{} -m venv {}".format(self.parent.executable, self.workdir))
+        super().update()
+        self.cmd(f"{self.parent.executable} -m venv {self.workdir}")
 
 
 class VirtualEnvDownload(Component):
@@ -242,4 +238,4 @@ class Package(Component):
 
     @property
     def namevar_for_breadcrumb(self):
-        return "{}=={}".format(self.package, self.version)
+        return f"{self.package}=={self.version}"

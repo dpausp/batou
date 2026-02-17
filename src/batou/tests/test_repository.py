@@ -1,7 +1,7 @@
 import os
 import subprocess
+from unittest import mock
 
-import mock
 import pytest
 
 import batou.utils
@@ -86,12 +86,10 @@ def test_repository_hg_verify(tmpdir):
     # Create a second repo as target
     with open(".hg/hgrc", "w") as f:
         f.write(
-            """\
+            f"""\
 [paths]
-default = file:///{}/remote
-""".format(
-                tmpdir
-            )
+default = file:///{tmpdir}/remote
+"""
         )
 
     repository = MercurialRepository(environment)

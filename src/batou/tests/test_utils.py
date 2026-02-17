@@ -4,8 +4,8 @@ import tempfile
 import threading
 import unittest
 from io import StringIO
+from unittest import mock
 
-import mock
 import pytest
 
 import batou
@@ -304,7 +304,7 @@ def fake_lock(lockfile, options):
     # Emulate fcntl's behaviour if we would be two processes.
     success = the_fake_lock.acquire(False)
     if not success:
-        raise IOError
+        raise OSError
 
 
 class LockfileContextManagerTests(unittest.TestCase):
@@ -322,10 +322,10 @@ class LockfileContextManagerTests(unittest.TestCase):
     def test_lock_creates_file_and_writes_and_removes_pid(self):
         lockfile = self.tempfile()
         with locked(lockfile):
-            with open(lockfile, "r") as f:
+            with open(lockfile) as f:
                 pid = f.read().strip()
             self.assertEqual(os.getpid(), int(pid))
-        with open(lockfile, "r") as f:
+        with open(lockfile) as f:
             self.assertEqual("", f.read())
 
     def test_lock_works_with_existing_file(self):
@@ -334,10 +334,10 @@ class LockfileContextManagerTests(unittest.TestCase):
         f.write("sadf")
         f.close()
         with locked(lockfile):
-            with open(lockfile, "r") as f:
+            with open(lockfile) as f:
                 pid = f.read().strip()
             self.assertEqual(os.getpid(), int(pid))
-        with open(lockfile, "r") as f:
+        with open(lockfile) as f:
             self.assertEqual("", f.read())
 
     @mock.patch("fcntl.lockf", side_effect=fake_lock)

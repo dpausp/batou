@@ -2,8 +2,8 @@ import os
 import re
 import tempfile
 import time
+from unittest import mock
 
-import mock
 import pytest
 
 from batou.debug.fd_tracker import FileDescriptorTracker
@@ -271,7 +271,7 @@ def test_fd_tracker_tracks_opens_with_timestamps(monkeypatch, tmpdir):
     output_file = f"/tmp/batou_fd_track_test_env_{deployment_name}_{pid}.txt"
     assert os.path.exists(output_file)
 
-    with open(output_file, "r") as f:
+    with open(output_file) as f:
         content = f.read()
         # Find the bar line for the most opened FD
         lines = content.split("\n")
@@ -306,7 +306,7 @@ def test_fd_tracker_verbose_stack_traces(monkeypatch, tmpdir):
     output_file = f"/tmp/batou_fd_track_test_env_{deployment_name}_{pid}.txt"
     assert os.path.exists(output_file)
 
-    with open(output_file, "r") as f:
+    with open(output_file) as f:
         content = f.read()
         assert "Stack Traces (grouped by trace):" in content
 
@@ -425,7 +425,7 @@ def test_fd_tracker_report_ascii_trend_graph(monkeypatch, tmpdir):
     assert os.path.exists(output_file)
 
     # Verify report contains ASCII trend graph
-    with open(output_file, "r") as f:
+    with open(output_file) as f:
         content = f.read()
         assert "Top 20 Files:" in content
         assert "*" in content  # Bar characters
@@ -458,7 +458,7 @@ def test_fd_tracker_grouped_stack_traces(monkeypatch, tmp_path):
     assert os.path.exists(output_file)
 
     # Verify report groups traces together
-    with open(output_file, "r") as f:
+    with open(output_file) as f:
         content = f.read()
         assert "Stack Traces (grouped by trace):" in content
         # Should show one trace with multiple files, not one trace per file

@@ -1,8 +1,8 @@
 import inspect
 import os
 import os.path
+from unittest import mock
 
-import mock
 import pytest
 
 import batou.utils
@@ -71,7 +71,7 @@ def test_update_code_new_target(mock_remote_core, tmpdir):
 
     assert remote_core.cmd.call_count == 4
     calls = iter(x[1][0] for x in remote_core.cmd.mock_calls)
-    assert next(calls) == "hg init {}".format(remote_core.target_directory)
+    assert next(calls) == f"hg init {remote_core.target_directory}"
     assert next(calls) == "hg pull http://bitbucket.org/flyingcircus/batou"
     assert next(calls) == "hg up -C default"
     assert next(calls) == "hg id -Tjson"
@@ -93,7 +93,7 @@ def test_hg_bundle_shipping(mock_remote_core, tmpdir):
 
     assert remote_core.cmd.call_count == 6
     calls = iter(x[1][0] for x in remote_core.cmd.mock_calls)
-    assert next(calls) == "hg init {}".format(remote_core.target_directory)
+    assert next(calls) == f"hg init {remote_core.target_directory}"
     assert next(calls) == "hg id -Tjson"
     assert next(calls) == "hg heads -Tjson"
     assert next(calls) == "hg -y unbundle batou-bundle.hg"
@@ -146,7 +146,7 @@ def test_whoami():
     assert remote_core.whoami() != ""
 
 
-class DummyChannel(object):
+class DummyChannel:
     _closed = False
 
     def __init__(self):

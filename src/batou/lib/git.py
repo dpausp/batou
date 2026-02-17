@@ -64,24 +64,20 @@ class Clone(Component):
 
             if self.has_outgoing_changesets():
                 output.annotate(
-                    "Git clone at {} has outgoing changesets.".format(self.target)
+                    f"Git clone at {self.target} has outgoing changesets."
                 )
 
             if self.has_changes():
                 if self.clobber:
                     output.annotate(
-                        "Git clone at {} is dirty, going to lose changes.".format(
-                            self.target
-                        ),
+                        f"Git clone at {self.target} is dirty, going to lose changes.",
                         red=True,
                     )
                     raise UpdateNeeded()
                 else:
                     output.annotate(
-                        "Git clone at {} is dirty - refusing to clobber. "
-                        "Use `clobber=True` if this is intentional .".format(
-                            self.target
-                        ),
+                        f"Git clone at {self.target} is dirty - refusing to clobber. "
+                        "Use `clobber=True` if this is intentional .",
                         red=True,
                     )
                     raise RuntimeError("Refusing to clobber dirty work directory.")

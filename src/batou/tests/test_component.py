@@ -1,8 +1,8 @@
 import os
 import os.path
+from unittest.mock import Mock
 
 import pytest
-from mock import Mock
 
 import batou
 from batou import SilentConfigurationError, UpdateNeeded
@@ -100,10 +100,10 @@ def test_recursive_sub_component_iterator(root):
         name = None
 
     for x in range(3):
-        c = TestComponent(name="x{}".format(x))
+        c = TestComponent(name=f"x{x}")
         root.component += c
         for y in range(2):
-            c2 = TestComponent(name="x{}y{}".format(x, y))
+            c2 = TestComponent(name=f"x{x}y{y}")
             c += c2
 
     recursive = list(x.name for x in root.component.recursive_sub_components)
@@ -202,11 +202,11 @@ def test_sub_components_are_deployed_first(root):
         namevar = "id"
 
         def verify(self):
-            log.append("{}:verify".format(self.id))
+            log.append(f"{self.id}:verify")
             raise batou.UpdateNeeded()
 
         def update(self):
-            log.append("{}:update".format(self.id))
+            log.append(f"{self.id}:update")
 
     c1 = MyComponent("1")
     root.component += c1
@@ -220,7 +220,7 @@ def test_log_in_configure_is_stored_on_root_for_later(root):
         namevar = "id"
 
         def configure(self):
-            self.log("{}: configure".format(self.id))
+            self.log(f"{self.id}: configure")
 
     c1 = MyComponent("1")
     root.component += c1
@@ -232,7 +232,7 @@ def test_log_in_verify(root):
         namevar = "id"
 
         def verify(self):
-            self.log("{}: verify".format(self.id))
+            self.log(f"{self.id}: verify")
 
     c1 = MyComponent("1")
     root.component += c1
@@ -400,7 +400,7 @@ def test_touch_updates_mtime_leaves_content_intact(tmpdir):
     os.utime(reference, (0, 0))
     c.touch(reference)
     assert os.stat(reference).st_mtime != 0
-    with open(reference, "r") as r:
+    with open(reference) as r:
         assert "Hello world" == r.read()
 
 

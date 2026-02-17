@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from batou import NonConvergingWorkingSet, UnsatisfiedResources
 from batou.environment import Environment

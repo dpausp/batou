@@ -4,7 +4,7 @@ from batou import output
 from batou.component import Component
 
 
-class TemplateStats(object):
+class TemplateStats:
     """Track template cache statistics."""
 
     def __init__(self):

@@ -4,7 +4,7 @@ import sys
 from batou.remote_core import Output
 
 
-class TerminalBackend(object):
+class TerminalBackend:
     def __init__(self):
         import py.io
 
@@ -23,7 +23,7 @@ class TerminalBackend(object):
         self._tw.write(content, **format)
 
 
-class NullBackend(object):
+class NullBackend:
     def line(self, message, **format):
         pass
 
@@ -34,7 +34,7 @@ class NullBackend(object):
         pass
 
 
-class TestBackend(object):
+class TestBackend:
     def __init__(self):
         self.output = ""
 
@@ -42,7 +42,7 @@ class TestBackend(object):
         self.output += message + "\n"
 
     def sep(self, sep, title, **format):
-        self.output += " {} {} {} ".format(sep * 3, title, sep * 3)
+        self.output += f" {sep * 3} {title} {sep * 3} "
 
     def write(self, content, **format):
         self.output += content + "\n"

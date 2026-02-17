@@ -4,7 +4,7 @@ from typing import Set
 from batou.utils import flatten
 
 
-class Subscription(object):
+class Subscription:
     # Dirty on the subscription means: I am OK to be dirty and _not_
     # get updated. The default is False: I want to be updated.
 
@@ -19,7 +19,7 @@ class Subscription(object):
         return hash((self.root, self.strict, self.host, self.reverse, self.dirty))
 
 
-class Resources(object):
+class Resources:
     """A registry for resources.
 
     Resources are mappings of keys to lists of values.

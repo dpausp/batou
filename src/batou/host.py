@@ -64,21 +64,21 @@ def new_ssh_args(spec):
 execnet.gateway_io.ssh_args = new_ssh_args
 
 
-class RPCWrapper(object):
+class RPCWrapper:
     def __init__(self, host):
         self.host = host
 
     def __getattr__(self, name):
         def call(*args, **kw):
             output.annotate(
-                "rpc {}: {}(*{}, **{})".format(self.host.fqdn, name, args, kw),
+                f"rpc {self.host.fqdn}: {name}(*{args}, **{kw})",
                 debug=True,
             )
             self.host.channel.send((name, args, kw))
             while True:
                 message = self.host.channel.receive()
                 output.annotate(
-                    "{}: message: {}".format(self.host.fqdn, message),
+                    f"{self.host.fqdn}: message: {message}",
                     debug=True,
                 )
                 type = message[0]
@@ -90,16 +90,16 @@ class RPCWrapper(object):
                 elif type == "batou-unknown-error":
                     output.error(message[1])
                     raise RuntimeError(
-                        "{}: Remote exception encountered.".format(self.host.fqdn)
+                        f"{self.host.fqdn}: Remote exception encountered."
                     )
                 elif type == "batou-error":
                     # Remote put out the details already.
                     raise RuntimeError(
-                        "{}: Remote exception encountered.".format(self.host.fqdn)
+                        f"{self.host.fqdn}: Remote exception encountered."
                     )
                 else:
                     raise RuntimeError(
-                        "{}: Unknown message type {}".format(self.host.fqdn, type)
+                        f"{self.host.fqdn}: Unknown message type {type}"
                     )
 
         return call
@@ -108,7 +108,7 @@ class RPCWrapper(object):
 _no_value_marker = object()
 
 
-class Host(object):
+class Host:
     service_user = None
     require_sudo = None
     ignore = False
@@ -204,7 +204,7 @@ class Host(object):
 
 class LocalHost(Host):
     def connect(self):
-        self.gateway = execnet.makegateway("popen//python={}".format(sys.executable))
+        self.gateway = execnet.makegateway(f"popen//python={sys.executable}")
         self.channel = self.gateway.remote_exec(remote_core)
 
     def start(self):
@@ -250,21 +250,15 @@ class RemoteHost(Host):
         if self.service_user is not None and self.require_sudo:
             # When calling sudo, ensure that no password will ever be
             # requested, and fail otherwise.
-            interpreter = "sudo -ni -u {user} {interpreter}".format(
-                user=self.service_user, interpreter=interpreter
-            )
-        spec = "ssh={fqdn}//python={interpreter}//type={method}".format(
-            fqdn=self.fqdn,
-            method=self.environment.connect_method,
-            interpreter=interpreter,
-        )
+            interpreter = f"sudo -ni -u {self.service_user} {interpreter}"
+        spec = f"ssh={self.fqdn}//python={interpreter}//type={self.environment.connect_method}"
         ssh_configs = [
-            "ssh_config_{}".format(self.environment.name),
+            f"ssh_config_{self.environment.name}",
             "ssh_config",
         ]
         for ssh_config in ssh_configs:
             if os.path.exists(ssh_config):
-                spec += "//ssh_config={}".format(ssh_config)
+                spec += f"//ssh_config={ssh_config}"
                 break
 
         return execnet.makegateway(spec)
@@ -280,10 +274,10 @@ class RemoteHost(Host):
 
         try:
             self.channel = self.gateway.remote_exec(remote_core)
-        except IOError:
+        except OSError:
             raise RuntimeError(
-                "Could not start batou on host `{}`. "
-                "The output above may contain more information. ".format(self.fqdn)
+                f"Could not start batou on host `{self.fqdn}`. "
+                "The output above may contain more information. "
             )
 
         if self.service_user is not None and self.require_sudo is None:
@@ -302,12 +296,10 @@ class RemoteHost(Host):
 
                 try:
                     self.channel = self.gateway.remote_exec(remote_core)
-                except IOError:
+                except OSError:
                     raise RuntimeError(
-                        "Could not start batou on host `{}`. "
-                        "The output above may contain more information. ".format(
-                            self.fqdn
-                        )
+                        f"Could not start batou on host `{self.fqdn}`. "
+                        "The output above may contain more information. "
                     )
 
         output.annotate("Connected ...", debug=True)

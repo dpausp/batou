@@ -1,8 +1,8 @@
 import os.path
 import pathlib
 import sys
+from unittest import mock
 
-import mock
 import pytest
 
 from batou.utils import CmdExecutionError

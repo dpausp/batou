@@ -124,10 +124,8 @@ class File(Component):
                 # convenience case (template a simple file) and an edge case
                 # (have an empty file)
                 raise ValueError(
-                    "Missing implicit template file {}. Or did you want "
-                    "to create an empty file? Then use File('{}', content='').".format(
-                        guess_source, self._unmapped_path
-                    )
+                    f"Missing implicit template file {guess_source}. Or did you want "
+                    f"to create an empty file? Then use File('{self._unmapped_path}', content='')."
                 )
         if self.ensure == "file" and (self.content or self.source):
             if self.template_args is None:
@@ -224,16 +222,14 @@ class SyncDirectory(Component):
     def exclude_arg(self):
         if not self.exclude:
             return ""
-        return " ".join("--exclude '{}'".format(x) for x in self.exclude) + " "
+        return " ".join(f"--exclude '{x}'" for x in self.exclude) + " "
 
     def verify(self):
         if not os.path.isdir(self.path):
             raise batou.UpdateNeeded()
 
         stdout, stderr = self.cmd(
-            "rsync {} {}{}/ {}".format(
-                self.verify_opts, self.exclude_arg, self.source, self.path
-            )
+            f"rsync {self.verify_opts} {self.exclude_arg}{self.source}/ {self.path}"
         )
 
         # In case of we see non-convergent rsync runs
@@ -245,9 +241,7 @@ class SyncDirectory(Component):
 
     def update(self):
         self.cmd(
-            "rsync {} {}{}/ {}".format(
-                self.sync_opts, self.exclude_arg, self.source, self.path
-            )
+            f"rsync {self.sync_opts} {self.exclude_arg}{self.source}/ {self.path}"
         )
 
     @property
@@ -388,7 +382,7 @@ class ManagedContentBase(FileComponent):
     _content_source_attribute = "content"
 
     def configure(self):
-        super(ManagedContentBase, self).configure()
+        super().configure()
 
         self.diff_dir = os.path.join(self.environment.workdir_base, ".batou-diffs")
         # Step 1: Determine content attribute:
@@ -397,9 +391,7 @@ class ManagedContentBase(FileComponent):
         # - we might fall back using the path attribute (namevar)
         if self.source and getattr(self, self._content_source_attribute):
             raise ValueError(
-                'Only one of either "{}" or "source" are allowed.'.format(
-                    self._content_source_attribute
-                ),
+                f'Only one of either "{self._content_source_attribute}" or "source" are allowed.',
             )
 
         if not getattr(self, self._content_source_attribute):
@@ -424,7 +416,7 @@ class ManagedContentBase(FileComponent):
             else:
                 if self._delayed:
                     raise FileNotFoundError(
-                        "Could not find source file {}".format(self.source)
+                        f"Could not find source file {self.source}"
                     )
                 # We need to try rendering again later.
                 self._delayed = True

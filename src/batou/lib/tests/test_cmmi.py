@@ -6,8 +6,8 @@ import tarfile
 import time
 from datetime import datetime
 from io import BytesIO
+from unittest import mock
 
-import mock
 import pytest
 
 from batou.lib.cmmi import Build, Configure, Make
@@ -28,7 +28,7 @@ def test_configure_defaults_prefix_to_workdir(root):
     assert configure.prefix == root.component.workdir
     root.component.deploy()
     assert (
-        " --prefix={}".format(root.component.workdir) in configure.cmd.call_args[0][0]
+        f" --prefix={root.component.workdir}" in configure.cmd.call_args[0][0]
     )
 
 
@@ -61,7 +61,7 @@ def test_make_verifies_against_success_file(root):
     assert 1 == make.cmd.call_count
 
 
-CONFIGURE = """#!{}
+CONFIGURE = f"""#!{sys.executable}
 import sys
 open('configure-running', 'w').close()
 
@@ -74,9 +74,7 @@ install:
 '''
 
 open('Makefile', 'w').write(Makefile_template)
-""".format(
-    sys.executable
-).encode(
+""".encode(
     "ascii"
 )
 

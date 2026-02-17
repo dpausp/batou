@@ -4,14 +4,11 @@ These tests verify that conversions in both directions produce
 semantically equivalent configurations.
 """
 
-import tempfile
 from pathlib import Path
 
-import pytest
-
-from batou.config_toml import load_toml_config, to_legacy_format
+from batou.config_toml import load_toml_config
 from batou.ini_to_toml import InferMode, convert_config_to_toml, format_toml
-from batou.toml_to_ini import convert_toml_to_ini, format_ini
+from batou.toml_to_ini import convert_toml_to_ini
 
 # Sample INI configurations for testing
 MINIMAL_INI = """\

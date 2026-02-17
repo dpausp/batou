@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 import collections
 import os.path
+from unittest import mock
 
-import mock
 import pytest
 
 from batou import TemplatingError
@@ -52,7 +51,7 @@ def test_jinja2_template_dont_add_trailing_newline():
 
 def test_jinja2_template_file():
     tmpl = TemplateEngine.get("jinja2")
-    filename = "{}/haproxy.cfg".format(fixture)
+    filename = f"{fixture}/haproxy.cfg"
     result = tmpl.template(filename + ".jinja2", sample_dict)
     with open(filename) as ref:
         assert ref.read() == result

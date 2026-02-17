@@ -80,7 +80,7 @@ class AppEnv(Component):
     pip_version = None
 
     def configure(self):
-        with open("requirements.lock", "r") as f:
+        with open("requirements.lock") as f:
             lockfile = f.read()
 
         # Include editable package sources in hash so code changes trigger rebuild
@@ -98,7 +98,7 @@ class AppEnv(Component):
                     editable_sources.append(path)
 
         # Read appenv code
-        with open(__file__, "r") as f:
+        with open(__file__) as f:
             hash_content = lockfile + self.python_version + f.read()
 
         # Read editable source files
@@ -113,9 +113,9 @@ class AppEnv(Component):
                     ):
                         continue
                     try:
-                        with open(filepath, "r", errors="ignore") as f:
+                        with open(filepath, errors="ignore") as f:
                             hash_content += f.read()
-                    except (IOError, UnicodeDecodeError):
+                    except (OSError, UnicodeDecodeError):
                         pass
 
         hash_content = hash_content.encode("utf-8")

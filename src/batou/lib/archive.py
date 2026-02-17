@@ -25,7 +25,7 @@ class Extract(Component):
             if candidate.can_handle(self.archive):
                 break
         else:
-            raise ValueError("No handler found for archive '{}'.".format(self.archive))
+            raise ValueError(f"No handler found for archive '{self.archive}'.")
         extractor = candidate(
             self.archive,
             target=self.target,
@@ -65,16 +65,14 @@ class Extractor(Component):
     def configure(self):
         if self.strip and not self._supports_strip:
             raise ValueError(
-                "Strip is not supported by {}".format(self.__class__.__name__)
+                f"Strip is not supported by {self.__class__.__name__}"
             )
         if self.create_target_dir:
             if self.target is None:
                 self.target = self.extract_base_name(self.archive)
             if not self.target:
                 raise AttributeError(
-                    "Target not given and not derivable from archive name ({}).".format(
-                        self.archive
-                    )
+                    f"Target not given and not derivable from archive name ({self.archive})."
                 )
             d = Directory(self.target, leading=True)
             self += d
@@ -121,8 +119,8 @@ class Untar(Extractor):
     _supports_strip = True
 
     def configure(self):
-        super(Untar, self).configure()
-        self.exclude = " ".join("--exclude='{}'".format(x) for x in self.exclude)
+        super().configure()
+        self.exclude = " ".join(f"--exclude='{x}'" for x in self.exclude)
 
     def get_names_from_archive(self):
         # Note, this does not work combined with strip ... :/
@@ -136,7 +134,7 @@ class Untar(Extractor):
         )
 
 
-class DMGVolume(object):
+class DMGVolume:
     """Wrapper to mount a .dmg volume and operate on it."""
 
     HDIUTIL = "/usr/bin/hdiutil"

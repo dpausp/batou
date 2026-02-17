@@ -74,6 +74,6 @@ def test_configurationerrors_can_be_sorted(root):
 
     errors.append(DuplicateHostError.from_context("asdf"))
 
-    errors.append(InvalidIPAddressError.from_context(("127.0.0.256/24")))
+    errors.append(InvalidIPAddressError.from_context("127.0.0.256/24"))
 
     errors.sort(key=lambda x: x.sort_key)

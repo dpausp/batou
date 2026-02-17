@@ -8,7 +8,7 @@ import socket
 from batou import output
 
 
-class FileDescriptorTracker(object):
+class FileDescriptorTracker:
     """File descriptor tracking for leak detection."""
 
     from batou.debug.settings import DebugSettings
@@ -346,9 +346,7 @@ stats = get_statistics()
                     # Show stack trace
                     for frame in stack_key:
                         f.write(
-                            '  File "{}", line {}, in {}\n'.format(
-                                frame[0], frame[1], frame[2]
-                            )
+                            f'  File "{frame[0]}", line {frame[1]}, in {frame[2]}\n'
                         )
                     # Show files with this trace
                     f.write(

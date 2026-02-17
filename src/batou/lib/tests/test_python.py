@@ -30,9 +30,7 @@ def test_venv_updates_if_python_changes(root):
     playground.deploy()
 
     out, err = playground.cmd(
-        '{}/bin/python -c "import sys; print(sys.version_info[:2])"'.format(
-            playground.workdir
-        )
+        f'{playground.workdir}/bin/python -c "import sys; print(sys.version_info[:2])"'
     )
     assert 3 == ast.literal_eval(out)[0]
 

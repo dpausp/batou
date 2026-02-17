@@ -56,10 +56,10 @@ def check_event_scope(scope, source, target):
                 # and is in the same root.
                 return True
         return False
-    raise ValueError("Unknown event scope: {}".format(scope))
+    raise ValueError(f"Unknown event scope: {scope}")
 
 
-class ComponentDefinition(object):
+class ComponentDefinition:
     def __init__(self, factory, filename=None, defdir=None):
         self.factory = factory
         self.name = factory.__name__.lower()
@@ -73,9 +73,9 @@ def load_components_from_file(filename):
     # Synthesize a module for this component file in batou.c
     defdir = os.path.dirname(filename)
     module_name = os.path.basename(defdir)
-    module_path = "batou.c.{}".format(module_name)
+    module_path = f"batou.c.{module_name}"
     module = types.ModuleType(
-        module_name, "Component definition module for {}".format(filename)
+        module_name, f"Component definition module for {filename}"
     )
     sys.modules[module_path] = module
     setattr(batou.c, module_name, module)
@@ -95,7 +95,7 @@ def load_components_from_file(filename):
     return components
 
 
-class Component(object):
+class Component:
     """A component that models configuration and can apply it.
 
     Use sub-classes of :py:class:`Component` to create custom
@@ -526,9 +526,7 @@ class Component(object):
                     continue
                 if predict_only:
                     output.annotate(
-                        "Trigger {}: {}.{}".format(
-                            event, handler.__self__, handler.__name__
-                        )
+                        f"Trigger {event}: {handler.__self__}.{handler.__name__}"
                     )
                     continue
                 handler(self)
@@ -653,9 +651,7 @@ class Component(object):
         resources = self.require(key, host, strict, reverse, dirty)
         if len(resources) > 1:
             raise KeyError(
-                "Expected only one result, got multiple for (key={}, host={})".format(
-                    key, host
-                )
+                f"Expected only one result, got multiple for (key={key}, host={host})"
             )
         elif len(resources) == 0 and strict:
             raise SilentConfigurationError()
@@ -731,9 +727,7 @@ class Component(object):
         reference = self.last_updated(**kw)
         if reference is None:
             output.annotate(
-                "assert_component_is_current({}, ...): No reference".format(
-                    self._breadcrumb
-                ),
+                f"assert_component_is_current({self._breadcrumb}, ...): No reference",
                 debug=True,
             )
             raise batou.UpdateNeeded()
@@ -744,12 +738,7 @@ class Component(object):
                 continue
             if reference < required:
                 output.annotate(
-                    "assert_component_is_current({}, {}): {} < {}".format(
-                        self._breadcrumb,
-                        requirement._breadcrumb,
-                        reference,
-                        required,
-                    ),
+                    f"assert_component_is_current({self._breadcrumb}, {requirement._breadcrumb}): {reference} < {required}",
                     debug=True,
                 )
                 raise batou.UpdateNeeded()
@@ -1018,7 +1007,7 @@ class Component(object):
         result = self.__class__.__name__
         name = self.namevar_for_breadcrumb
         if name:
-            result += "({!r})".format(name)
+            result += f"({name!r})"
         return result
 
     @property
@@ -1042,7 +1031,7 @@ class HookComponent(Component):
         self.provide(self.key, self)
 
 
-class RootComponent(object):
+class RootComponent:
     """Wrapper to manage top-level components assigned to hosts in an
     environment.
 
@@ -1122,7 +1111,7 @@ class ConfigString(str):
 NO_DEFAULT = object()
 
 
-class Attribute(object):
+class Attribute:
     """An attribute descriptor is used to provide:
 
     - declare overrideability for components
@@ -1166,7 +1155,7 @@ class Attribute(object):
         map=False,
     ):
         if isinstance(conversion, str):
-            conversion = getattr(self, "convert_{}".format(conversion))
+            conversion = getattr(self, f"convert_{conversion}")
         self.conversion = conversion
 
         self.default = default

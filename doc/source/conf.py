@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # batou documentation build configuration file, created by
 # sphinx-quickstart on Fri Nov  2 10:08:20 2012.

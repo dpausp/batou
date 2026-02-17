@@ -15,7 +15,7 @@ class RotatedLogfile(HookComponent):
     postrotate = None
 
     def configure(self):
-        super(RotatedLogfile, self).configure()
+        super().configure()
         self.path = os.path.join(self.workdir, self.path)
         self.path = self.map(self.path)
         self.args = list(map(str.strip, self.args.split(",")))

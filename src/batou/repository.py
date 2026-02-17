@@ -12,7 +12,7 @@ from batou.utils import cmd as cmd_
 
 
 def cmd(c, *args, **kw):
-    return cmd_("LANG=C LC_ALL=C LANGUAGE=C {}".format(c), *args, **kw)
+    return cmd_(f"LANG=C LC_ALL=C LANGUAGE=C {c}", *args, **kw)
 
 
 def find_line_with(prefix, output):
@@ -22,7 +22,7 @@ def find_line_with(prefix, output):
             return line.replace(prefix, "", 1).strip()
 
 
-class Repository(object):
+class Repository:
     """A repository containing the batou deployment.
 
     The actual deployment may be located within a prefix
@@ -40,9 +40,7 @@ class Repository(object):
     @classmethod
     def from_environment(cls, environment):
         output.annotate(
-            "Repository.from_environment: connect_method={}, update_method={}".format(
-                environment.connect_method, environment.update_method
-            ),
+            f"Repository.from_environment: connect_method={environment.connect_method}, update_method={environment.update_method}",
             debug=True,
         )
         if environment.connect_method == "local":
@@ -103,7 +101,7 @@ class FilteredRSync(execnet.RSync):
     )
 
     def __init__(self, *args, **kw):
-        super(FilteredRSync, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.IGNORE_LIST = set(self.IGNORE_LIST)
 
     def filter(self, path):
@@ -120,7 +118,7 @@ class RSyncRepository(Repository):
 
     def update(self, host):
         source, target = self.root, host.remote_repository
-        output.annotate("rsync: {} -> {}".format(source, target), debug=True)
+        output.annotate(f"rsync: {source} -> {target}", debug=True)
         rsync = FilteredRSync(source, verbose=False)
         # We really want to use `delete=True` here but there's an execnet issue
         # preventing us to use it. See
@@ -160,7 +158,7 @@ class RSyncExtRepository(Repository):
         rsync_args = self.SYNC_OPTS.copy()
 
         ssh_configs = [
-            "ssh_config_{}".format(self.environment.name),
+            f"ssh_config_{self.environment.name}",
             "ssh_config",
         ]
         ssh_config_used = None
@@ -175,10 +173,10 @@ class RSyncExtRepository(Repository):
 
         if host.require_sudo:
             rsync_args.append(
-                "--rsync-path='sudo -ni -u {} rsync'".format(host.service_user)
+                f"--rsync-path='sudo -ni -u {host.service_user} rsync'"
             )
 
-        output.annotate("rsync-ext: {} -> {}".format(source, dest), debug=True)
+        output.annotate(f"rsync-ext: {source} -> {dest}", debug=True)
         output.annotate(
             "rsync-ext: SSH config: {}".format(ssh_config_used or "none"), debug=True
         )
@@ -187,7 +185,7 @@ class RSyncExtRepository(Repository):
         )
         if host.require_sudo:
             output.annotate(
-                "rsync-ext: Sudo user: {}".format(host.service_user), debug=True
+                f"rsync-ext: Sudo user: {host.service_user}", debug=True
             )
         output.annotate(
             "rsync-ext: Command: rsync {opts} {source}/ {target}:{dest}".format(
@@ -230,9 +228,7 @@ class RSyncDevRepository(RSyncExtRepository):
             debug=True,
         )
         output.annotate(
-            "RSyncDevRepository: source={} dest={}".format(
-                self.root, host.remote_repository
-            ),
+            f"RSyncDevRepository: source={self.root} dest={host.remote_repository}",
             debug=True,
         )
 
@@ -249,13 +245,11 @@ class RSyncDevRepository(RSyncExtRepository):
 
         if symlinks:
             output.annotate(
-                "RSyncDevRepository: Found {} symlinks in source:".format(
-                    len(symlinks)
-                ),
+                f"RSyncDevRepository: Found {len(symlinks)} symlinks in source:",
                 debug=True,
             )
             for rel_path, link_target in symlinks:
-                output.annotate("  {} -> {}".format(rel_path, link_target), debug=True)
+                output.annotate(f"  {rel_path} -> {link_target}", debug=True)
         else:
             output.annotate(
                 "RSyncDevRepository: No symlinks found in source", debug=True
@@ -275,7 +269,7 @@ class MercurialRepository(Repository):
     _upstream = None
 
     def __init__(self, environment):
-        super(MercurialRepository, self).__init__(environment)
+        super().__init__(environment)
         self.root = hg_cmd("hg root")[0]["reporoot"]
         self.branch = environment.branch or "default"
         self.subdir = os.path.relpath(self.environment.base_dir, self.root)
@@ -364,15 +358,15 @@ class MercurialBundleRepository(MercurialRepository):
             )
         fd, bundle_file = tempfile.mkstemp()
         os.close(fd)
-        bases = " ".join("--base {}".format(x) for x in heads)
+        bases = " ".join(f"--base {x}" for x in heads)
         cmd(
-            "hg -qy bundle {} {}".format(bases, bundle_file),
+            f"hg -qy bundle {bases} {bundle_file}",
             acceptable_returncodes=[0, 1],
         )
         change_size = os.stat(bundle_file).st_size
         if not change_size:
             return
-        output.annotate("Sending {} bytes of changes".format(change_size), debug=True)
+        output.annotate(f"Sending {change_size} bytes of changes", debug=True)
         rsync = execnet.RSync(bundle_file, verbose=False)
         rsync.add_target(host.gateway, host.remote_repository + "/batou-bundle.hg")
         rsync.send()
@@ -387,7 +381,7 @@ class GitRepository(Repository):
     remote = "origin"
 
     def __init__(self, environment):
-        super(GitRepository, self).__init__(environment)
+        super().__init__(environment)
         self.branch = environment.branch or "master"
         root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).strip()
         self.root = root.decode(sys.getfilesystemencoding())
@@ -398,7 +392,7 @@ class GitRepository(Repository):
         if self.environment.repository_url is not None:
             self._upstream = self.environment.repository_url
         elif self._upstream is None:
-            result = cmd("git remote show -n {}".format(self.remote))[0]
+            result = cmd(f"git remote show -n {self.remote}")[0]
             self._upstream = find_line_with("Fetch URL:", result)
         return self._upstream
 
@@ -443,23 +437,19 @@ Please commit and push first.
                 output.annotate(status, red=True)
                 raise DeploymentError()
         outgoing, _ = cmd(
-            "git log {remote}/{branch}..{branch} --pretty=oneline".format(
-                remote=self.remote, branch=self.branch
-            ),
+            f"git log {self.remote}/{self.branch}..{self.branch} --pretty=oneline",
             acceptable_returncodes=[0, 128],
         )
         if outgoing.strip():
             output.error(
-                """\
-Your repository has outgoing changes on branch {branch}:
+                f"""\
+Your repository has outgoing changes on branch {self.branch}:
 
 {outgoing}
 
 I am refusing to deploy in this situation as the results will be unpredictable.
 Please push first.
-""".format(
-                    branch=self.branch, outgoing=outgoing
-                )
+"""
             )
             raise DeploymentError()
 
@@ -490,9 +480,7 @@ class GitBundleRepository(GitRepository):
         os.close(fd)
         try:
             out, err = cmd(
-                "git bundle create {file} {range}".format(
-                    file=bundle_file, range=bundle_range
-                ),
+                f"git bundle create {bundle_file} {bundle_range}",
                 acceptable_returncodes=[0],
             )
         except CmdExecutionError as e:
@@ -508,7 +496,7 @@ class GitBundleRepository(GitRepository):
             output.error("Created invalid bundle (0 bytes):")
             output.annotate(err, red=True)
             raise DeploymentError()
-        output.annotate("Sending {} bytes of changes".format(change_size), debug=True)
+        output.annotate(f"Sending {change_size} bytes of changes", debug=True)
         rsync = execnet.RSync(bundle_file, verbose=False)
         rsync.add_target(host.gateway, host.remote_repository + "/batou-bundle.git")
         rsync.send()

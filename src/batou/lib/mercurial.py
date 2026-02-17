@@ -34,15 +34,13 @@ class Clone(Component):
 
             if self.has_outgoing_changesets():
                 output.annotate(
-                    "Hg clone at {} has outgoing changesets.".format(self.target),
+                    f"Hg clone at {self.target} has outgoing changesets.",
                     red=True,
                 )
 
             if self.has_changes():
                 output.annotate(
-                    "Hg clone at {} is dirty, going to lose changes.".format(
-                        self.target
-                    ),
+                    f"Hg clone at {self.target} is dirty, going to lose changes.",
                     red=True,
                 )
                 raise UpdateNeeded()

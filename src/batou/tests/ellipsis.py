@@ -2,7 +2,7 @@ import difflib
 import re
 
 
-class Report(object):
+class Report:
     matches = None
 
     def __init__(self):
@@ -47,7 +47,7 @@ def match(pattern, line):
     return pattern.match(line)
 
 
-class Ellipsis(object):
+class Ellipsis:
     # other = other.replace('\t', ' '*8) oder allgemein white-space unsensibel
     # multi-line support
 

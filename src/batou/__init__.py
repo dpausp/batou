@@ -112,7 +112,7 @@ class FileLockedError(ReportingException):
         return self
 
     def __str__(self):
-        return "File already locked: {}".format(self.filename)
+        return f"File already locked: {self.filename}"
 
     def report(self):
         output.error(str(self))
@@ -220,10 +220,7 @@ class ConfigurationError(ReportingException):
     def report(self):
         message = self.message
         if self.has_component:
-            message = "{}: {}".format(
-                self.component_root_name,
-                message,
-            )
+            message = f"{self.component_root_name}: {message}"
         output.error(message)
 
 
@@ -266,7 +263,7 @@ class AttributeExpansionError(ConfigurationError):
         )
         output.tabular(
             "Attribute",
-            "{}.{}".format(self.component_breadcrumbs, self.key),
+            f"{self.component_breadcrumbs}.{self.key}",
             red=True,
         )
 
@@ -307,12 +304,12 @@ class ConversionError(ConfigurationError):
         output.error(self.error_str)
         output.tabular(
             "Attribute",
-            "{}.{}".format(self.component_breadcrumbs, self.key),
+            f"{self.component_breadcrumbs}.{self.key}",
             red=True,
         )
         output.tabular(
             "Conversion",
-            "{}({})".format(self.conversion_name, self.value_repr),
+            f"{self.conversion_name}({self.value_repr})",
             red=True,
         )
         # TODO provide traceback in debug output
@@ -378,7 +375,7 @@ class DuplicateComponent(ConfigurationError):
         return "Duplicate component: " + self.a_name
 
     def report(self):
-        output.error('Duplicate component "{}"'.format(self.a_name))
+        output.error(f'Duplicate component "{self.a_name}"')
         output.tabular("Occurrence", self.a_filename)
         output.tabular("Occurrence", self.b_filename)
 
@@ -404,7 +401,7 @@ class DuplicateHostMapping(ConfigurationError):
         return "Duplicate host mapping: " + self.affected_hostname
 
     def report(self):
-        output.error('Duplicate host mapping "{}"'.format(self.affected_hostname))
+        output.error(f'Duplicate host mapping "{self.affected_hostname}"')
         output.tabular("Mapping 1: ", self.a)
         output.tabular("Mapping 2: ", self.b)
 
@@ -462,9 +459,7 @@ class UnusedResources(ConfigurationError):
         output.error("Unused provided resources")
         for key, component, value in self.unused_resources:
             output.line(
-                '    Resource "{}" provided by {} with value {}'.format(
-                    key, component, value
-                ),
+                f'    Resource "{key}" provided by {component} with value {value}',
                 red=True,
             )
 
@@ -597,7 +592,7 @@ class MissingEnvironment(ConfigurationError):
         return self
 
     def __str__(self):
-        return "Missing environment `{}`".format(self.environment_name)
+        return f"Missing environment `{self.environment_name}`"
 
     def report(self):
         output.error("Missing environment")
@@ -831,9 +826,7 @@ class NonConvergingWorkingSet(ConfigurationError):
         # TODO show this last or first, but not in the middle
         # of everything
         output.error(
-            "{} remaining unconfigured component(s): {}".format(
-                self.roots_len, self.root_names
-            )
+            f"{self.roots_len} remaining unconfigured component(s): {self.root_names}"
         )
         # TODO show all incl. their host name in -vv or so
 
@@ -889,7 +882,7 @@ class DuplicateHostError(ConfigurationError):
         return "Duplicate host: " + self.affected_hostname
 
     def report(self):
-        output.error("Duplicate definition of host: {}".format(self.affected_hostname))
+        output.error(f"Duplicate definition of host: {self.affected_hostname}")
 
 
 class InvalidIPAddressError(ConfigurationError):
@@ -905,7 +898,7 @@ class InvalidIPAddressError(ConfigurationError):
         return "Not a valid IP address: " + self.address
 
     def report(self):
-        output.error("Not a valid IP address: {}".format(self.address))
+        output.error(f"Not a valid IP address: {self.address}")
 
 
 class IPAddressConfigurationError(ConfigurationError):

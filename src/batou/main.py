@@ -22,8 +22,8 @@ def main(args: Optional[list] = None) -> None:
     version = importlib.metadata.version("batou")
     parser = argparse.ArgumentParser(
         description=(
-            "batou v{}: multi-(host|component|environment|version|platform) deployment"
-        ).format(version),
+            f"batou v{version}: multi-(host|component|environment|version|platform) deployment"
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.set_defaults(func=parser.print_usage)

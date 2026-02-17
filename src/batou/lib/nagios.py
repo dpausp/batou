@@ -28,7 +28,7 @@ class Service(HookComponent):
         self.description = self.description.replace(",", "_")
         if isinstance(self.contact_groups, (list, tuple)):
             self.contact_groups = ",".join(self.contact_groups)
-        super(Service, self).configure()
+        super().configure()
 
     @property
     def check_command(self):
@@ -43,7 +43,7 @@ class NRPEService(Service):
     servicegroups = "nrpe"
 
     def configure(self):
-        super(NRPEService, self).configure()
+        super().configure()
         if not self.name:
             self.name = self.description.lower().replace(" ", "_")
 
@@ -53,7 +53,7 @@ class NRPEService(Service):
 
     @property
     def nrpe_command(self):
-        return "{} {}".format(self.command, self.args)
+        return f"{self.command} {self.args}"
 
 
 class NagiosServer(Component):

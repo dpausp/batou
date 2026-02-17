@@ -28,7 +28,7 @@ def service(root, tmpdir, request, deploy_platform):
 
     batou.lib.service.Service._add_platform("test", TestPlatformService)
 
-    service = batou.lib.service.Service("touch {}/called".format(tmpdir))
+    service = batou.lib.service.Service(f"touch {tmpdir}/called")
     service._platform_started = False
     root.component += service
     root.component.deploy()

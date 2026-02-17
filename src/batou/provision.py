@@ -12,7 +12,7 @@ from batou import output
 from batou.utils import cmd
 
 
-class Provisioner(object):
+class Provisioner:
     rebuild = False
 
     def __init__(self, name):
@@ -175,7 +175,7 @@ Host {hostname} {aliases}
         # keep updating it. This helps users to also interact with containers
         # by running `ssh -F ssh_config_dev mycontainer`
         self.ssh_config_file = os.path.abspath(
-            "ssh_config_{}".format(host.environment.name)
+            f"ssh_config_{host.environment.name}"
         )
         with open(self.ssh_config_file, "w") as f:
             f.write("\n".join(ssh_config))
@@ -248,7 +248,7 @@ Host {hostname} {aliases}
 
         env = self._initial_provision_env(host)
         env["SSH_CONFIG"] = self.ssh_config_file
-        env["RSYNC_RSH"] = "ssh -F {}".format(self.ssh_config_file)
+        env["RSYNC_RSH"] = f"ssh -F {self.ssh_config_file}"
         if self.rebuild:
             env["PROVISION_REBUILD"] = "1"
         # Add all component variables (uppercased) to the environment

@@ -22,4 +22,4 @@ class DPKG(Component):
 
     def update(self):
         # /dev/null: a talky apt-get get blocks remote execution
-        self.cmd("LANG=C apt-get -qy install {0}".format(self.package))
+        self.cmd(f"LANG=C apt-get -qy install {self.package}")

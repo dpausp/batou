@@ -68,7 +68,7 @@ class ConfigSection(dict):
         return result
 
 
-class Config(object):
+class Config:
     def __init__(self, path):
         config = RawConfigParser()
         config.optionxform = lambda optionstr: optionstr
@@ -96,7 +96,7 @@ class Config(object):
             return default
 
 
-class Environment(object):
+class Environment:
     """An environment assigns components to hosts and provides
     environment-specific configuration for components.
     """
@@ -147,7 +147,7 @@ class Environment(object):
 
         # These are the component classes, decorated with their
         # name.
-        self.components: Dict[str, "ComponentDefinition"] = {}
+        self.components: Dict[str, ComponentDefinition] = {}
         # These are the components assigned to hosts.
         self.root_components: List[RootComponent] = []
 
@@ -230,7 +230,7 @@ class Environment(object):
 
         mapping_file = self._environment_path("hostmap.json")
         if os.path.exists(mapping_file):
-            with open(mapping_file, "r") as f:
+            with open(mapping_file) as f:
                 for k, v in json.load(f).items():
                     if k in self.hostname_mapping:
                         raise DuplicateHostMapping.from_context(
@@ -469,7 +469,7 @@ class Environment(object):
             if root.host == host and root.name == component_name:
                 return root
         raise KeyError(
-            "Component {} not configured for host {}".format(component_name, host.name)
+            f"Component {component_name} not configured for host {host.name}"
         )
 
     def prepare_connect(self):
@@ -479,7 +479,7 @@ class Environment(object):
         elif self.connect_method == "kitchen":
             output.step("kitchen", "Ensuring machines are up ...")
             for fqdn in self.hosts:
-                cmd("kitchen create {}".format(fqdn))
+                cmd(f"kitchen create {fqdn}")
             if "BATOU_POST_KITCHEN_CREATE_CMD" in os.environ:
                 cmd(
                     "kitchen exec -c '{}'".format(

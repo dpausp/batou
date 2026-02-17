@@ -205,7 +205,7 @@ class GPGEncryptedFile(EncryptedFile):
         raise RuntimeError(
             "Could not find gpg binary."
             " Is GPG installed? I tried looking for: {}".format(
-                ", ".join("`{}`".format(x) for x in cls.GPG_BINARY_CANDIDATES)
+                ", ".join(f"`{x}`" for x in cls.GPG_BINARY_CANDIDATES)
             )
         )
 
@@ -280,7 +280,7 @@ def get_passphrase(identity: str) -> str:
     else:
         import getpass
 
-        passphrase = getpass.getpass("Enter passphrase for {}: ".format(identity))
+        passphrase = getpass.getpass(f"Enter passphrase for {identity}: ")
 
     known_passphrases[identity] = passphrase
     return passphrase
@@ -330,9 +330,7 @@ class AGEEncryptedFile(EncryptedFile):
                     if not matches:
                         exceptions.append(
                             Exception(
-                                'Unexpected output from age, expected "\\r\\r\\n": {}'.format(
-                                    out
-                                )
+                                f'Unexpected output from age, expected "\\r\\r\\n": {out}'
                             )
                         )
                         continue
@@ -358,7 +356,7 @@ class AGEEncryptedFile(EncryptedFile):
                             buffer = buffer[len(magic_bytes) :]
                     if buffer:
                         exceptions.append(
-                            Exception("Unexpected output from age: {}".format(buffer))
+                            Exception(f"Unexpected output from age: {buffer}")
                         )
                         continue
 
@@ -427,7 +425,7 @@ class AGEEncryptedFile(EncryptedFile):
         raise RuntimeError(
             "Could not find age binary."
             " Is age installed? I tried looking for: {}".format(
-                ", ".join("`{}`".format(x) for x in cls.AGE_BINARY_CANDIDATES)
+                ", ".join(f"`{x}`" for x in cls.AGE_BINARY_CANDIDATES)
             )
         )
 

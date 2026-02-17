@@ -11,8 +11,8 @@ def test_runs_svn_to_clone_repository(root):
     repos_path = os.path.join(root.environment.workdir_base, "repos")
     cmd("svnadmin create " + repos_path)
     cmd(
-        "svn checkout file://{dir} upstream; cd upstream;"
-        'touch foo; svn add foo; svn commit -m "bar"'.format(dir=repos_path)
+        f"svn checkout file://{repos_path} upstream; cd upstream;"
+        'touch foo; svn add foo; svn commit -m "bar"'
     )
     root.component += batou.lib.svn.Checkout(
         "file://" + repos_path, target="clone", revision="head"

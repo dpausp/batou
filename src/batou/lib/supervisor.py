@@ -54,7 +54,7 @@ redirect_stderr = true
             self.dependencies = (self.parent,)
         if not self.command:
             raise ValueError(
-                "`command` option missing for program {}".format(self.name)
+                f"`command` option missing for program {self.name}"
             )
         if not self.directory:
             self.directory = self.workdir
@@ -75,8 +75,8 @@ redirect_stderr = true
         self += File(self.config, content=self.expand(self.program_section))
 
     def ctl(self, args, **kw):
-        command = "{}/bin/supervisorctl".format(self.supervisor.workdir)
-        return self.cmd("{} {}".format(command, args), **kw)
+        command = f"{self.supervisor.workdir}/bin/supervisorctl"
+        return self.cmd(f"{command} {args}", **kw)
 
     def verify(self):
         if not self.supervisor.enable:
@@ -91,20 +91,20 @@ redirect_stderr = true
         self.ctl("reread")
         self.ctl("update")
         if self.enable:
-            self.ctl("restart {}".format(self.name))
+            self.ctl(f"restart {self.name}")
         else:
             if self.is_running():
-                self.ctl("stop {}".format(self.name))
+                self.ctl(f"stop {self.name}")
             return
         if self.supervisor.wait_for_running:
             for retry in range(self.options["startsecs"]):
                 time.sleep(1)
                 if self.is_running():
                     return
-            raise RuntimeError('Program "{}" did not start up'.format(self.name))
+            raise RuntimeError(f'Program "{self.name}" did not start up')
 
     def is_running(self):
-        out, err = self.ctl("status {}".format(self.name), ignore_returncode=True)
+        out, err = self.ctl(f"status {self.name}", ignore_returncode=True)
         return "RUNNING" in out
 
     # Keep track whether
@@ -118,9 +118,9 @@ redirect_stderr = true
             return
         # Only try once. Keep going anyway.
         self._evaded = True
-        output.annotate("\u2623 Stopping {} for cold deployment".format(self.name))
+        output.annotate(f"\u2623 Stopping {self.name} for cold deployment")
         try:
-            self.ctl("stop {}".format(self.name))
+            self.ctl(f"stop {self.name}")
         except Exception:
             pass
 
@@ -152,7 +152,7 @@ process_name={{component.name}}
                 os.path.join(self.supervisor.workdir, self.command)
             )
 
-        super(Eventlistener, self).configure()
+        super().configure()
 
 
 class Supervisor(Component):
@@ -303,9 +303,7 @@ class RunningSupervisor(RunningHelper):
                 break
         else:
             raise RuntimeError(
-                "supervisor master process did not start within {} seconds".format(
-                    self.reload_timeout
-                )
+                f"supervisor master process did not start within {self.reload_timeout} seconds"
             )
 
 

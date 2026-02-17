@@ -1,6 +1,7 @@
-import mock
+from unittest import mock
+from unittest.mock import Mock
+
 import pytest
-from mock import Mock
 
 import batou
 import batou.utils
@@ -94,7 +95,7 @@ def test_multiple_components(sample_service):
     e = Environment("test-multiple-components")
     e.load()
     components = dict(
-        (host, list(sorted(c.name for c in e.root_dependencies(host=host))))
+        (host, sorted(c.name for c in e.root_dependencies(host=host)))
         for host in sorted(e.hosts.keys())
     )
     assert components == dict(

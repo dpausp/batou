@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import getpass
 import grp
@@ -6,10 +5,10 @@ import json
 import os
 import pwd
 from stat import S_IMODE
+from unittest.mock import Mock, patch
 
 import pytest
 import yaml
-from mock import Mock, patch
 
 import batou
 from batou.lib.file import (
@@ -392,9 +391,9 @@ def test_content_source_unclear(root):
     with pytest.raises(ValueError) as e:
         root.component += p
     assert str(e.value) == (
-        "Missing implicit template file {}/path. "
+        f"Missing implicit template file {root.defdir}/path. "
         "Or did you want to create an empty file? "
-        "Then use File('path', content='').".format(root.defdir)
+        "Then use File('path', content='')."
     )
 
 
