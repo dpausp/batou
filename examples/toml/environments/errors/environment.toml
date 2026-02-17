@@ -1,5 +1,5 @@
 # batou environment.toml - VALIDATION ERRORS DEMO
-# 
+#
 # Demonstrates Pydantic validation errors with line numbers.
 
 [environment]

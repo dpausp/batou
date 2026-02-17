@@ -1,5 +1,5 @@
 # batou environment.toml - EXTREME EXAMPLE
-# 
+#
 # Production-like environment showcasing:
 # - 7 hosts with many data attributes
 # - 40+ components across hosts

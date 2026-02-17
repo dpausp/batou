@@ -1,7 +1,7 @@
 # Research Report: Automatic Type Annotation Generation (State of 2026)
 
-**Date:** February 13, 2026  
-**Focus:** Python (with notes on other languages)  
+**Date:** February 13, 2026
+**Focus:** Python (with notes on other languages)
 **Researcher:** Technical Research Specialist
 
 ---

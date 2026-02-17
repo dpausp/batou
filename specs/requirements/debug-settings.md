@@ -159,4 +159,3 @@ Invalid environment variable values shall prevent deployment execution with clea
 ## 4. Verification
 
 not required
-

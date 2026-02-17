@@ -233,7 +233,7 @@ Deployment Start
                   ├─> Interceptor.install_hooks()
                   ├─> RemoteTracker.register_execnet_hook()
                   └─> Timer.step("fd_tracking_init")
-               
+
 Deployment Execution
    └─> FD operations occur
         ├─> Local: Interceptor intercepts open/close
