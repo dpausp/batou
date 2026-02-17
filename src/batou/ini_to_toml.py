@@ -18,8 +18,52 @@ app = typer.Typer(
 )
 
 
-def infer_type(value: str) -> str | int | float | bool | list[str]:
-    """Infer the type of a config value and convert it."""
+class InferMode:
+    """Type inference modes for INI → TOML conversion."""
+
+    NONE = "none"  # Keep everything as strings
+    SAFE = "safe"  # Only bools and newline-separated lists
+    FULL = "full"  # Full type inference (int, float, bool, list)
+
+
+def infer_type(
+    value: str, mode: str = InferMode.NONE
+) -> str | int | float | bool | list[str]:
+    """Infer the type of a config value and convert it.
+
+    Args:
+        value: The string value from INI
+        mode: Inference mode - "none", "safe", or "full"
+
+    Returns:
+        Converted value based on mode
+    """
+    if mode == InferMode.NONE:
+        # Keep everything as strings, but still handle multiline lists
+        # for structural correctness
+        if "\n" in value:
+            items = [x.strip() for x in value.split("\n") if x.strip()]
+            if items:
+                return items
+        return value
+
+    if mode == InferMode.SAFE:
+        # Safe mode: only booleans and newline-separated lists
+        # These are "safe" because they don't lose information
+        if value.lower() in ("true", "yes", "on"):
+            return True
+        if value.lower() in ("false", "no", "off"):
+            return False
+
+        # Multi-line list (newline separated) - structural, not heuristic
+        if "\n" in value:
+            items = [x.strip() for x in value.split("\n") if x.strip()]
+            if items:
+                return items
+
+        return value
+
+    # FULL mode - current behavior
     # Boolean
     if value.lower() in ("true", "yes", "on"):
         return True
@@ -77,8 +121,13 @@ def parse_multiline_yaml(value: str) -> dict | None:
         return None
 
 
-def convert_config_to_toml(cfg_path: Path) -> dict:
-    """Convert an INI config file to TOML-compatible dict."""
+def convert_config_to_toml(cfg_path: Path, infer_mode: str = InferMode.NONE) -> dict:
+    """Convert an INI config file to TOML-compatible dict.
+
+    Args:
+        cfg_path: Path to environment.cfg file
+        infer_mode: Type inference mode - "none", "safe", or "full"
+    """
     config = configparser.ConfigParser()
     config.optionxform = str  # type: ignore[assignment]  # Preserve case
     config.read(cfg_path)
@@ -96,7 +145,7 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
         if section == "environment":
             # Environment settings
             for key, value in config.items(section):
-                result["environment"][key] = infer_type(value)
+                result["environment"][key] = infer_type(value, infer_mode)
 
         elif section == "hosts":
             # Simple host -> component mapping
@@ -145,11 +194,11 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
                         host_config["components"] = [value]
                 elif key.startswith("data-"):
                     # Data attributes - try to infer type
-                    host_config[key] = infer_type(value)
+                    host_config[key] = infer_type(value, infer_mode)
                 elif key == "platform":
                     host_config["platform"] = value
                 else:
-                    host_config[key] = infer_type(value)
+                    host_config[key] = infer_type(value, infer_mode)
 
             if "components" in host_config:
                 result["host"][hostname] = host_config
@@ -165,7 +214,7 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
                 if yaml_data is not None:
                     comp_config[key] = yaml_data
                 else:
-                    comp_config[key] = infer_type(value)
+                    comp_config[key] = infer_type(value, infer_mode)
 
             if comp_config:
                 result["components"][comp_name] = comp_config
@@ -176,7 +225,7 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
             prov_config = {}
 
             for key, value in config.items(section):
-                prov_config[key] = infer_type(value)
+                prov_config[key] = infer_type(value, infer_mode)
 
             if prov_config:
                 result["provisioner"][prov_name] = prov_config
@@ -208,22 +257,27 @@ def format_toml(data: dict) -> str:
 
 
 def migrate_environment(
-    env_path: Path, output_path: Path | None = None, dry_run: bool = False
+    env_path: Path,
+    output_path: Path | None = None,
+    dry_run: bool = False,
+    force: bool = False,
+    infer_mode: str = InferMode.NONE,
 ):
     """Migrate a single environment."""
     cfg_path = env_path / "environment.cfg"
-    toml_path = env_path / "environment.toml"
+    toml_path = output_path or (env_path / "environment.toml")
 
     if not cfg_path.exists():
         print(f"  ⚠️  No environment.cfg found in {env_path}")
         return False
 
-    if toml_path.exists() and not dry_run:
+    if toml_path.exists() and not dry_run and not force:
         print(f"  ⚠️  environment.toml already exists in {env_path}")
+        print("     Use --force to overwrite")
         return False
 
     try:
-        data = convert_config_to_toml(cfg_path)
+        data = convert_config_to_toml(cfg_path, infer_mode)
         toml_content = format_toml(data)
 
         if dry_run:
@@ -257,22 +311,47 @@ def migrate(
         bool,
         typer.Option("-f", "--force", help="Overwrite existing files"),
     ] = False,
+    infer_types: Annotated[
+        str,
+        typer.Option(
+            help="Type inference mode: 'none' (strings only), "
+            "'safe' (bools+lists), 'full' (all types)"
+        ),
+    ] = InferMode.NONE,
 ):
     """Convert environment.cfg to environment.toml."""
+    # Validate infer_types mode
+    valid_modes = [InferMode.NONE, InferMode.SAFE, InferMode.FULL]
+    if infer_types not in valid_modes:
+        print(f"Invalid --infer-types value: {infer_types}")
+        print(f"Valid options: {', '.join(valid_modes)}")
+        raise typer.Exit(1)
+
     target_path = Path(path)
 
     if dry_run:
         print("🔍 Dry run mode - no files will be modified\n")
 
+    if infer_types != InferMode.NONE:
+        print(f"📊 Type inference mode: {infer_types}\n")
+
     # Single environment or directory?
     if target_path.is_file() and target_path.name == "environment.cfg":
         # Single environment.cfg file
         env_path = target_path.parent
-        migrate_environment(env_path, Path(output) if output else None, dry_run)
+        migrate_environment(
+            env_path,
+            Path(output) if output else None,
+            dry_run,
+            force,
+            infer_types,
+        )
 
     elif (target_path / "environment.cfg").exists():
         # Single environment directory
-        migrate_environment(target_path, Path(output) if output else None, dry_run)
+        migrate_environment(
+            target_path, Path(output) if output else None, dry_run, force, infer_types
+        )
 
     elif target_path.is_dir():
         # Environments directory - find all environments
@@ -293,7 +372,7 @@ def migrate(
         success = 0
         for env_path in envs:
             print(f"📁 {env_path.name}")
-            if migrate_environment(env_path, None, dry_run):
+            if migrate_environment(env_path, None, dry_run, force, infer_types):
                 success += 1
 
         print(

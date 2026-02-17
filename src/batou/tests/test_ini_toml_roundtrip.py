@@ -10,9 +10,8 @@ from pathlib import Path
 import pytest
 
 from batou.config_toml import load_toml_config, to_legacy_format
-from batou.ini_to_toml import convert_config_to_toml, format_toml
+from batou.ini_to_toml import InferMode, convert_config_to_toml, format_toml
 from batou.toml_to_ini import convert_toml_to_ini, format_ini
-
 
 # Sample INI configurations for testing
 MINIMAL_INI = """\
@@ -59,7 +58,7 @@ class TestIniToTomlToIni:
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(MINIMAL_INI)
 
-        # INI → TOML
+        # INI → TOML (default mode: no type inference)
         toml_data = convert_config_to_toml(ini_path)
         toml_content = format_toml(toml_data)
 
@@ -81,6 +80,50 @@ class TestIniToTomlToIni:
 
         assert dict(cfg1["environment"]) == dict(cfg2["environment"])
         assert dict(cfg1["hosts"]) == dict(cfg2["hosts"])
+
+    def test_perfect_roundtrip_preserves_strings(self, tmp_path: Path):
+        """Test that default mode preserves strings exactly."""
+        # Use component section which allows arbitrary keys
+        ini = """\
+[environment]
+connect_method = local
+
+[component:config]
+port = 0123
+version = 5.0
+enabled = yes
+count = 42
+"""
+        ini_path = tmp_path / "environment.cfg"
+        ini_path.write_text(ini)
+
+        # Default mode: no type inference
+        toml_data = convert_config_to_toml(ini_path, InferMode.NONE)
+        toml_content = format_toml(toml_data)
+
+        # All values should be strings
+        assert toml_data["components"]["config"]["port"] == "0123"
+        assert toml_data["components"]["config"]["version"] == "5.0"
+        assert toml_data["components"]["config"]["enabled"] == "yes"
+        assert toml_data["components"]["config"]["count"] == "42"
+
+        # Roundtrip should be perfect
+        toml_path = tmp_path / "environment.toml"
+        toml_path.write_text(toml_content)
+        ini_result = convert_toml_to_ini(toml_path)
+
+        import configparser
+
+        cfg1 = configparser.ConfigParser()
+        cfg1.optionxform = str
+        cfg1.read_string(ini)
+
+        cfg2 = configparser.ConfigParser()
+        cfg2.optionxform = str
+        cfg2.read_string(ini_result)
+
+        # All values should match exactly
+        assert dict(cfg1["component:config"]) == dict(cfg2["component:config"])
 
     def test_complex_roundtrip_environment_section(self, tmp_path: Path):
         """Test environment section preservation."""
@@ -106,9 +149,9 @@ class TestIniToTomlToIni:
 
         # Compare environment section values
         for key in cfg1["environment"]:
-            assert cfg1["environment"][key] == cfg2["environment"][key], (
-                f"Mismatch in environment.{key}"
-            )
+            assert (
+                cfg1["environment"][key] == cfg2["environment"][key]
+            ), f"Mismatch in environment.{key}"
 
     def test_complex_roundtrip_hosts(self, tmp_path: Path):
         """Test hosts section preservation."""
@@ -270,7 +313,7 @@ debug = true
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini_content)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
         toml_result = format_toml(toml_data)
 
         original_config = load_toml_config(self.COMPLEX_TOML)
@@ -297,7 +340,7 @@ disabled = false
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["components"]["test"]["enabled"] is True
         assert toml_data["components"]["test"]["disabled"] is False
@@ -312,7 +355,7 @@ max_connections = 100
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["environment"]["timeout"] == 300
         assert toml_data["environment"]["max_connections"] == 100
@@ -332,7 +375,7 @@ components = nginx
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["host"]["web01"]["components"] == [
             "nginx",
@@ -352,7 +395,7 @@ servers = host1, host2, host3
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["components"]["app"]["servers"] == [
             "host1",
@@ -372,7 +415,7 @@ ttl = -1
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["components"]["cache"]["ttl"] == -1
         assert isinstance(toml_data["components"]["cache"]["ttl"], int)
@@ -390,10 +433,54 @@ factor = 2.5
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["components"]["math"]["ratio"] == 3.14159
         assert toml_data["components"]["math"]["factor"] == 2.5
+
+    def test_no_inference_keeps_strings(self, tmp_path: Path):
+        """Test that default mode keeps everything as strings."""
+        ini = """\
+[environment]
+connect_method = local
+timeout = 300
+enabled = true
+"""
+        ini_path = tmp_path / "environment.cfg"
+        ini_path.write_text(ini)
+
+        toml_data = convert_config_to_toml(ini_path, InferMode.NONE)
+
+        # Everything should be strings
+        assert toml_data["environment"]["connect_method"] == "local"
+        assert toml_data["environment"]["timeout"] == "300"
+        assert toml_data["environment"]["enabled"] == "true"
+        assert isinstance(toml_data["environment"]["timeout"], str)
+
+    def test_safe_mode_only_bools_and_lists(self, tmp_path: Path):
+        """Test that safe mode only converts bools and lists."""
+        ini = """\
+[environment]
+connect_method = local
+timeout = 300
+enabled = true
+
+[host:web01]
+components = nginx
+    mysql
+"""
+        ini_path = tmp_path / "environment.cfg"
+        ini_path.write_text(ini)
+
+        toml_data = convert_config_to_toml(ini_path, InferMode.SAFE)
+
+        # Bool should be converted
+        assert toml_data["environment"]["enabled"] is True
+        # List should be converted
+        assert toml_data["host"]["web01"]["components"] == ["nginx", "mysql"]
+        # Integer should stay string
+        assert toml_data["environment"]["timeout"] == "300"
+        assert isinstance(toml_data["environment"]["timeout"], str)
 
 
 class TestPathologicalCases:
@@ -535,7 +622,7 @@ flag_false = false
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         assert toml_data["components"]["flags"]["flag_yes"] is True
         assert toml_data["components"]["flags"]["flag_no"] is False
@@ -666,8 +753,8 @@ connect_method = local
 
 [component:app]
 name = myapp
-description = 
-optional = 
+description =
+optional =
 """
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
@@ -686,7 +773,7 @@ optional =
 connect_method = local
 
 [component:app]
-message =   Hello World  
+message =   Hello World
 path = /var/log/app
 """
         ini_path = tmp_path / "environment.cfg"
@@ -811,7 +898,7 @@ data-backup-schedule = daily
         ini_path = tmp_path / "environment.cfg"
         ini_path.write_text(ini)
 
-        toml_data = convert_config_to_toml(ini_path)
+        toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
 
         host = toml_data["host"]["db01"]
         assert host["data-ram"] == 16
