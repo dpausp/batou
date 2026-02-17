@@ -68,17 +68,42 @@ test = [
     "pytest-instafail",
     "pytest-timeout",
 ]
-pre-commit = ["pre-commit"]
+lint = ["ruff", "ty"]
 check-cmd = ["rich", "typer"]
 dev = [
     { include-group = "test" },
+    { include-group = "lint" },
     { include-group = "check-cmd" },
-    { include-group = "pre-commit" },
     "tox>=4.0",
     "tox-uv",
     "sphinx",
     "recommonmark",
-    "ruff",
+]
+
+# =============================================================================
+# tox configuration
+# =============================================================================
+[tool.tox]
+env_list = ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "fix"]
+skip_missing_interpreters = true
+
+[tool.tox.env_run_base]
+package = "wheel"
+runner = "uv-venv-lock-runner"
+setenv = {APPENV_BEST_PYTHON = "{envpython}", COLUMNS = "80", IN_TOX_TEST = "1"}
+depends = ["fix"]
+dependency_groups = ["test"]
+commands = [["pytest"]]
+
+[tool.tox.env.fix]
+skip_install = true
+depends = []
+description = "Format, lint, fix whitespace, type-check"
+dependency_groups = ["test", "lint"]
+commands = [
+    ["ruff", "check", "--fix", "."],
+    ["ruff", "format", "."],
+    ["ty", "check", "."],
 ]
 
 # =============================================================================
@@ -340,3 +365,16 @@ possibly-missing-attribute = "ignore"
 
 [tool.ty.analysis]
 allowed-unresolved-imports = ["yaml"]
+
+# =============================================================================
+# scriv changelog configuration
+# =============================================================================
+[tool.scriv]
+format = "md"
+fragment_directory = "CHANGES.d"
+output_file = "CHANGES.md"
+version = "unreleased"
+entry_title_template = ""
+new_fragment_template = "- New changelog entry."
+insert_marker = "- Nothing changed yet."
+categories = ""
