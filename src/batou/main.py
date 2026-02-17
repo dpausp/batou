@@ -5,7 +5,7 @@ import sys
 import textwrap
 from typing import Optional
 
-import importlib_resources
+import importlib.metadata
 
 import batou
 import batou.check
@@ -16,13 +16,12 @@ import batou.secrets.edit
 import batou.secrets.encryption
 import batou.secrets.manage
 from batou._output import TerminalBackend, output
+from batou.utils import find_basedir
 
 
 def main(args: Optional[list] = None) -> None:
     os.chdir(os.environ["APPENV_BASEDIR"])
-    version = (
-        importlib_resources.files("batou").joinpath("version.txt").read_text().strip()
-    )
+    version = importlib.metadata.version("batou")
     parser = argparse.ArgumentParser(
         description=(
             "batou v{}: multi-(host|component|environment|version|platform) deployment"
