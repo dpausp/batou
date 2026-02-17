@@ -522,7 +522,6 @@ class CheckCommand:
             output.section("LOCAL CONSISTENCY CHECK FINISHED", cyan=True)
 
 
-@app.command()
 def check(
     environment: Annotated[
         str,
@@ -573,6 +572,10 @@ def check(
     )
     exit_code = command.execute()
     raise typer.Exit(exit_code)
+
+
+# Register with local app for standalone execution
+app.command()(check)
 
 
 def main(environment, platform, timeout):

@@ -41,8 +41,7 @@ dependencies = [
 
 [project.scripts]
 batou = "batou.main:main"
-batou-check = "batou.check:main_cli"
-batou-migrate-toml = "batou.migrate_toml:main"
+batommel = "batou.batommel:app"
 
 [project.entry-points."zc.buildout"]
 requirements = "batou.buildout:Requirements"
@@ -204,6 +203,7 @@ include = ["src/batou/check.py"]
 [tool.ty.overrides.rules]
 unsupported-operator = "ignore"
 possibly-missing-attribute = "ignore"
+unresolved-attribute = "ignore"
 
 # Utils - dynamic attributes
 [[tool.ty.overrides]]

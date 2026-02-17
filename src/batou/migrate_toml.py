@@ -4,13 +4,18 @@ This script converts existing INI configuration files to TOML format
 with proper type inference for better DX.
 """
 
-import argparse
 import configparser
 import re
-import sys
 from pathlib import Path
+from typing import Annotated
 
 import rtoml
+import typer
+
+app = typer.Typer(
+    no_args_is_help=True,
+    help="Migrate batou environment.cfg to environment.toml.",
+)
 
 
 def infer_type(value: str) -> str | int | float | bool | list[str]:
@@ -75,7 +80,7 @@ def parse_multiline_yaml(value: str) -> dict | None:
 def convert_config_to_toml(cfg_path: Path) -> dict:
     """Convert an INI config file to TOML-compatible dict."""
     config = configparser.ConfigParser()
-    config.optionxform = lambda x: x  # Preserve case
+    config.optionxform = str  # type: ignore[assignment]  # Preserve case
     config.read(cfg_path)
 
     result: dict = {
@@ -85,9 +90,6 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
         "components": {},
         "resolver": {},
     }
-
-    # Known sections that aren't components
-    special_sections = {"environment", "hosts", "vfs", "resolver"}
 
     for section in config.sections():
         if section == "environment":
@@ -168,9 +170,7 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
                 result["components"][comp_name] = comp_config
 
         elif section.startswith("provisioner:"):
-            # Provisioner config - store as-is for now
-            prov_name = section[12:]
-            # Skip for now, add support later if needed
+            # Provisioner config - skip for now, add support later if needed
             pass
 
         elif section == "resolver":
@@ -232,99 +232,75 @@ def migrate_environment(
         return False
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Migrate batou environment.cfg to environment.toml",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Migrate all environments in the current directory
-  batou-migrate-toml
+def migrate(
+    path: Annotated[
+        str,
+        typer.Argument(help="Path to environments directory or specific environment"),
+    ] = "environments",
+    output: Annotated[
+        str | None,
+        typer.Option("-o", "--output", help="Output file path"),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("-n", "--dry-run", help="Show what would be converted"),
+    ] = False,
+    force: Annotated[
+        bool,
+        typer.Option("-f", "--force", help="Overwrite existing files"),
+    ] = False,
+):
+    """Migrate batou environment.cfg to environment.toml."""
+    target_path = Path(path)
 
-  # Migrate specific environment
-  batou-migrate-toml environments/prod
-
-  # Dry run (show what would be converted)
-  batou-migrate-toml --dry-run
-
-  # Custom output location
-  batou-migrate-toml environments/dev --output /tmp/dev.toml
-""",
-    )
-    parser.add_argument(
-        "path",
-        nargs="?",
-        default="environments",
-        help="Path to environments directory or specific environment (default: environments/)",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        help="Output file path (only for single environment)",
-    )
-    parser.add_argument(
-        "-n",
-        "--dry-run",
-        action="store_true",
-        help="Show what would be converted without writing files",
-    )
-    parser.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        help="Overwrite existing environment.toml files",
-    )
-
-    args = parser.parse_args()
-    path = Path(args.path)
-
-    if args.dry_run:
+    if dry_run:
         print("🔍 Dry run mode - no files will be modified\n")
 
     # Single environment or directory?
-    if path.is_file() and path.name == "environment.cfg":
+    if target_path.is_file() and target_path.name == "environment.cfg":
         # Single environment.cfg file
-        env_path = path.parent
-        migrate_environment(
-            env_path, Path(args.output) if args.output else None, args.dry_run
-        )
+        env_path = target_path.parent
+        migrate_environment(env_path, Path(output) if output else None, dry_run)
 
-    elif (path / "environment.cfg").exists():
+    elif (target_path / "environment.cfg").exists():
         # Single environment directory
-        migrate_environment(
-            path, Path(args.output) if args.output else None, args.dry_run
-        )
+        migrate_environment(target_path, Path(output) if output else None, dry_run)
 
-    elif path.is_dir():
+    elif target_path.is_dir():
         # Environments directory - find all environments
         envs = sorted(
             [
                 d
-                for d in path.iterdir()
+                for d in target_path.iterdir()
                 if d.is_dir() and (d / "environment.cfg").exists()
             ]
         )
 
         if not envs:
-            print(f"No environments found in {path}")
-            sys.exit(1)
+            print(f"No environments found in {target_path}")
+            raise typer.Exit(1)
 
         print(f"Found {len(envs)} environment(s) to migrate:\n")
 
         success = 0
         for env_path in envs:
             print(f"📁 {env_path.name}")
-            if migrate_environment(env_path, None, args.dry_run):
+            if migrate_environment(env_path, None, dry_run):
                 success += 1
 
         print(
-            f"\n{'Would convert' if args.dry_run else 'Converted'} {success}/{len(envs)} environment(s)"
+            f"\n{'Would convert' if dry_run else 'Converted'} "
+            f"{success}/{len(envs)} environment(s)"
         )
 
     else:
-        print(f"Path not found: {path}")
-        sys.exit(1)
+        print(f"Path not found: {target_path}")
+        raise typer.Exit(1)
+
+
+# Register with local app for standalone execution
+app.command()(migrate)
 
 
 if __name__ == "__main__":
-    main()
+    app()
