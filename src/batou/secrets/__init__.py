@@ -39,10 +39,13 @@ class SecretProvider:
         )
         secret_provider_candidates: List[SecretProvider] = []
 
-        # check if environment has a environment.cfg file. If not, it does not
-        # exist.
+        # check if environment has a environment.cfg or environment.toml file.
+        # If not, it does not exist.
 
-        if not (environment_path / "environment.cfg").exists():
+        if not (
+            (environment_path / "environment.cfg").exists()
+            or (environment_path / "environment.toml").exists()
+        ):
             raise ValueError(f"Environment {environment.name} does not exist.")
 
         output.annotate(
@@ -211,7 +214,9 @@ class SecretProvider:
             f"Secret provider changed from {old_secret_provider.secret_provider_str} to {new_secret_provider.secret_provider_str}."
         )
 
-    def purge(self, except_files: Dict[str, EncryptedFile] = {}):
+    def purge(self, except_files: Dict[str, EncryptedFile] | None = None):
+        if except_files is None:
+            except_files = {}
         raise NotImplementedError("purge() not implemented.")
 
     def _get_recipients(self) -> List[str]:
@@ -270,7 +275,9 @@ class NoSecretProvider(SecretProvider):
     def read_secret_files(self) -> Dict[str, bytes]:
         return {}
 
-    def purge(self, except_files: Dict[str, EncryptedFile] = {}):
+    def purge(self, except_files: Dict[str, EncryptedFile] | None = None):
+        if except_files is None:
+            except_files = {}
         pass
 
 
@@ -328,7 +335,9 @@ class ConfigFileSecretProvider(SecretProvider):
             with self._get_file(name, writeable=True) as file:
                 self.write_file(file, content)
 
-    def purge(self, except_files: Dict[str, EncryptedFile] = {}):
+    def purge(self, except_files: Dict[str, EncryptedFile] | None = None):
+        if except_files is None:
+            except_files = {}
         for name, file in self.iter_secret_files(writeable=True).items():
             if name not in except_files:
                 file.delete()
@@ -511,7 +520,7 @@ def process_age_recipients(members, environment_path):
     # if they differ, we will warn
     keys_changed = False
     if os.path.exists(key_meta_file_path):
-        with open(key_meta_file_path, "r") as f:
+        with open(key_meta_file_path) as f:
             old_key_meta_file_content = f.read()
         if old_key_meta_file_content != key_meta_file_content:
             keys_changed = True
