@@ -1,0 +1,62 @@
+# batou environment.toml - VALIDATION ERRORS DEMO
+# 
+# Demonstrates Pydantic validation errors with line numbers.
+
+[environment]
+connect_method = "local"
+
+# ERROR: Invalid update_method (not in Literal list)
+update_method = "git-clone"
+
+# ERROR: Timeout must be positive
+timeout = -5
+
+# ERROR: Unknown field (not in schema)
+production_mode = true
+
+# ERROR: Another unknown field
+deployment_strategy = "blue-green"
+
+# =============================================================================
+# HOST ERRORS
+# =============================================================================
+
+# Simple host mapping (valid)
+[hosts]
+localhost = "hello"
+
+# ERROR: Invalid host configuration value type
+[host.invalid]
+components = "not-a-list"  # Should be a list
+
+# =============================================================================
+# RESOLVER ERRORS
+# =============================================================================
+
+# ERROR: Invalid IP address format (not a valid IP)
+[resolver]
+"api.example.com" = "10.0.1.10"
+"invalid.example.com" = "not-an-ip"
+"multi.example.com" = ["10.0.1.1", "invalid"]
+
+# =============================================================================
+# COMPONENT ERRORS (not validated by Pydantic, shown as examples)
+# =============================================================================
+
+# Component override examples that would fail at runtime:
+# - timeout = "not-an-integer"  (string instead of int)
+# - count = "five"  (string instead of int)
+# - enabled = "yes"  (string instead of bool)
+
+[components.mycomponent]
+# Example: should be int but is string - would fail at runtime
+timeout = "not-an-integer"
+
+[components.another]
+# Example: invalid type for count
+count = "five"
+
+[components.third]
+# Example: multiple wrong types
+enabled = "yes"
+items = 42  # should be list

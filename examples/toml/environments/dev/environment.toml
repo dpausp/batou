@@ -1,0 +1,9 @@
+# Minimal environment for batou-check testing
+# Demonstrates the basic TOML structure
+
+[environment]
+connect_method = "local"
+update_method = "rsync"
+
+[hosts]
+localhost = "hello"

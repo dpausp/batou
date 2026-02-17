@@ -1,0 +1,287 @@
+# batou environment.toml - EXTREME EXAMPLE
+# 
+# Production-like environment showcasing:
+# - 7 hosts with many data attributes
+# - 40+ components across hosts
+# - Extensive component overrides
+# - Multi-line lists as TOML arrays
+
+# =============================================================================
+# [environment] - Global settings
+# =============================================================================
+[environment]
+host_domain = "example.com"
+platform = "nixos"
+service_user = "service_user"
+update_method = "git-bundle"
+branch = "master"
+connect_method = "local"
+timeout = 300
+
+# =============================================================================
+# [host.*] - Host configurations
+# =============================================================================
+
+[host.host01]
+data-description = "Frontend"
+data-ram = 4
+data-disk = 40
+data-cores = 1
+data-roles = ["docker", "mailstub", "nfs_rg_client", "webgateway", "webproxy"]
+data-frontend-ipv4 = 1
+data-frontend-ipv6 = 1
+data-alias-fe = ["brand_a", "brand_a-stage", "files", "mail", "brand_b", "brand_b-stage", "brand_c", "brand_c-stage", "brand_d", "brand_d-stage"]
+
+components = [
+    "copypreislistetonfs",
+    "crontab",
+    "frontendrebuild",
+    "ftp",
+    "haproxy",
+    "haproxyaddress",
+    "haproxys3",
+    "httpbasicauth",
+    "journalbeattransport",
+    "logrotate",
+    "mailpit",
+    "nginxbrand_b",
+    "nginxs3",
+    "nginxbrand_d",
+    "nginxbrand_c",
+    "nginxbrand_a",
+    "postfixrelay",
+    "provision",
+    "sensuchecks",
+    "settings",
+    "shibboleth",
+    "shibbolethaddress",
+    "source",
+    "sourcebrand_c",
+    "varnish",
+    "varnishaddress",
+]
+
+[host.host02]
+data-description = "MySQL, Solr, Redis"
+data-ram = 32
+data-disk = 1000
+data-cores = 2
+data-roles = ["nfs_rg_client", "percona80", "postgresql16", "redis"]
+
+components = [
+    "crontab",
+    "journalbeattransport",
+    "logrotate",
+    "mysqlserver",
+    "postgresql",
+    "rediscache",
+    "redissession",
+    "sensuchecks",
+    "solr",
+    "source",
+    "updateportaltable",
+]
+
+[host.host03]
+data-description = "Importer"
+data-ram = 10
+data-disk = 300
+data-cores = 1
+data-roles = ["lamp", "nfs_rg_client", "nfs_rg_share"]
+
+components = [
+    "apache:php83",
+    "crontab",
+    "importersymfony",
+    "journalbeattransport",
+    "logrotate",
+    "sensuchecks",
+    "userenv",
+]
+
+[host.host04]
+data-description = "Counter5, OAI, Alerting, Reporting"
+data-ram = 16
+data-disk = 40
+data-cores = 1
+data-roles = ["lamp", "nfs_rg_client"]
+
+components = [
+    "alerting",
+    "apache:php83",
+    "counter5:logs",
+    "counter5:worker",
+    "journalbeattransport",
+    "logrotate",
+    "oaisymfony",
+    "report",
+    "sensuchecks",
+    "userenv",
+]
+
+[host.host05]
+data-description = "Backoffice"
+data-ram = 4
+data-disk = 30
+data-cores = 1
+data-roles = ["lamp", "nfs_rg_client"]
+
+components = [
+    "apache:php83",
+    "backoffice:cron",
+    "backoffice:message_consumer",
+    "crontab",
+    "journalbeattransport",
+    "logrotate",
+]
+
+[host.host06]
+data-description = "PHP Portal"
+data-ram = 4
+data-disk = 40
+data-cores = 1
+data-roles = ["lamp", "nfs_rg_client"]
+
+components = [
+    "apache:php83",
+    "crontab",
+    "frontendsymfony:cron",
+    "journalbeattransport",
+    "logrotate",
+    "sensuchecks",
+    "source",
+    "sourcebrand_c",
+    "userenv",
+]
+
+[host.host07]
+data-description = "PHP Portal (Bots)"
+data-ram = 4
+data-disk = 40
+data-cores = 1
+data-roles = ["lamp", "nfs_rg_client"]
+
+components = [
+    "apache:php83",
+    "frontendsymfony:bots",
+    "journalbeattransport",
+    "logrotate",
+    "sensuchecks",
+    "source",
+    "sourcebrand_c",
+    "userenv",
+]
+
+# =============================================================================
+# [components.*] - Component overrides
+# =============================================================================
+
+[components.provision]
+project = "testproject"
+vm_environment = "fc-25.11-staging"
+
+[components.journalbeattransport]
+transport_name = "transport_placeholder"
+graylog_host = "graylog_placeholder.example.com"
+
+[components.mysqlserver]
+user = "db_user"
+
+[components.settings]
+versions_ini = "versions-testing.ini"
+app_env = "testproject"
+password_protected = true
+verlag_ids = ["publisher1", "publisher2", "publisher3", "publisher4"]
+elastic_search_endpoint = "https://search-placeholder.example.com"
+
+# Example of complex nested structure using TOML multiline string
+# (parsed as YAML when used)
+brand_config = """
+publisher1:
+    name: BrandOne
+    live: brandone.testproject.example.com
+    staging: brandone-stage.testproject.example.com
+    default_from_email: placeholder@example.com
+    importer_email_report_from: placeholder@example.com
+    importer_email_report_to: placeholder@example.com,placeholder2@example.com
+    counter_5_extra_reports: TR_B1_KUP
+    google_scholar_inst_id: 35496
+    shibboleth:
+        library-name: BrandOne Library
+        adminc:
+            givenname: FirstName
+            surname: LastName
+            email: placeholder@example.com
+        supportc:
+            givenname: FirstName
+            surname: LastName
+            email: placeholder@example.com
+publisher2:
+    name: BrandTwo
+    live: brandtwo.testproject.example.com
+    staging: brandtwo-stage.testproject.example.com
+    default_from_email: placeholder@example.com
+    importer_email_report_from: placeholder@example.com
+    importer_email_report_to: placeholder@example.com,placeholder2@example.com
+    google_scholar_inst_id: 7869
+    shibboleth:
+        library-name: BrandTwo Library
+        adminc:
+            givenname: FirstName
+            surname: LastName
+            email: placeholder@example.com
+        supportc:
+            givenname: FirstName
+            surname: LastName
+            email: placeholder@example.com
+"""
+
+[components.solr]
+solr_memory = "2G"
+
+[components.shibboleth]
+enable_samltest_id = true
+certificate_definition = "publisher1: 2024-06\npublisher2: 2024-06\npublisher3: 2024-06\npublisher4: 2024-06"
+
+[components.mailpit]
+public_name = "mail.example.com"
+public_smtp_name = "mail.example.com"
+
+[components.alerting]
+enable_cron = false
+
+[components.postfixrelay]
+provide_as = "mail"
+smtp_relay_host = "{{component.host.fqdn}}"
+smtp_relay_port = 1025
+smtp_auth = false
+
+[components.httpbasicauth]
+fcio_auth = true
+
+[components.importersymfony]
+enable_processor = ["publisher3"]
+kup_notify_email = "placeholder@example.com"
+
+[components.nginxs3]
+public_name = "files.example.com"
+
+[components.haproxy]
+counter5_path_mangling = false
+additional_backends = ["frontend-symfony-publisher3", "frontend-symfony-publisher3-bots"]
+
+[components.backoffice]
+fpm_memory_limit = "1G"
+
+# =============================================================================
+# [resolver] - DNS overrides
+# =============================================================================
+
+[resolver]
+"api.example.com" = "10.0.1.10"
+"db.example.com" = "10.0.2.10"
+"cache.example.com" = "10.0.2.20"
+"search.example.com" = "10.0.2.30"
+"mail.example.com" = "10.0.1.25"
+"graylog.example.com" = "10.0.3.10"
+"files.example.com" = "10.0.1.50"

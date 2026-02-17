@@ -1,0 +1,50 @@
+# batou environment.toml - Feature showcase
+# 
+# This example demonstrates available TOML configuration options.
+
+# =============================================================================
+# [environment] - Global environment settings
+# =============================================================================
+[environment]
+connect_method = "local"
+update_method = "rsync"
+service_user = "deploy"
+repository_root = "../.."
+timeout = 300
+jobs = 2
+
+# =============================================================================
+# [hosts] - Simple hostname → component mapping
+# =============================================================================
+[hosts]
+localhost = "hello"
+
+# =============================================================================
+# [host.<name>] - Detailed host configuration
+# =============================================================================
+[host.localhost]
+components = ["hello"]
+
+# Data attributes accessible as host.data.* in components
+data-api-url = "https://staging.example.com"
+data-max-workers = 4
+data-enabled = true
+data-tags = ["staging", "internal"]
+
+# =============================================================================
+# [components.<name>] - Component configuration overrides
+# =============================================================================
+[components.hello]
+message = "Hello from staging!"
+debug = true
+
+# Nested configuration
+[components.hello.settings]
+retry_count = 3
+timeout_seconds = 30
+
+# =============================================================================
+# [resolver] - DNS overrides
+# =============================================================================
+[resolver]
+"api.internal" = "127.0.0.1"
