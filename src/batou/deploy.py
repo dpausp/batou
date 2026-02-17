@@ -323,6 +323,7 @@ class Deployment(object):
                 h for h in list(self.environment.hosts.values()) if not h.ignore
             ][0]
 
+            self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
             self.taskpool = ThreadPoolExecutor(self.jobs)
             self.loop.set_default_executor(self.taskpool)
