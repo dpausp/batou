@@ -462,7 +462,7 @@ def to_legacy_format(config: EnvironmentConfig) -> dict[str, dict[str, str]]:
     legacy: dict[str, dict[str, str]] = {}
 
     # [environment]
-    env_dict = config.environment.model_dump(exclude_none=True)
+    env_dict = config.environment.model_dump(exclude_none=True, exclude_unset=True)
     if env_dict:
         legacy["environment"] = {k: str(v) for k, v in env_dict.items()}
 
