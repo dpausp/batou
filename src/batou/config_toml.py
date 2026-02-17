@@ -22,6 +22,7 @@ TOML Format Examples:
     database_port = 5432
 """
 
+from ipaddress import AddressValueError, IPv4Address, IPv6Address
 from typing import Annotated, Any, Literal
 
 import rtoml
@@ -113,6 +114,37 @@ class EnvironmentConfig(BaseModel):
     vfs: dict[str, str] | None = None
     provisioners: dict[str, dict[str, Any]] = {}
 
+    @field_validator("resolver")
+    @classmethod
+    def validate_resolver_ips(
+        cls, v: dict[str, str | list[str]]
+    ) -> dict[str, str | list[str]]:
+        """Validate that resolver values are valid IPv4 or IPv6 addresses."""
+        for hostname, ips in v.items():
+            ip_list = [ips] if isinstance(ips, str) else ips
+            for ip in ip_list:
+                if not cls._is_valid_ip(ip):
+                    raise ValueError(
+                        f"Invalid IP address '{ip}' for host '{hostname}': "
+                        f"must be a valid IPv4 or IPv6 address"
+                    )
+        return v
+
+    @staticmethod
+    def _is_valid_ip(ip: str) -> bool:
+        """Check if string is a valid IPv4 or IPv6 address."""
+        try:
+            IPv4Address(ip)
+            return True
+        except AddressValueError:
+            pass
+        try:
+            IPv6Address(ip)
+            return True
+        except AddressValueError:
+            pass
+        return False
+
     def get_all_hosts(self) -> dict[str, HostConfig]:
         """Merge hosts and host sections."""
         result = dict(self.hosts)
@@ -157,17 +189,98 @@ def load_toml_config(content: str, source: str = "<toml>") -> EnvironmentConfig:
     try:
         return EnvironmentConfig.model_validate(data)
     except ValidationError as e:
-        errors = _format_validation_errors(e)
+        errors = _format_validation_errors(e, content)
         raise ConfigLoadError(f"Configuration validation failed in {source}", errors)
 
 
-def _format_validation_errors(e: ValidationError) -> str:
-    """Format Pydantic validation errors for display."""
+def _find_line_for_key(content: str, location: str) -> int | None:
+    """Find the line number for a given location path.
+
+    Args:
+        content: Original TOML content
+        location: Dot-separated path like "environment.update_method"
+
+    Returns:
+        1-indexed line number or None if not found
+    """
+    parts = location.split(".")
+    if not parts:
+        return None
+
+    lines = content.split("\n")
+    current_section = None
+    target_section = None
+    target_key = None
+
+    # Determine what we're looking for
+    if len(parts) == 1:
+        # Top-level key (rare in our schema)
+        target_key = parts[0]
+    elif len(parts) == 2:
+        # Section.key like "environment.update_method"
+        target_section = parts[0]
+        target_key = parts[1]
+    elif len(parts) >= 3:
+        # Nested like "hosts.localhost" or deeper
+        target_section = parts[0]
+        target_key = parts[-1]
+
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+
+        # Track current section
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section_name = stripped[1:-1].strip()
+            # Handle quoted section names
+            if section_name.startswith('"') and section_name.endswith('"'):
+                section_name = section_name[1:-1]
+            current_section = section_name.split(".")[0]  # Get first part for nested
+
+        # Check for key match
+        if "=" in stripped:
+            key_part = stripped.split("=", 1)[0].strip()
+            # Remove quotes from key if present
+            if key_part.startswith('"') and key_part.endswith('"'):
+                key_part = key_part[1:-1]
+
+            if key_part == target_key:
+                # Check if we're in the right section
+                if target_section is None or current_section == target_section:
+                    return i
+
+    return None
+
+
+def _format_validation_errors(e: ValidationError, content: str = "") -> str:
+    """Format Pydantic validation errors with line numbers.
+
+    Args:
+        e: The ValidationError from Pydantic
+        content: Original TOML content for line number lookup
+
+    Returns:
+        Formatted error string
+    """
     lines = []
     for error in e.errors():
         loc = ".".join(str(x) for x in error["loc"])
         msg = error["msg"]
-        lines.append(f"  {loc}: {msg}")
+
+        # Try to find line number
+        line_num = _find_line_for_key(content, loc) if content else None
+
+        if line_num:
+            # Show error with line number and content
+            source_lines = content.split("\n")
+            if line_num <= len(source_lines):
+                line_content = source_lines[line_num - 1].strip()
+                lines.append(f"  line {line_num}: {msg}")
+                lines.append(f"    {line_content}")
+            else:
+                lines.append(f"  {loc}: {msg}")
+        else:
+            lines.append(f"  {loc}: {msg}")
+
     return "\n".join(lines)
 
 
