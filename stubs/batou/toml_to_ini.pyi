@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import typer
-from batou.config_toml import EnvironmentConfig
 
 app: typer.Typer
 

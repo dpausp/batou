@@ -55,8 +55,6 @@ def prepare_traceback_from_stack(stack):
 class ReportingException(Exception):
     """Exceptions that support user-readable reporting."""
 
-    affected_hostname: str | None
-
     def __str__(self):
         raise NotImplementedError()
 
@@ -102,8 +100,6 @@ class ReportingException(Exception):
 class FileLockedError(ReportingException):
     """A file is already locked and we do not want to block."""
 
-    filename: str
-
     @classmethod
     def from_context(cls, filename):
         self = cls()
@@ -119,10 +115,6 @@ class FileLockedError(ReportingException):
 
 class GPGCallError(ReportingException):
     """There was an error calling GPG on encrypted file."""
-
-    command: str
-    exitcode: str
-    output: str
 
     @classmethod
     def from_context(cls, command, exitcode, output):
@@ -145,10 +137,6 @@ class GPGCallError(ReportingException):
 class AgeCallError(ReportingException):
     """There was an error calling age on encrypted file."""
 
-    command: str
-    exitcode: str
-    output: str
-
     @classmethod
     def from_context(cls, command, exitcode, output):
         self = cls()
@@ -169,9 +157,6 @@ class AgeCallError(ReportingException):
 
 class GetAddressInfoError(ReportingException, socket.gaierror):
     """There was an error calling getaddrinfo."""
-
-    hostname: str
-    error: str
 
     @classmethod
     def from_context(cls, hostname, error):
@@ -195,10 +180,6 @@ class UpdateNeeded(AssertionError):
 
 class ConfigurationError(ReportingException):
     """Indicates that an environment could not be configured successfully."""
-
-    message: str
-    has_component: bool
-    component_root_name: str | None
 
     @property
     def sort_key(self):
@@ -225,11 +206,6 @@ class ConfigurationError(ReportingException):
 
 class AttributeExpansionError(ConfigurationError):
     """An override attribute could not be expanded properly."""
-
-    component_breadcrumbs: str
-    value_repr: str
-    error_str: str
-    key: str
 
     @property
     def sort_key(self):
@@ -269,12 +245,6 @@ class AttributeExpansionError(ConfigurationError):
 
 class ConversionError(ConfigurationError):
     """An override attribute could not be converted properly."""
-
-    component_breadcrumbs: str
-    conversion_name: str
-    value_repr: str
-    error_str: str
-    key: str
 
     @property
     def sort_key(self):
@@ -326,9 +296,6 @@ class SilentConfigurationError(Exception):
 
 
 class MissingOverrideAttributes(ConfigurationError):
-    component_breadcrumbs: str
-    attributes: list[str]
-
     @property
     def sort_key(self):
         return (3, self.affected_hostname, self.component_breadcrumbs)
@@ -354,10 +321,6 @@ class MissingOverrideAttributes(ConfigurationError):
 
 
 class DuplicateComponent(ConfigurationError):
-    a_name: str
-    a_filename: str
-    b_filename: str
-
     @property
     def sort_key(self):
         return (2, self.a_name)
@@ -380,10 +343,6 @@ class DuplicateComponent(ConfigurationError):
 
 
 class DuplicateHostMapping(ConfigurationError):
-    affected_hostname: str
-    a: str
-    b: str
-
     @property
     def sort_key(self):
         return (3, self.affected_hostname, self.a, self.b)
