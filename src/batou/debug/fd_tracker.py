@@ -462,7 +462,9 @@ stats = get_statistics()
                     # Show verbose logs if available
                     if "logs" in remote_stats and self.verbose:
                         output.line(f"  FD opens for {host.name}:")
-                        for now, count, path, mode, _action in remote_stats["logs"][:10]:
+                        for now, count, path, _mode, _action in remote_stats["logs"][
+                            :10
+                        ]:
                             output.line(f"    [{now}] FD #{count} Opening: {path}")
                         if len(remote_stats["logs"]) > 10:
                             output.line(
