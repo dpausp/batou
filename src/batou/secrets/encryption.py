@@ -527,7 +527,6 @@ class DiffableAGEEncryptedFile(EncryptedFile):
 
 
 all_encrypted_file_types = [
-    NoBackingEncryptedFile,
     GPGEncryptedFile,
     AGEEncryptedFile,
     DiffableAGEEncryptedFile,
