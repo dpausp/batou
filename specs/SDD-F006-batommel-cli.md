@@ -64,7 +64,8 @@ src/batou/
 ├── batommel/
 │   └── __init__.py       # Main app with subcommand registration
 ├── check.py              # Remains, provides app for subcommand
-└── migrate_toml.py       # Converted to Typer, provides app
+├── migrate_toml.py       # Converted to Typer, provides app
+└── toml_to_ini.py        # New: TOML → INI conversion subcommand
 ```
 
 ### 2.3 Module Responsibilities
@@ -74,6 +75,7 @@ src/batou/
 | `batommel/__init__.py` | Main Typer app with subcommand registration | New |
 | `check.py` | Provides `app` for check subcommand | No change |
 | `migrate_toml.py` | Convert argparse to Typer, provide `app` | Convert |
+| `toml_to_ini.py` | TOML → INI reverse conversion subcommand | New |
 
 ---
 
@@ -93,8 +95,11 @@ batommel (entry point)
             ├── batou.check:app (check subcommand)
             │       └── CheckCommand class
             │
-            └── batou.migrate_toml:app (migrate-toml subcommand)
-                    └── Migration functions
+            ├── batou.migrate_toml:app (migrate-toml subcommand)
+            │       └── Migration functions
+            │
+            └── batou.toml_to_ini:app (toml-to-ini subcommand)
+                    └── Reuses config_toml.to_legacy_format()
 ```
 
 **Key Design Decision:** Existing modules remain self-contained. The batommel package only handles registration, not implementation.
@@ -108,6 +113,7 @@ batommel (entry point)
 | `batommel` | CLI entry | `batommel [OPTIONS] COMMAND [ARGS]` |
 | `batommel check` | Subcommand | Same as former `batou-check` |
 | `batommel migrate-toml` | Subcommand | Same as former `batou-migrate-toml` |
+| `batommel toml-to-ini` | Subcommand | Converts environment.toml → environment.cfg |
 
 ---
 
@@ -154,6 +160,7 @@ batommel (entry point)
 import typer
 from batou.check import app as check_app
 from batou.migrate_toml import app as migrate_app
+from batou.toml_to_ini import app as toml_to_ini_app
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -162,6 +169,7 @@ app = typer.Typer(
 
 app.add_typer(check_app, name="check")
 app.add_typer(migrate_app, name="migrate-toml")
+app.add_typer(toml_to_ini_app, name="toml-to-ini")
 ```
 
 **Consequences:**
@@ -252,6 +260,51 @@ app.add_typer(migrate_app, name="migrate-toml")
 
 ---
 
+### D-009: Add toml-to-ini Subcommand for Reverse Conversion
+
+**Context:** Users may need to generate INI from TOML for backward compatibility scenarios (e.g., sharing configs with environments that haven't migrated yet).
+
+**Options:**
+
+1. Implement new conversion logic from scratch - duplicates existing patterns
+2. Reuse existing `to_legacy_format()` from config_toml.py - minimal code, consistent
+3. Require users to manually convert - poor UX
+
+**Decision:** Create new `toml_to_ini.py` module that reuses `to_legacy_format()` from `config_toml.py`.
+
+**Consequences:**
+
+- (+) Minimal new code - reuses existing conversion logic
+- (+) Consistent with existing TOML handling patterns
+- (+) Complete bidirectional conversion capability
+- (-) Adds third subcommand to batommel
+
+**Constraint Mapping:** C-006-reuse-legacy-format (MUST)
+
+---
+
+### D-010: Consistent CLI Pattern for toml-to-ini
+
+**Context:** The toml-to-ini command should follow the same CLI pattern as migrate-toml for consistency.
+
+**Options:**
+
+1. Different option names/semantics - confusing for users
+2. Same pattern (path, --output, --dry-run, --force) - consistent UX
+3. Simpler subset of options - less flexible
+
+**Decision:** Use same CLI pattern as migrate-toml with identical option semantics.
+
+**Consequences:**
+
+- (+) Predictable interface - users familiar with migrate-toml can use toml-to-ini
+- (+) Consistent help text and error messages
+- (+) Same dry-run and force behaviors
+
+**Constraint Mapping:** C-007-cli-pattern-consistency (MUST)
+
+---
+
 ## 5. Module Design
 
 ### 5.1 Main App Module (`batommel/__init__.py`)
@@ -261,7 +314,7 @@ app.add_typer(migrate_app, name="migrate-toml")
 **Responsibilities:**
 
 - Create main Typer app with `no_args_is_help=True`
-- Register check and migrate-toml subcommands
+- Register check, migrate-toml, and toml-to-ini subcommands
 - Provide help text describing batommel purpose
 
 **Public Interface:**
@@ -269,6 +322,7 @@ app.add_typer(migrate_app, name="migrate-toml")
 import typer
 from batou.check import app as check_app
 from batou.migrate_toml import app as migrate_app
+from batou.toml_to_ini import app as toml_to_ini_app
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -277,6 +331,7 @@ app = typer.Typer(
 
 app.add_typer(check_app, name="check")
 app.add_typer(migrate_app, name="migrate-toml")
+app.add_typer(toml_to_ini_app, name="toml-to-ini")
 ```
 
 **Entry Point:** `batommel = "batou.batommel:app"`
@@ -365,6 +420,71 @@ def migrate(
 
 ---
 
+### 5.4 TOML-to-INI Subcommand (`toml_to_ini.py`)
+
+**D-011:** New module for reverse conversion
+
+**Responsibilities:**
+
+- Create Typer app for toml-to-ini subcommand
+- Load TOML configuration using existing `load_toml_config()` from `config_toml.py`
+- Convert to INI format using `to_legacy_format()` and `_value_to_legacy_string()` from `config_toml.py`
+- Write output using `configparser.ConfigParser` for proper INI formatting
+
+**Public Interface:**
+```python
+import typer
+from typing import Annotated
+from pathlib import Path
+import configparser
+
+from batou.config_toml import load_toml_config, to_legacy_format
+
+app = typer.Typer(
+    no_args_is_help=True,
+    help="Convert batou environment.toml to environment.cfg.",
+)
+
+@app.command()
+def convert(
+    path: Annotated[
+        str,
+        typer.Argument(
+            help="Path to environments directory or specific environment.toml"
+        ),
+    ] = "environments",
+    output: Annotated[
+        str | None,
+        typer.Option("-o", "--output", help="Output file path"),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("-n", "--dry-run", help="Show what would be generated"),
+    ] = False,
+    force: Annotated[
+        bool,
+        typer.Option("-f", "--force", help="Overwrite existing files"),
+    ] = False,
+):
+    """Convert batou environment.toml to environment.cfg."""
+    # Implementation uses:
+    # - load_toml_config() to parse TOML
+    # - to_legacy_format() to convert to legacy structure
+    # - configparser.ConfigParser to write INI
+```
+
+**Reused Components from config_toml.py:**
+
+| Function | Purpose |
+|----------|---------|
+| `load_toml_config(content, source_file)` | Parse and validate TOML content |
+| `to_legacy_format(config)` | Convert Pydantic config to legacy dict |
+| `_value_to_legacy_string(value)` | Convert values to INI-compatible strings |
+
+**Constraint Mapping:** C-006-reuse-legacy-format (MUST), C-007-cli-pattern-consistency (MUST)
+
+---
+
 ## 6. Entry Point Changes
 
 ### 6.1 pyproject.toml Updates
@@ -399,6 +519,9 @@ batommel = "batou.batommel:app"
 | `batou-migrate-toml` | `batommel migrate-toml` | Identical |
 | `batou-migrate-toml --dry-run` | `batommel migrate-toml --dry-run` | Identical |
 | `batou-migrate-toml envs/prod` | `batommel migrate-toml envs/prod` | Identical |
+| (new) | `batommel toml-to-ini` | Converts environment.toml → environment.cfg |
+| (new) | `batommel toml-to-ini --dry-run` | Shows what would be generated |
+| (new) | `batommel toml-to-ini -o output.cfg` | Writes to specified output file |
 
 ---
 
@@ -411,9 +534,12 @@ batommel = "batou.batommel:app"
 | D-003: Remove old entry points | pyproject.toml | Verify entry point removal |
 | D-004: Keep source files | check.py, migrate_toml.py | File location verification |
 | D-005: Rich output preserved | check.py | Visual verification of table output |
-| D-006: Thin registration layer | batommel/__init__.py | Code review, line count < 20 |
+| D-006: Thin registration layer | batommel/__init__.py | Code review, line count < 25 |
 | D-007: No check.py changes | check.py | Diff shows no changes |
 | D-008: argparse→Typer conversion | migrate_toml.py | Test all CLI options |
+| D-009: toml-to-ini subcommand | toml_to_ini.py | Test INI output matches expected format |
+| D-010: Consistent CLI pattern | toml_to_ini.py | Verify options match migrate-toml |
+| D-011: Reuse to_legacy_format | toml_to_ini.py | Import verification, unit tests |
 
 ---
 
@@ -426,6 +552,8 @@ batommel = "batou.batommel:app"
 | C-003-backward-compat-entry-points | MUST | D-003 | pyproject.toml diff |
 | C-004-keep-source-files | MUST | D-004 | File structure unchanged |
 | C-005-rich-output | MUST | D-005, D-007 | check.py Rich tables preserved |
+| C-006-reuse-legacy-format | MUST | D-009, D-011 | Import from config_toml.py |
+| C-007-cli-pattern-consistency | MUST | D-010 | Option names match migrate-toml |
 
 ---
 
@@ -464,6 +592,12 @@ Usage: batommel migrate-toml [OPTIONS] [PATH]
   Migrate batou environment.cfg to environment.toml.
 ```
 
+### batommel toml-to-ini (new)
+```
+Usage: batommel toml-to-ini [OPTIONS] [PATH]
+  Convert batou environment.toml to environment.cfg.
+```
+
 ---
 
 ## Appendix B: migrate_toml.py Conversion Checklist
@@ -479,6 +613,28 @@ Usage: batommel migrate-toml [OPTIONS] [PATH]
 - [ ] Update function body to use parameters instead of `args` object
 - [ ] Remove argparse imports
 - [ ] Keep `if __name__ == "__main__": app()` for direct execution
+
+---
+
+## Appendix C: toml_to_ini.py Implementation Checklist
+
+- [ ] Create `app = typer.Typer()` instance
+- [ ] Add `no_args_is_help=True` to app
+- [ ] Import `load_toml_config`, `to_legacy_format` from `batou.config_toml`
+- [ ] Import `configparser.ConfigParser` for INI writing
+- [ ] Define `path` positional argument with `Annotated[str, typer.Argument()]`
+- [ ] Define `--output` option with `Annotated[str | None, typer.Option()]`
+- [ ] Define `--dry-run` flag with `Annotated[bool, typer.Option()]`
+- [ ] Define `--force` flag with `Annotated[bool, typer.Option()]`
+- [ ] Create `convert()` function with `@app.command()` decorator
+- [ ] Implement path resolution (file vs directory)
+- [ ] Call `load_toml_config()` to parse TOML
+- [ ] Call `to_legacy_format()` to get legacy dict
+- [ ] Use `ConfigParser` to write INI output
+- [ ] Handle dry-run mode (print to stdout)
+- [ ] Handle force mode (overwrite existing)
+- [ ] Add `if __name__ == "__main__": app()` for direct execution
+- [ ] Register in `batommel/__init__.py` with `app.add_typer(toml_to_ini_app, name="toml-to-ini")`
 
 ---
 
