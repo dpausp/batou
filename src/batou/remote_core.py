@@ -415,8 +415,8 @@ def setup_deployment(*args):
 def deploy(root, predict_only=False):
     # Always install FD tracking hook (we'll only return stats if requested)
     from batou.debug.remote_fd_tracking import (
-        install_remote_fd_tracking_hook,
         get_remote_fd_tracking_stats,
+        install_remote_fd_tracking_hook,
     )
 
     install_remote_fd_tracking_hook()

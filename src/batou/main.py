@@ -1,11 +1,10 @@
 import argparse
+import importlib.metadata
 import os
 import os.path
 import sys
 import textwrap
 from typing import Optional
-
-import importlib.metadata
 
 import batou
 import batou.debug.cli

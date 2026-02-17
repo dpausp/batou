@@ -1175,8 +1175,8 @@ def test_verify_diff_mode_none(monkeypatch, output, root):
     monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1201,8 +1201,8 @@ def test_verify_diff_mode_summary(monkeypatch, output, root):
     monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1230,8 +1230,8 @@ def test_verify_diff_mode_full(monkeypatch, output, root):
     monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1258,8 +1258,8 @@ def test_verify_sensitive_data_without_override(monkeypatch, output, root):
     monkeypatch.delenv("BATOU_SHOW_SECRET_DIFFS", raising=False)
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1285,8 +1285,8 @@ def test_verify_sensitive_data_with_override(monkeypatch, output, root):
     monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1313,8 +1313,8 @@ def test_verify_sensitive_data_with_env_secrets(monkeypatch, output, root):
     monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1342,8 +1342,8 @@ def test_verify_secret_diffs_0_respects_sensitive_data(monkeypatch, output, root
     monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "0")
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1368,8 +1368,8 @@ def test_verify_summary_with_sensitive_override(monkeypatch, output, root):
     monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 
@@ -1395,8 +1395,8 @@ def test_verify_none_with_sensitive_override(monkeypatch, output, root):
     monkeypatch.setenv("BATOU_SHOW_SECRET_DIFFS", "1")
 
     # Patch file.py's debug_settings to pick up new environment variables
-    from batou.debug.settings import DebugSettings
     import batou.lib.file as file_module
+    from batou.debug.settings import DebugSettings
 
     file_module.debug_settings = DebugSettings()
 

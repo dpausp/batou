@@ -208,10 +208,10 @@ class Environment(object):
         if toml_file.exists():
             # Load TOML with Pydantic validation
             from batou.config_toml import (
+                ConfigLoadError,
+                DictConfig,
                 load_toml_config,
                 to_legacy_format,
-                DictConfig,
-                ConfigLoadError,
             )
 
             try:

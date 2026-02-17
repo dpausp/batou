@@ -4,6 +4,7 @@ import builtins
 import datetime
 import os
 import socket
+
 from batou import output
 
 
@@ -153,7 +154,8 @@ class FileDescriptorTracker(object):
         if not self.enabled:
             return
 
-        gateway.remote_exec("""
+        gateway.remote_exec(
+            """
 import builtins
 import os
 import sys
@@ -193,13 +195,15 @@ def tracked_open(path, mode="r", *args, **kwargs):
     return fd
 
 builtins.open = tracked_open
-""")
+"""
+        )
 
     def get_remote_logs(self, gateway):
         if not self.enabled:
             return None
 
-        return gateway.remote_exec("""
+        return gateway.remote_exec(
+            """
 import builtins
 import os
 import sys
@@ -240,7 +244,8 @@ def tracked_open(path, mode="r", *args, **kwargs):
 
 builtins.open = tracked_open
 stats = get_statistics()
-""").receive()
+"""
+        ).receive()
 
     def report(self, location="local", env_name=None):
         if not self.enabled:

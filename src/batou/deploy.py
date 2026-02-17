@@ -7,11 +7,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 
-from batou import (
-    ConfigurationError,
-    ReportingException,
-    SilentConfigurationError,
-)
+from batou import ConfigurationError, ReportingException, SilentConfigurationError
 from batou._output import TerminalBackend, output
 from batou.debug.settings import get_debug_settings
 

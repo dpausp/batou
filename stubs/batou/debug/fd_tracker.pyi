@@ -17,7 +17,9 @@ class FileDescriptorTracker:
     _instance: FileDescriptorTracker | None
 
     def __init__(
-        self, environment_name: str, debug_settings: DebugSettings,
+        self,
+        environment_name: str,
+        debug_settings: DebugSettings,
     ) -> None: ...
     def _install_local_hook(self) -> None: ...
     def _track_close(self, fd: int) -> None: ...

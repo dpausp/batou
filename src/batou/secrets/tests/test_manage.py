@@ -9,13 +9,7 @@ import pytest
 from batou.environment import UnknownEnvironmentError
 
 from ..encryption import GPGEncryptedFile
-from ..manage import (
-    add_user,
-    decrypt_to_stdout,
-    reencrypt,
-    remove_user,
-    summary,
-)
+from ..manage import add_user, decrypt_to_stdout, reencrypt, remove_user, summary
 from .test_secrets import cleartext_file
 
 

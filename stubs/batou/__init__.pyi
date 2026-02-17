@@ -1,9 +1,7 @@
 from traceback import StackSummary
 from typing import Any
 
-from batou.component import (
-    Component,
-)
+from batou.component import Component
 
 __version__: str
 output: Any  # from _output module

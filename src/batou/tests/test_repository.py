@@ -89,7 +89,9 @@ def test_repository_hg_verify(tmpdir):
             """\
 [paths]
 default = file:///{}/remote
-""".format(tmpdir)
+""".format(
+                tmpdir
+            )
         )
 
     repository = MercurialRepository(environment)

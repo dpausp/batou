@@ -2,8 +2,7 @@
 
 import time
 
-from batou.utils import Timer
-from batou.utils import format_duration
+from batou.utils import Timer, format_duration
 
 
 def test_timer_basic_context_manager():

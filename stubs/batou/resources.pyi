@@ -1,12 +1,8 @@
 from collections import defaultdict
-from typing import (
-    Any,
-)
+from typing import Any
 
 from batou.component import RootComponent
-from batou.host import (
-    Host,
-)
+from batou.host import Host
 
 class Resources:
     subscribers: dict[str, set[Subscription]]

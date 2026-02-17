@@ -1,6 +1,4 @@
-from typing import (
-    Any,
-)
+from typing import Any
 
 from execnet.gateway_bootstrap import HostNotFound
 

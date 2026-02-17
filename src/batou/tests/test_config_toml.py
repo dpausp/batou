@@ -7,8 +7,8 @@ from batou.config_toml import (
     DictConfig,
     DictConfigSection,
     EnvironmentConfig,
-    HostConfig,
     EnvironmentSettings,
+    HostConfig,
     load_toml_config,
     to_legacy_format,
 )

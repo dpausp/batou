@@ -1,7 +1,4 @@
-from batou.environment import (
-    ConfigSection,
-    Environment,
-)
+from batou.environment import ConfigSection, Environment
 
 class Developer:
     def __init__(self, environment: Environment, config: ConfigSection | None): ...

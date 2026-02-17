@@ -1,13 +1,7 @@
 import os
 
 from batou import ConfigurationError, UpdateNeeded
-from batou.component import (
-    Attribute,
-    Component,
-    ConfigString,
-    HookComponent,
-    platform,
-)
+from batou.component import Attribute, Component, ConfigString, HookComponent, platform
 from batou.lib.file import File
 
 

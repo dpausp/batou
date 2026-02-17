@@ -3,11 +3,11 @@ import re
 import tempfile
 import time
 
-import pytest
 import mock
-from batou.debug.settings import DebugSettings
+import pytest
 
 from batou.debug.fd_tracker import FileDescriptorTracker
+from batou.debug.settings import DebugSettings
 
 
 @pytest.fixture(scope="module", autouse=True)

@@ -1,9 +1,4 @@
-from batou.lib.debian import (
-    Logrotate,
-    LogrotateCronjob,
-    RebootCronjob,
-    Supervisor,
-)
+from batou.lib.debian import Logrotate, LogrotateCronjob, RebootCronjob, Supervisor
 from batou.lib.service import Service
 
 # This is a very rough test to at least ensure we can import the modules

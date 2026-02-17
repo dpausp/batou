@@ -57,9 +57,11 @@ def cleanup_fd_tracking():
     4. These cycles prevent proper garbage collection
     5. This causes ResourceWarnings in later tests
     """
-    from batou.debug.fd_tracker import FileDescriptorTracker
     import warnings
+
     import pytest
+
+    from batou.debug.fd_tracker import FileDescriptorTracker
 
     # Suppress unraisable exception warnings during test execution
     # These are often false positives from coverage/pytest internals
