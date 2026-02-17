@@ -53,6 +53,7 @@ fc-nixos-dev-vm = "batou.provision:FCDevVM"
 
 [project.urls]
 Homepage = "https://batou.readthedocs.io/en/latest/"
+Repository = "https://github.com/flyingcircusio/batou"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/batou"]
