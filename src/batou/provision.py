@@ -221,7 +221,7 @@ Host {hostname} {aliases}
             pass
 
     def summarize(self, host):
-        for alias, fqdn in host.aliases.items():
+        for _alias, fqdn in host.aliases.items():
             output.line(f" 🌐 https://{fqdn}/")
 
     def _initial_provision_env(self, host):

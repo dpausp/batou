@@ -18,7 +18,7 @@ def test_simple_appenv(root):
 
     hashes = os.listdir(os.path.join(root.component.workdir, ".appenv"))
     assert len(hashes) == 2
-    first_hash = list(set(hashes) - set(["current"]))[0]
+    first_hash = list(set(hashes) - {"current"})[0]
 
     # Running it twice doesn't change anything
     appenv.prepare(root.component)
@@ -47,7 +47,7 @@ def test_simple_appenv(root):
     assert hashes3 != hashes
 
     assert len(hashes3) == 3
-    second_hash = list(set(hashes3) - set(["current", first_hash]))[0]
+    second_hash = list(set(hashes3) - {"current", first_hash})[0]
     assert first_hash == appenv.last_env_hash
     assert second_hash == appenv.env_hash
 

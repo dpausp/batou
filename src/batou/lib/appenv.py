@@ -50,7 +50,7 @@ class CleanupUnused(Component):
     def verify(self):
         if not os.path.exists(".appenv/"):
             return
-        protected = set([self.parent.env_hash, self.parent.last_env_hash, "current"])
+        protected = {self.parent.env_hash, self.parent.last_env_hash, "current"}
         self.cleanup = set(os.listdir(".appenv/")) - protected
         assert not self.cleanup
 
@@ -103,7 +103,7 @@ class AppEnv(Component):
 
         # Read editable source files
         for source_path in editable_sources:
-            for root, dirs, files in os.walk(source_path):
+            for root, _dirs, files in os.walk(source_path):
                 for filename in files:
                     filepath = os.path.join(root, filename)
                     if (

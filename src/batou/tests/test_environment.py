@@ -94,15 +94,15 @@ def test_get_root_raises_keyerror_on_nonassigned_component():
 def test_multiple_components(sample_service):
     e = Environment("test-multiple-components")
     e.load()
-    components = dict(
-        (host, sorted(c.name for c in e.root_dependencies(host=host)))
+    components = {
+        host: sorted(c.name for c in e.root_dependencies(host=host))
         for host in sorted(e.hosts.keys())
-    )
-    assert components == dict(
-        localhost=["hello1", "hello2"],
-        otherhost=["hello3", "hello4"],
-        thishost=["hello5", "hello6"],
-    )
+    }
+    assert components == {
+        "localhost": ["hello1", "hello2"],
+        "otherhost": ["hello3", "hello4"],
+        "thishost": ["hello5", "hello6"],
+    }
 
 
 def test_parse_host_components():

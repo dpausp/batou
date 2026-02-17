@@ -9,15 +9,15 @@ from batou.template import TemplateEngine
 
 Server = collections.namedtuple("Server", ["name", "address"])
 
-sample_dict = dict(
-    host=mock.Mock(),
-    config=dict(),
-    servers=[Server("s1", "1.2.3.4"), Server("s2", "2.3.4.5")],
-    hello="world",
-    hello2="wörld",
-)
+sample_dict = {
+    "host": mock.Mock(),
+    "config": {},
+    "servers": [Server("s1", "1.2.3.4"), Server("s2", "2.3.4.5")],
+    "hello": "world",
+    "hello2": "wörld",
+}
 
-fixture = "%s/fixture/template" % os.path.dirname(__file__)
+fixture = f"{os.path.dirname(__file__)}/fixture/template"
 
 
 def test_unknown_template_engine():

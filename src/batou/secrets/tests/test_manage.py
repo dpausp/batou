@@ -145,7 +145,7 @@ def test_manage__reencrypt__1(tmp_path, monkeypatch, capsys):
 
 def test_manage__decrypt_to_stdout__1(encrypted_file, capsys):
     """It decrypts a file and writes the content to stdout."""
-    with GPGEncryptedFile(encrypted_file) as secret:
+    with GPGEncryptedFile(encrypted_file):
         with open(cleartext_file) as cleartext:
             # assert cleartext.read().strip() == secret.cleartext.strip()
             assert decrypt_to_stdout(str(encrypted_file)) == 0

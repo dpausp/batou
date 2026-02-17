@@ -24,7 +24,7 @@ def test_reset_marks_depending_components_as_dirty():
     resources.require(root3, mock.sentinel.key, dirty=True)
     assert resources.dirty_dependencies == set()
     resources.reset_component_resources(root1)
-    assert resources.dirty_dependencies == set([root2])
+    assert resources.dirty_dependencies == {root2}
 
 
 def test_mentions_missing_requirement_with_host_requirement(sample_service):

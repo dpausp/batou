@@ -7,7 +7,7 @@ import sys
 
 
 def main():
-    for root, dirs, files in os.walk("."):
+    for root, _dirs, files in os.walk("."):
         for file in files:
             if file == "secrets.cfg":
                 path = os.path.join(root, file)

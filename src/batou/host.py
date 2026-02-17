@@ -53,7 +53,7 @@ def new_ssh_args(spec):
         args = ["ssh", "-C"]
     if spec.ssh_config is not None:
         args.extend(["-F", str(spec.ssh_config)])
-    remotecmd = '%s -c "%s"' % (remotepython, popen_bootstrapline)
+    remotecmd = f'{remotepython} -c "{popen_bootstrapline}"'
     if spec.type == "vagrant" or spec.type == "kitchen":
         args.extend([remotecmd])
     else:
@@ -118,10 +118,12 @@ class Host:
     remap = False
     ignore = False
 
-    def __init__(self, name, environment, config={}):
+    def __init__(self, name, environment, config=None):
         # The _name attribute is the name that is given to this host in the
         # environment. The `name` property will return the true name for this
         # host in case that a mapping exists, e.g. due to a provisioner.
+        if config is None:
+            config = {}
         self._name = name
 
         self.aliases = BagOfAttributes()

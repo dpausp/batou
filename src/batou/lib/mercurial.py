@@ -19,7 +19,7 @@ class Clone(Component):
     def configure(self):
         if (not self.revision_or_branch) or (self.revision and self.branch):
             raise ValueError(
-                "Clone(%s) needs exactly one of revision or branch" % self.url
+                f"Clone({self.url}) needs exactly one of revision or branch"
             )
         self.target = self.map(self.target)
         self += Directory(self.target)
@@ -128,7 +128,7 @@ class Clone(Component):
             if not os.path.exists(".hg"):
                 return None
             stdout, stderr = self.cmd(
-                'hg log -r %s --template "{date|hgdate}\n"' % self.current_revision()
+                f'hg log -r {self.current_revision()} --template "{{date|hgdate}}\n"'
             )
             timestamp, offset = stdout.split()
             return float(timestamp) - float(offset)

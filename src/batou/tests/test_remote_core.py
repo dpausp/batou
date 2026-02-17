@@ -170,7 +170,7 @@ class DummyChannel:
 def remote_core_mod():
     channel = DummyChannel()
 
-    local_namespace = dict(channel=channel, __name__="__channelexec__")
+    local_namespace = {'channel': channel, '__name__': "__channelexec__"}
 
     remote_core_mod = compile(
         inspect.getsource(remote_core),

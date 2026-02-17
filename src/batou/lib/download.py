@@ -47,13 +47,10 @@ class Download(Component):
         target_checksum = batou.utils.hash(self.target, self.checksum_function)
         assert (
             self.checksum == target_checksum
-        ), """\
+        ), f"""\
 Checksum mismatch!
-expected: %s
-got: %s""" % (
-            self.checksum,
-            target_checksum,
-        )
+expected: {self.checksum}
+got: {target_checksum}"""
 
     def _update_requests(self):
         r = requests.get(

@@ -255,7 +255,9 @@ class CmdError(Exception):
         output.annotate(self.stderr.decode("utf-8", errors="replace"))
 
 
-def cmd(c, acceptable_returncodes=[0]):
+def cmd(c, acceptable_returncodes=None):
+    if acceptable_returncodes is None:
+        acceptable_returncodes = [0]
     process = subprocess.Popen(
         [f"LANG=C LC_ALL=C LANGUAGE=C {c}"],
         stdout=subprocess.PIPE,

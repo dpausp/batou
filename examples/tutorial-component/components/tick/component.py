@@ -6,4 +6,4 @@ class Tick(Component):
     def configure(self):
         tick = File("tick.sh", source="tick.sh", mode=0o755)
         self += tick
-        self.provide("programs", dict(name="tick", path=tick.path, priority=10))
+        self.provide("programs", {"name": "tick", "path": tick.path, "priority": 10})

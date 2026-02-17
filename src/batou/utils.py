@@ -62,7 +62,7 @@ def self_id():
     system = " ".join([system[0], system[2], system[4]])
     version = importlib_metadata.version("batou")
     python = sys.implementation.name
-    python += " {0}.{1}.{2}-{3}{4}".format(*sys.version_info)
+    python += " {}.{}.{}-{}{4}".format(*sys.version_info)
     return template.format(**locals())
 
 
@@ -95,8 +95,8 @@ def locked(filename, exit_on_failure=False):
                 print("Exiting.", file=sys.stderr)
                 sys.exit(1)
             raise RuntimeError(
-                'cannot create lock "%s": more than one instance running '
-                "concurrently?" % lockfile,
+                f'cannot create lock "{lockfile}": more than one instance running '
+                "concurrently?",
                 lockfile,
             )
         # publishing the process id comes handy for debugging
@@ -400,7 +400,7 @@ def revert_graph(graph):
 def ensure_graph_data(graph):
     # Ensure that all nodes exist as keys even if they don't have outgoing
     # relations.
-    for node, relations in list(graph.items()):
+    for _node, relations in list(graph.items()):
         for relation in relations:
             if relation not in graph:
                 graph[relation] = set()
@@ -479,9 +479,11 @@ def cmd(
     ignore_returncode=False,
     communicate=True,
     env=None,
-    acceptable_returncodes=[0],
+    acceptable_returncodes=None,
     encoding="utf-8",
 ):
+    if acceptable_returncodes is None:
+        acceptable_returncodes = [0]
     if not isinstance(cmd, str):
         # We use `shell=True`, so the command needs to be a single string and
         # we need to pay attention to shell quoting.

@@ -644,11 +644,11 @@ requires-python = ">={python_version}"
         # Read existing lockfile for comparison
         old_lines: set[str] = set()
         if lock_file.exists():
-            old_lines = set(
+            old_lines = {
                 stripped
                 for line in lock_file.read_text().splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
         if args and args.diff:
             print("Checking lockfile changes ...")
@@ -697,11 +697,11 @@ requires-python = ">={python_version}"
 
             # Read new content
             new_content = lock_file.read_text() if lock_file.exists() else ""
-            new_lines = set(
+            new_lines = {
                 stripped
                 for line in new_content.splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
             # Show summary
             added = new_lines - old_lines
@@ -744,11 +744,11 @@ requires-python = ">={python_version}"
         lock_file = Path(REQUIREMENTS_LOCK)
         old_lines: set[str] = set()
         if lock_file.exists():
-            old_lines = set(
+            old_lines = {
                 stripped
                 for line in lock_file.read_text().splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
         if args and args.diff:
             print("Checking lockfile changes ...")
@@ -798,11 +798,11 @@ requires-python = ">={python_version}"
             new_content += compiled
 
             # Extract new lines for comparison
-            new_lines = set(
+            new_lines = {
                 stripped
                 for line in new_content.splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
             if args and args.diff:
                 # Show full diff with colors

@@ -38,7 +38,7 @@ def platform(name, component):
 
 def handle_event(event, scope):
     def wrapper(f):
-        f._event = dict(event=event, scope=scope)
+        f._event = {"event": event, "scope": scope}
         return f
 
     return wrapper
@@ -250,7 +250,7 @@ class Component:
 
         if self.namevar:
             if namevar is None:
-                raise ValueError("Namevar %s required" % self.namevar)
+                raise ValueError(f"Namevar {self.namevar} required")
             kw[self.namevar] = namevar
         elif namevar:
             raise ValueError("Namevar is undefined for this component.")
@@ -260,11 +260,7 @@ class Component:
         self.__dict__.update(kw)
 
     def __repr__(self):
-        return '<%s (%s) "%s">' % (
-            self.__class__.__name__,
-            self.host.name,
-            self._breadcrumbs,
-        )
+        return f'<{self.__class__.__name__} ({self.host.name}) "{self._breadcrumbs}">'
 
     # Configuration phase
 
@@ -290,7 +286,9 @@ class Component:
         self.__setup_event_handlers__()
         self._prepared = True
 
-    def _overrides(self, overrides={}):
+    def _overrides(self, overrides=None):
+        if overrides is None:
+            overrides = {}
         missing = []
         for key, value in list(overrides.items()):
             # I explicitly check whether we're overriding an attribute on the
@@ -565,8 +563,7 @@ class Component:
     def recursive_sub_components(self):
         for sub in self.sub_components:
             yield sub
-            for rec_sub in sub.recursive_sub_components:
-                yield rec_sub
+            yield from sub.recursive_sub_components
 
     # Platform mechanics
 
@@ -670,7 +667,7 @@ class Component:
         except batou.utils.CmdExecutionError:
             raise batou.UpdateNeeded()
 
-    def assert_file_is_current(self, reference, requirements=[], **kw):
+    def assert_file_is_current(self, reference, requirements=None, **kw):
         """Assert that the file given by the ``reference`` pathname has been
         created or updated after the given list of ``requirement`` file names,
         raise :py:class:`UpdateNeeded` otherwise.
@@ -695,11 +692,13 @@ class Component:
         """
         from batou.lib.file import Presence
 
+        if requirements is None:
+            requirements = []
         reference = Presence(reference)
         self |= reference
         reference.assert_component_is_current([Presence(r) for r in requirements], **kw)
 
-    def assert_component_is_current(self, requirements=[], **kw):
+    def assert_component_is_current(self, requirements=None, **kw):
         """Assert that this component has been updated more recently
         than the components specified in the ``requirements``,
         raise :py:class:`UpdateNeeded` otherwise.
@@ -722,6 +721,8 @@ class Component:
 
         """
 
+        if requirements is None:
+            requirements = []
         if isinstance(requirements, Component):
             requirements = [requirements]
         reference = self.last_updated(**kw)
@@ -953,12 +954,12 @@ class Component:
     def _template_args(self, component=None, **kw):
         if component is None:
             component = self
-        args = dict(
-            host=component.host,
-            environment=component.environment,
-            component=component,
-            batou_generated_header=batou_generated_header(component),
-        )
+        args = {
+            "host": component.host,
+            "environment": component.environment,
+            "component": component,
+            "batou_generated_header": batou_generated_header(component),
+        }
         args.update(kw)
         return args
 
@@ -1077,7 +1078,7 @@ class RootComponent:
 
     def log(self, msg, *args):
         if self._logs is None:
-            msg = "%s: %s" % (self.host.fqdn, msg)
+            msg = f"{self.host.fqdn}: {msg}"
             output.annotate(msg % args)
         else:
             self._logs.append((msg, args))
@@ -1088,11 +1089,7 @@ class RootComponent:
         self._logs = None
 
     def __repr__(self):
-        return '<%s "%s" object at %s>' % (
-            self.__class__.__name__,
-            self.name,
-            id(self),
-        )
+        return f'<{self.__class__.__name__} "{self.name}" object at {id(self)}>'
 
     @property
     def _breadcrumbs(self):
@@ -1162,7 +1159,7 @@ class Attribute:
         self.expand = expand
         self.map = map
         self.instances = weakref.WeakKeyDictionary()
-        self.names = dict()
+        self.names = {}
 
     def __set_name__(self, owner, name):
         self.names[owner] = name

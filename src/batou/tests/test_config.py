@@ -64,13 +64,13 @@ def test_production_environment_is_loaded(env_prod):
 def test_dev_environment_is_loaded(env):
     assert env.branch == "default"
     assert env.host_domain is None
-    assert set(env.hosts.keys()) == set(["localhost", "host2"])
+    assert set(env.hosts.keys()) == {"localhost", "host2"}
 
     localhost = env.hosts["localhost"]
     assert localhost.name == "localhost"
     assert localhost.fqdn == "localhost"
-    root_components = set([x.name for x in env.root_components if x.host is localhost])
-    assert root_components == set(["zeo", "zope"])
+    root_components = {x.name for x in env.root_components if x.host is localhost}
+    assert root_components == {"zeo", "zope"}
 
     zeo = env.get_root("zeo", env.hosts["localhost"])
     zeo.prepare()

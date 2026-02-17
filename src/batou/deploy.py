@@ -155,7 +155,7 @@ class Deployment:
             self.jobs = int(self.environment.jobs)
         else:
             self.jobs = 1
-        output.step("main", "Number of jobs: %s" % self.jobs, debug=True, icon="⚙️")
+        output.step("main", f"Number of jobs: {self.jobs}", debug=True, icon="⚙️")
 
         # This is located here to avoid duplicating the verification check
         # when loading the repository on the remote environment object.
@@ -249,7 +249,7 @@ class Deployment:
         # we can merge them into a list of (reporting_hostname, affected_hostnames, error) tuples
         merged_errors = []
         for equivalence_class in errors_by_equivalence_class:
-            reporting_hostnames = set(hostname for hostname, _ in equivalence_class)
+            reporting_hostnames = {hostname for hostname, _ in equivalence_class}
             merged_error, affected_hostnames = type(equivalence_class[0][1]).merge(
                 [e for _, e in equivalence_class]
             )
@@ -330,10 +330,7 @@ class Deployment:
             # for Python 3.7 and upwards
             # confer https://docs.python.org/3/whatsnew/3.7.html
             # and https://docs.python.org/3.9/whatsnew/3.9.html
-            if sys.version_info < (3, 7):
-                all_tasks = asyncio.Task.all_tasks
-            else:
-                all_tasks = asyncio.all_tasks
+            all_tasks = asyncio.all_tasks
 
             def get_pending():
                 return {t for t in all_tasks(self.loop) if not t.done()}

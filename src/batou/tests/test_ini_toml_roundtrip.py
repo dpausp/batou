@@ -295,7 +295,7 @@ debug = true
         toml_data = convert_config_to_toml(ini_path)
         toml_result = format_toml(toml_data)
 
-        original_config = load_toml_config(self.COMPLEX_TOML)
+        load_toml_config(self.COMPLEX_TOML)
         result_config = load_toml_config(toml_result)
 
         assert "host01" in result_config.host
@@ -313,7 +313,7 @@ debug = true
         toml_data = convert_config_to_toml(ini_path, InferMode.FULL)
         toml_result = format_toml(toml_data)
 
-        original_config = load_toml_config(self.COMPLEX_TOML)
+        load_toml_config(self.COMPLEX_TOML)
         result_config = load_toml_config(toml_result)
 
         assert "myapp" in result_config.components
@@ -976,7 +976,7 @@ class TestCliCommands:
 
         # Read TOML and verify
         toml_content = (env_dir / "environment.toml").read_text()
-        original_toml_config = load_toml_config(toml_content)
+        load_toml_config(toml_content)
 
         # TOML → INI (with --force)
         result2 = runner.invoke(toml_to_ini_app, [str(env_dir), "--force"])

@@ -38,7 +38,7 @@ class Clone(Component):
     def configure(self):
         if not exactly_one(self.revision, self.branch, self.tag):
             raise ValueError(
-                "Clone(%s) needs exactly one of revision, branch or tag" % self.url
+                f"Clone({self.url}) needs exactly one of revision, branch or tag"
             )
         self.target = self.map(self.target)
         self += Directory(self.target)

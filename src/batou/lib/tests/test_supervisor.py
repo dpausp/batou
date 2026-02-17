@@ -23,11 +23,11 @@ def test_waits_for_start(root, supervisor):
         "foo",
         command_absolute=False,
         command="bash",
-        args='-c "sleep 1; touch %s/foo; sleep 3600"' % (root.workdir),
-        options=dict(startsecs=2),
+        args=f'-c "sleep 1; touch {root.workdir}/foo; sleep 3600"',
+        options={"startsecs": 2},
     )
     root.component.deploy()
-    assert os.path.exists("%s/foo" % root.workdir)
+    assert os.path.exists(f"{root.workdir}/foo")
 
     supervisor.cmd(f"{supervisor.workdir}/check_supervisor")
 
@@ -38,18 +38,18 @@ def test_does_not_start_disabled_program(root, supervisor):
         "foo",
         command_absolute=False,
         command="bash",
-        args='-c "sleep 1; touch %s/foo; sleep 3600"' % (root.workdir),
-        options=dict(startsecs=2),
+        args=f'-c "sleep 1; touch {root.workdir}/foo; sleep 3600"',
+        options={"startsecs": 2},
         enable=False,
     )
     root.component.deploy()
-    assert not os.path.exists("%s/foo" % root.workdir)
+    assert not os.path.exists(f"{root.workdir}/foo")
 
 
 @pytest.mark.slow
 def test_program_does_not_start_within_startsecs_raises(root, supervisor):
     root.component += batou.lib.supervisor.Program(
-        "foo", command_absolute=False, command="true", options=dict(startsecs=1)
+        "foo", command_absolute=False, command="true", options={"startsecs": 1}
     )
     with pytest.raises(RuntimeError):
         root.component.deploy()
@@ -62,7 +62,7 @@ def test_starts_stopped_program(root, supervisor):
         command_absolute=False,
         command="bash",
         args='-c "sleep 3600"',
-        options=dict(startsecs=2),
+        options={"startsecs": 2},
     )
     root.component.deploy()
     supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl stop foo")

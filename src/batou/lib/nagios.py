@@ -49,7 +49,7 @@ class NRPEService(Service):
 
     @property
     def check_command(self):
-        return "check_nrpe!%s" % self.name
+        return f"check_nrpe!{self.name}"
 
     @property
     def nrpe_command(self):

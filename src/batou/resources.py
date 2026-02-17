@@ -168,9 +168,9 @@ class Resources:
     def unsatisfied_keys_and_components(self):
         keys = {}
         for resource, host in self.unsatisfied:
-            keys[(resource, host)] = set(
-                [s.root for s in self._subscriptions(resource, host)]
-            )
+            keys[(resource, host)] = {
+                s.root for s in self._subscriptions(resource, host)
+            }
         return keys
 
     def get_dependency_graph(self):

@@ -141,8 +141,7 @@ class GPGEncryptedFile(EncryptedFile):
         try:
             p = subprocess.run(
                 args,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -170,8 +169,7 @@ class GPGEncryptedFile(EncryptedFile):
             subprocess.run(
                 args,
                 input=content,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -272,8 +270,7 @@ def get_passphrase(identity: str) -> str:
     elif op:
         op_process = subprocess.run(
             ["op", "read", op],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=True,
         )
         passphrase = op_process.stdout.decode("utf-8").strip()
@@ -392,11 +389,10 @@ class AGEEncryptedFile(EncryptedFile):
             print(f"Running `{args}`", file=sys.stderr)
 
         try:
-            p = subprocess.run(
+            subprocess.run(
                 args,
                 input=content,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:

@@ -384,22 +384,22 @@ def test_revert_graph_no_edges_is_identical():
 
 
 def test_revert_graph_one_edge_reverses():
-    graph = {1: set([2])}
-    assert {2: set([1]), 1: set()} == dict(revert_graph(graph))
+    graph = {1: {2}}
+    assert {2: {1}, 1: set()} == dict(revert_graph(graph))
 
 
 def test_topological_sort_simple_chain():
-    graph = {1: set([2]), 2: set([3]), 3: set([4])}
+    graph = {1: {2}, 2: {3}, 3: {4}}
     assert [1, 2, 3, 4] == topological_sort(graph)
 
 
 def test_topological_sort_multiple_paths():
-    graph = {1: set([2, 3]), 2: set([3])}
+    graph = {1: {2, 3}, 2: {3}}
     assert [1, 2, 3] == topological_sort(graph)
 
 
 def test_topological_sort_raises_on_loop():
-    graph = {1: set([2]), 2: set([3]), 3: set([1])}
+    graph = {1: {2}, 2: {3}, 3: {1}}
     with pytest.raises(ValueError):
         topological_sort(graph)
 

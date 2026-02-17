@@ -48,7 +48,7 @@ def test_non_empty_purge_crontab_must_raise(root):
 def test_additional_envs_can_be_set(root):
     root.environment.vfs_sandbox = batou.vfs.Developer(root.environment, None)
     root.component += CronJob("command2", timing="* * * * *")
-    root.component += CronTab(env=dict(PATH="/foo/bar"))
+    root.component += CronTab(env={"PATH": "/foo/bar"})
     root.component.deploy()
     cron_filename = os.path.join(root.environment.workdir_base, "mycomponent/crontab")
     with open(cron_filename) as f:

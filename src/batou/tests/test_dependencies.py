@@ -105,12 +105,12 @@ def test_consumer_without_provider_raises_error(env):
     assert len(env.configure()) > 0
     for exc in env.exceptions:
         if isinstance(exc, UnsatisfiedResources):
-            assert set(["the-answer"]) == set(
-                [key for key, _, _ in exc.unsatisfied_resources]
-            )
+            assert {"the-answer"} == {
+                key for key, _, _ in exc.unsatisfied_resources
+            }
             break
     else:
-        assert False, "Did not find exception"
+        raise AssertionError("Did not find exception")
 
 
 def test_aggressive_consumer_raises_unsatisfiedrequirement(env):
@@ -118,12 +118,12 @@ def test_aggressive_consumer_raises_unsatisfiedrequirement(env):
     assert len(env.configure()) > 0
     for exc in env.exceptions:
         if isinstance(exc, UnsatisfiedResources):
-            assert set(["the-answer"]) == set(
-                [key for key, _, _ in exc.unsatisfied_resources]
-            )
+            assert {"the-answer"} == {
+                key for key, _, _ in exc.unsatisfied_resources
+            }
             break
     else:
-        assert False, "Did not find expected exception."
+        raise AssertionError("Did not find expected exception.")
 
 
 def test_broken_component_logs_real_exception(env):

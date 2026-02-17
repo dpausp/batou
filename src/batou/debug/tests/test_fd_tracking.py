@@ -63,7 +63,7 @@ def test_fd_tracker_stack_trace_serialization(monkeypatch, tmpdir):
 
     # Check that stack traces are lists of tuples (not FrameSummary objects)
     assert len(tracker.fd_records) > 0
-    for path, record in tracker.fd_records.items():
+    for _path, record in tracker.fd_records.items():
         if record["stack_traces"]:
             for stack in record["stack_traces"]:
                 # Each stack should be a list of tuples
@@ -184,13 +184,13 @@ def test_fd_tracker_filter_tracking_frames(monkeypatch, tmpdir):
 
     # Check that tracking frames are filtered
     assert len(tracker.fd_records) > 0
-    for path, record in tracker.fd_records.items():
+    for _path, record in tracker.fd_records.items():
         if record["stack_traces"]:
             for stack in record["stack_traces"]:
                 # Convert back to tuples for easier checking
                 stack_tuples = [(f, lineno, n) for f, lineno, n in stack]
                 # No frame should be from batou/utils.py with tracking function names
-                for filename, lineno, name in stack_tuples:
+                for filename, _lineno, name in stack_tuples:
                     if "batou/utils.py" in filename:
                         assert name not in ["open_hook", "_track_open"]
 
@@ -319,7 +319,7 @@ def test_fd_tracker_performance_overhead_disabled(monkeypatch):
 
     # Measure time without tracking
     start = time.time()
-    for i in range(100):
+    for _i in range(100):
         with tempfile.NamedTemporaryFile() as f:
             f.write(b"test")
     _ = time.time() - start  # Verify baseline performance

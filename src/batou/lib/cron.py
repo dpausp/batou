@@ -16,7 +16,7 @@ class CronJob(HookComponent):
     def format(self):
         if self.timing is None:
             raise ValueError(
-                "Required timing value missing from cron job %r." % self.command
+                f"Required timing value missing from cron job {self.command!r}."
             )
         line = self.expand(
             "{{component.timing}} {{component.command}} {{component.args}}"

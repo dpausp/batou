@@ -38,7 +38,7 @@ def test_timer_total_step_forbidden():
     timer = Timer("test")
     try:
         timer.step("total")
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError as e:
         assert "Cannot use 'total' as a step name" in str(e)
 

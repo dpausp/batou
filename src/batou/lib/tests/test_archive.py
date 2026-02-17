@@ -91,7 +91,7 @@ def test_zip_overwrites_existing_files(root):
     )
     root.component += extract
 
-    target = "%s/mycomponent/example/foo/bar" % root.environment.workdir_base
+    target = f"{root.environment.workdir_base}/mycomponent/example/foo/bar"
     os.makedirs(target)
     filename = target + "/qux"
     with open(filename, "w") as f:

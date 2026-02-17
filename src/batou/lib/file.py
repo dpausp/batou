@@ -95,7 +95,7 @@ class File(Component):
             self += Symlink(self.path, source=self.link_to)
         else:
             raise ValueError(
-                "Ensure must be one of: file, directory, symlink not %s" % self.ensure
+                f"Ensure must be one of: file, directory, symlink not {self.ensure}"
             )
         # variation: content or source explicitly given
 
@@ -129,7 +129,7 @@ class File(Component):
                 )
         if self.ensure == "file" and (self.content or self.source):
             if self.template_args is None:
-                self.template_args = dict()
+                self.template_args = {}
             if not self.template_context:
                 self.template_context = self.parent
             content = Content(
@@ -289,7 +289,7 @@ class Directory(Component):
 
     def last_updated(self, key="st_mtime"):
         newest = 0  # epoch
-        for dirpath, dirnames, filenames in os.walk(self.path):
+        for dirpath, _dirnames, filenames in os.walk(self.path):
             for filename in filenames:
                 time = getattr(os.stat(os.path.join(dirpath, filename)), key)
                 if time > newest:
@@ -444,7 +444,7 @@ class ManagedContentBase(FileComponent):
                 # not yet work and that we will change. We might want to
                 # turn this into an explicit flag so we don't implicitly
                 # run into a broken deployment.
-                assert False
+                raise AssertionError()
             # If we are not predicting then this is definitely a problem.
             # Stop here.
             raise
@@ -547,7 +547,7 @@ class Content(ManagedContentBase):
         if not self.is_template:
             return
         if self.template_args is None:
-            self.template_args = dict()
+            self.template_args = {}
         if not self.template_context:
             self.template_context = self.parent
         self.content = self.expand(

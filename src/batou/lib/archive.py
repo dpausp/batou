@@ -159,7 +159,7 @@ class DMGVolume:
     def _mount(self):
         """Mount the .dmg file as volume."""
         if not os.path.exists(self.path):
-            raise UserWarning("Path %r does not exist." % self.path)
+            raise UserWarning(f"Path {self.path!r} does not exist.")
         volume_path = None
         mount_plist, _ = cmd(
             [self.HDIUTIL, "mount", "-plist", self.path], encoding=None

@@ -106,7 +106,7 @@ def test_recursive_sub_component_iterator(root):
             c2 = TestComponent(name=f"x{x}y{y}")
             c += c2
 
-    recursive = list(x.name for x in root.component.recursive_sub_components)
+    recursive = [x.name for x in root.component.recursive_sub_components]
     assert [
         "x0",
         "x0y0",
