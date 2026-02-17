@@ -7,7 +7,6 @@ import os.path
 import sys
 import types
 import weakref
-from typing import List
 
 import batou
 import batou.c
@@ -155,7 +154,7 @@ class Component:
     #: After the configuration phase, this list is checked for
     #: components that have component._prepared == False and
     #: warns about them.
-    _instances: List["Component"] = []
+    _instances: list["Component"] = []
 
     @property
     def defdir(self):

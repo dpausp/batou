@@ -6,7 +6,6 @@ import os.path
 import pathlib
 import sys
 from configparser import RawConfigParser
-from typing import Dict, List, Set
 
 from importlib_metadata import entry_points
 
@@ -133,31 +132,31 @@ class Environment:
         check_and_predict_local=False,
     ):
         self.name: str = name
-        self.hosts: Dict[str, Host] = {}
+        self.hosts: dict[str, Host] = {}
         self.resources = Resources()
-        self.overrides: Dict[str, Dict[str, str]] = {}
-        self.secret_data: Set[str] = set()
-        self.exceptions: List[Exception] = []
+        self.overrides: dict[str, dict[str, str]] = {}
+        self.secret_data: set[str] = set()
+        self.exceptions: list[Exception] = []
         self.timeout = timeout
         self.platform = platform
         self.provision_rebuild = provision_rebuild
         self.check_and_predict_local = check_and_predict_local
 
-        self.hostname_mapping: Dict[str, str] = {}
+        self.hostname_mapping: dict[str, str] = {}
 
         # These are the component classes, decorated with their
         # name.
-        self.components: Dict[str, ComponentDefinition] = {}
+        self.components: dict[str, ComponentDefinition] = {}
         # These are the components assigned to hosts.
-        self.root_components: List[RootComponent] = []
+        self.root_components: list[RootComponent] = []
 
         self.base_dir = os.path.abspath(basedir)
         self.workdir_base = os.path.join(self.base_dir, "work")
 
         # Additional secrets files as placed in secrets/<env>-<name>
-        self.secret_files: Dict[str, str] = {}
+        self.secret_files: dict[str, str] = {}
 
-        self.provisioners: Dict[str, Provisioner] = {}
+        self.provisioners: dict[str, Provisioner] = {}
 
         self.template_stats = TemplateStats()
 

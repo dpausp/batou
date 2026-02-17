@@ -4,7 +4,6 @@ import os
 import os.path
 import socket
 import traceback
-from typing import List, Optional
 
 import jinja2
 
@@ -56,7 +55,7 @@ def prepare_traceback_from_stack(stack):
 class ReportingException(Exception):
     """Exceptions that support user-readable reporting."""
 
-    affected_hostname: Optional[str]
+    affected_hostname: str | None
 
     def __str__(self):
         raise NotImplementedError()
@@ -199,7 +198,7 @@ class ConfigurationError(ReportingException):
 
     message: str
     has_component: bool
-    component_root_name: Optional[str]
+    component_root_name: str | None
 
     @property
     def sort_key(self):
@@ -328,7 +327,7 @@ class SilentConfigurationError(Exception):
 
 class MissingOverrideAttributes(ConfigurationError):
     component_breadcrumbs: str
-    attributes: List[str]
+    attributes: list[str]
 
     @property
     def sort_key(self):

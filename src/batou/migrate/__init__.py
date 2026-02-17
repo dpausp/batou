@@ -1,7 +1,6 @@
 import importlib
 import json
 import textwrap
-from typing import List
 
 import importlib_resources
 
@@ -37,7 +36,7 @@ def read_config() -> int:
         return int(json.load(f)["migration"]["version"])
 
 
-def get_migration_steps() -> List[int]:
+def get_migration_steps() -> list[int]:
     """Return the sorted list of all known migration steps."""
     migration_files = (
         importlib_resources.files(MIGRATION_MODULE).joinpath("migrations").iterdir()

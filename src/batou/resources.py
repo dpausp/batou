@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Set
 
 from batou.utils import flatten
 
@@ -47,7 +46,7 @@ class Resources:
     subscribers = None
     # Keeps track of root components that have not seen changes to a key they
     # have subscribed to when they were configured earlier..
-    dirty_dependencies: Set
+    dirty_dependencies: set
 
     # {key: {root: [values]}}
     resources = None

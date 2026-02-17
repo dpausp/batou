@@ -7,7 +7,6 @@ import pty
 import subprocess
 import sys
 import tempfile
-from typing import Dict, List, Optional
 
 from configupdater import ConfigUpdater
 
@@ -23,8 +22,8 @@ class EncryptedFile:
         self.path = path
         self.writeable = writeable
         self.fd = None
-        self.is_new: Optional[bool] = None
-        self._decrypted: Optional[bytes] = None
+        self.is_new: bool | None = None
+        self._decrypted: bytes | None = None
 
     @property
     def decrypted(self) -> bytes:
@@ -49,7 +48,7 @@ class EncryptedFile:
     def locked(self) -> bool:
         return self.fd is not None
 
-    def write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
+    def write(self, content: bytes, recipients: list[str], reencrypt: bool = False):
         if debug:
             print(
                 f"EncryptedFile({self.path}).write({content}, {recipients}, {reencrypt})",
@@ -59,7 +58,7 @@ class EncryptedFile:
         self._write(content, recipients, reencrypt)
         self._decrypted = content
 
-    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
+    def _write(self, content: bytes, recipients: list[str], reencrypt: bool = False):
         raise NotImplementedError("_write() not implemented")
 
     def __enter__(self):
@@ -148,7 +147,7 @@ class GPGEncryptedFile(EncryptedFile):
             raise GPGCallError.from_context(e.cmd, e.returncode, e.stderr) from e
         return p.stdout
 
-    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
+    def _write(self, content: bytes, recipients: list[str], reencrypt: bool = False):
         if not self.locked:
             raise RuntimeError("File not locked")
         if not self.writeable:
@@ -255,7 +254,7 @@ def get_identities():
     return identities
 
 
-known_passphrases: Dict[str, str] = {}
+known_passphrases: dict[str, str] = {}
 
 
 def get_passphrase(identity: str) -> str:
@@ -375,7 +374,7 @@ class AGEEncryptedFile(EncryptedFile):
             f"Could not decrypt {self.path} with any of the identities {identities}"
         )
 
-    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
+    def _write(self, content: bytes, recipients: list[str], reencrypt: bool = False):
         if not self.locked:
             raise ValueError("File is not locked")
         if not self.writeable:
@@ -442,7 +441,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
             with AGEEncryptedFile(pathlib.Path(temp_file.name)) as ef:
                 return ef.cleartext
 
-    def encrypt_age_string(self, content: str, recipients: List[str]) -> str:
+    def encrypt_age_string(self, content: str, recipients: list[str]) -> str:
         # tmpfile -> AGEEncryptedFile -> write plaintext -> read ciphertext -> base64
         with tempfile.NamedTemporaryFile() as temp_file:
             with AGEEncryptedFile(pathlib.Path(temp_file.name), True) as ef:
@@ -484,7 +483,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         # return the decrypted content as bytes
         return str(config).encode("utf-8")
 
-    def _write(self, content: bytes, recipients: List[str], reencrypt: bool = False):
+    def _write(self, content: bytes, recipients: list[str], reencrypt: bool = False):
         # parse the content as ConfigUpdater
         config = ConfigUpdater()
         config.read_string(content.decode("utf-8"))
