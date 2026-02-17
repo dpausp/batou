@@ -1,4 +1,4 @@
-"""Migrate batou environment.cfg to environment.toml.
+"""Convert batou environment.cfg to environment.toml.
 
 This script converts existing INI configuration files to TOML format
 with proper type inference for better DX.
@@ -14,7 +14,7 @@ import typer
 
 app = typer.Typer(
     no_args_is_help=True,
-    help="Migrate batou environment.cfg to environment.toml.",
+    help="Convert environment.cfg to environment.toml.",
 )
 
 
@@ -89,6 +89,7 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
         "host": {},
         "components": {},
         "resolver": {},
+        "provisioner": {},
     }
 
     for section in config.sections():
@@ -170,8 +171,15 @@ def convert_config_to_toml(cfg_path: Path) -> dict:
                 result["components"][comp_name] = comp_config
 
         elif section.startswith("provisioner:"):
-            # Provisioner config - skip for now, add support later if needed
-            pass
+            # Provisioner config
+            prov_name = section[12:]
+            prov_config = {}
+
+            for key, value in config.items(section):
+                prov_config[key] = infer_type(value)
+
+            if prov_config:
+                result["provisioner"][prov_name] = prov_config
 
         elif section == "resolver":
             # DNS overrides
@@ -250,7 +258,7 @@ def migrate(
         typer.Option("-f", "--force", help="Overwrite existing files"),
     ] = False,
 ):
-    """Migrate batou environment.cfg to environment.toml."""
+    """Convert environment.cfg to environment.toml."""
     target_path = Path(path)
 
     if dry_run:
