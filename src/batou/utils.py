@@ -6,6 +6,7 @@ import hashlib
 import inspect
 import itertools
 import os
+import os.path
 import re
 import shlex
 import socket
@@ -23,6 +24,21 @@ from batou import (
     IPAddressConfigurationError,
     output,
 )
+
+
+def find_basedir() -> str:
+    """Find the batou project root directory.
+
+    Priority:
+    1. APPENV_BASEDIR - explicitly set by appenv bootstrapping
+    2. VIRTUAL_ENV's parent - when running via uv run or similar tools
+    3. Current working directory - fallback
+    """
+    if "APPENV_BASEDIR" in os.environ:
+        return os.environ["APPENV_BASEDIR"]
+    if "VIRTUAL_ENV" in os.environ:
+        return os.path.dirname(os.environ["VIRTUAL_ENV"])
+    return os.getcwd()
 
 
 class BagOfAttributes(dict):

@@ -102,17 +102,19 @@ dependencies = [
     { name = "remote-pdb" },
     { name = "requests", version = "2.32.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "requests", version = "2.32.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
-    { name = "rich" },
     { name = "rtoml", version = "0.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "rtoml", version = "0.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "rtoml", version = "0.13.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "setuptools", version = "75.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "setuptools", version = "82.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
-    { name = "typer", version = "0.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "typer", version = "0.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
 
 [package.dev-dependencies]
+check-cmd = [
+    { name = "rich" },
+    { name = "typer", version = "0.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "typer", version = "0.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
 dev = [
     { name = "mock" },
     { name = "pre-commit", version = "3.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
@@ -126,6 +128,7 @@ dev = [
     { name = "pytest-instafail" },
     { name = "pytest-timeout" },
     { name = "recommonmark" },
+    { name = "rich" },
     { name = "ruff" },
     { name = "sphinx", version = "7.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "sphinx", version = "7.4.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
@@ -138,6 +141,8 @@ dev = [
     { name = "tox-uv", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "tox-uv", version = "1.28.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "tox-uv", version = "1.29.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "typer", version = "0.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "typer", version = "0.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
 pre-commit = [
     { name = "pre-commit", version = "3.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
@@ -168,13 +173,15 @@ requires-dist = [
     { name = "pyyaml" },
     { name = "remote-pdb" },
     { name = "requests" },
-    { name = "rich" },
     { name = "rtoml", specifier = ">=0.11.0" },
     { name = "setuptools", specifier = ">=66.1.0" },
-    { name = "typer" },
 ]
 
 [package.metadata.requires-dev]
+check-cmd = [
+    { name = "rich" },
+    { name = "typer" },
+]
 dev = [
     { name = "mock" },
     { name = "pre-commit" },
@@ -183,10 +190,12 @@ dev = [
     { name = "pytest-instafail" },
     { name = "pytest-timeout" },
     { name = "recommonmark" },
+    { name = "rich" },
     { name = "ruff" },
     { name = "sphinx" },
     { name = "tox", specifier = ">=4.0" },
     { name = "tox-uv" },
+    { name = "typer" },
 ]
 pre-commit = [{ name = "pre-commit" }]
 test = [

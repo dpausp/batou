@@ -8,7 +8,6 @@ from typing import Optional
 import importlib.metadata
 
 import batou
-import batou.check
 import batou.debug.cli
 import batou.deploy
 import batou.migrate
@@ -20,7 +19,7 @@ from batou.utils import find_basedir
 
 
 def main(args: Optional[list] = None) -> None:
-    os.chdir(os.environ["APPENV_BASEDIR"])
+    os.chdir(find_basedir())
     version = importlib.metadata.version("batou")
     parser = argparse.ArgumentParser(
         description=(
@@ -101,35 +100,6 @@ def main(args: Optional[list] = None) -> None:
         type=lambda x: x.replace(".cfg", ""),
     )
     p.set_defaults(func=batou.deploy.main)
-
-    # CHECK
-    p = subparsers.add_parser(
-        "check", help="Fast local consistency check without execnet overhead."
-    )
-    p.add_argument(
-        "-p",
-        "--platform",
-        default=None,
-        help="Alternative platform to choose. Empty for no platform.",
-    )
-    p.add_argument(
-        "-t",
-        "--timeout",
-        default=None,
-        help="Override the environment's timeout setting",
-    )
-    p.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        help="Enable debug mode.",
-    )
-    p.add_argument(
-        "environment",
-        help="Environment to check.",
-        type=lambda x: x.replace(".cfg", ""),
-    )
-    p.set_defaults(func=batou.check.main)
 
     # DEBUG
     p = subparsers.add_parser("debug", help="Display all available debug settings.")

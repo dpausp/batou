@@ -29,9 +29,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
     "requests",
-    "rich",
     "setuptools>=66.1.0",
-    "typer",
     "execnet>=1.8.1",
     "importlib_metadata",
     "importlib_resources",
@@ -43,6 +41,7 @@ dependencies = [
 
 [project.scripts]
 batou = "batou.main:main"
+batou-check = "batou.check:main_cli"
 batou-migrate-toml = "batou.migrate_toml:main"
 
 [project.entry-points."zc.buildout"]
@@ -70,8 +69,10 @@ test = [
     "pytest-timeout",
 ]
 pre-commit = ["pre-commit"]
+check-cmd = ["rich", "typer"]
 dev = [
     { include-group = "test" },
+    { include-group = "check-cmd" },
     { include-group = "pre-commit" },
     "tox>=4.0",
     "tox-uv",
