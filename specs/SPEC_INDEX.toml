@@ -1,6 +1,6 @@
 [metadata]
 created = "2026-01-26T00:00:00Z"
-modified = "2026-02-03T00:00:00Z"
+modified = "2026-02-17T00:00:00Z"
 version = "1.0"
 
 [features.F-001]
@@ -26,3 +26,7 @@ design_file = "./specs/design/templatestats-class.md"
 slug = "debug-settings"
 requirements_file = "./specs/requirements/debug-settings.md"
 design_file = "./specs/design/debug-settings.md"
+
+[features.F-006]
+slug = "batommel-cli"
+design_file = "./specs/SDD-F006-batommel-cli.md"
