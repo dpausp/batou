@@ -137,8 +137,7 @@ fi
                 f_target.write(f_packaged.read())
         os.chmod(local_insecure_key, 0o600)
 
-        self._known_ssh_hosts[host.name] = (
-            """
+        self._known_ssh_hosts[host.name] = """
 Host {hostname} {aliases}
     HostName {hostname}
     ProxyJump {target_host}
@@ -147,12 +146,11 @@ Host {hostname} {aliases}
     StrictHostKeyChecking no
     UserKnownHostsFile {known_hosts}
 """.format(
-                hostname=host.name,
-                aliases=" ".join(host._aliases),
-                target_host=self.target_host,
-                known_hosts=KNOWN_HOSTS_FILE,
-                insecure_private_key=local_insecure_key,
-            )
+            hostname=host.name,
+            aliases=" ".join(host._aliases),
+            target_host=self.target_host,
+            known_hosts=KNOWN_HOSTS_FILE,
+            insecure_private_key=local_insecure_key,
         )
 
         # Gather all known hosts together - otherwise we can only access
@@ -174,9 +172,7 @@ Host {hostname} {aliases}
         # Place this in the deployment base directory persistently and
         # keep updating it. This helps users to also interact with containers
         # by running `ssh -F ssh_config_dev mycontainer`
-        self.ssh_config_file = os.path.abspath(
-            f"ssh_config_{host.environment.name}"
-        )
+        self.ssh_config_file = os.path.abspath(f"ssh_config_{host.environment.name}")
         with open(self.ssh_config_file, "w") as f:
             f.write("\n".join(ssh_config))
 
@@ -241,6 +237,7 @@ Host {hostname} {aliases}
         self._prepare_ssh(host)
 
         rsync_path = ""
+        ssh_cmd_prefix = ""
         if host.environment.service_user:
             user_prefix = f"sudo -u {host.environment.service_user}"
             ssh_cmd_prefix = user_prefix

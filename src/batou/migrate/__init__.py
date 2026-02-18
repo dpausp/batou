@@ -18,6 +18,9 @@ def output_migration_step(title: str, text: str, status: str = "manual") -> None
     elif status == "automatic":
         label = "✅"
         args = {"green": True}
+    else:
+        label = "•"
+        args = {}
     output.annotate(title, icon=label, **args)
     output.annotate("")
     output.annotate(textwrap.dedent(text).strip())
