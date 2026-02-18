@@ -3,7 +3,7 @@ import types
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from typing import Any, Literal, overload
+from typing import Any, Literal
 
 # Type alias for graph structures
 type Graph = defaultdict[Any, set[Any]]

@@ -14,13 +14,13 @@ class Program(Component):
     directory: str | None
     dependencies: tuple[Component, ...] | None
     enable: bool
-    supervisor: "Supervisor"
+    supervisor: Supervisor
     config: str
     _evaded: bool
 
     def configure(self) -> None: ...
     def ctl(self, args: str, **kw: Any) -> tuple[str, str]: ...
-    def evade(self, component: "RunningSupervisor") -> None: ...
+    def evade(self, component: RunningSupervisor) -> None: ...
     def is_running(self) -> bool: ...
     def update(self) -> None: ...
     def verify(self) -> None: ...
@@ -44,7 +44,7 @@ class Supervisor(Component):
     logrotate: bool | str
     nagios: bool | str
     enable: bool | str
-    deployment_mode: Literal["hot", "cold"] | str
+    deployment_mode: str  # "hot" or "cold"
     max_startup_delay: int | str
     wait_for_running: bool | str
     pidfile: str

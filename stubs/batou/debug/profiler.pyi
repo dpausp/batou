@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import Any
 
 from batou.debug.settings import DebugSettings
 from batou.host import Host

@@ -475,7 +475,7 @@ class Component:
         """
         pass
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, exc_type, exc_value, tb):
         """Exit the component's context."""
         pass
 

@@ -16,7 +16,7 @@ class EncryptedFile:
 
     def __enter__(
         self,
-    ) -> "AGEEncryptedFile | DiffableAGEEncryptedFile | GPGEncryptedFile": ...
+    ) -> AGEEncryptedFile | DiffableAGEEncryptedFile | GPGEncryptedFile: ...
     def __exit__(
         self,
         exc_type: type[BaseException] | None,

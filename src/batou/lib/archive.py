@@ -64,9 +64,7 @@ class Extractor(Component):
 
     def configure(self):
         if self.strip and not self._supports_strip:
-            raise ValueError(
-                f"Strip is not supported by {self.__class__.__name__}"
-            )
+            raise ValueError(f"Strip is not supported by {self.__class__.__name__}")
         if self.create_target_dir:
             if self.target is None:
                 self.target = self.extract_base_name(self.archive)
@@ -189,7 +187,7 @@ class DMGExtractor(Extractor):
     def __enter__(self):
         self.volume = DMGVolume(self.archive)
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, exc_type, exc_value, tb):
         self.volume._unmount()
 
     def get_names_from_archive(self):

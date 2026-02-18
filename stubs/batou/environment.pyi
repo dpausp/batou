@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from batou.component import ComponentDefinition, RootComponent
-from batou.host import Host, LocalHost, RemoteHost
+from batou.host import Host
 
 def parse_host_components(components: list[str]) -> dict[str, dict[str, Any]]: ...
 

@@ -1,5 +1,4 @@
 import types
-from collections.abc import Iterator
 from typing import Any, Self
 
 from batou.component import Component
@@ -9,14 +8,14 @@ class DMGExtractor(Component):
     target: str | None
     create_target_dir: bool
     strip: int
-    volume: "DMGVolume"
+    volume: DMGVolume
     _supports_strip: bool
 
     def __enter__(self) -> Self: ...
     def __exit__(
         self,
-        type: type[BaseException] | None,
-        value: BaseException | None,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
         tb: types.TracebackType | None,
     ) -> None: ...
     def get_names_from_archive(self) -> list[str]: ...
@@ -38,7 +37,7 @@ class Extract(Component):
     create_target_dir: bool
     target: str | None
     strip: int
-    extractor: "Extractor"
+    extractor: Extractor
 
     def configure(self) -> None: ...
     @property

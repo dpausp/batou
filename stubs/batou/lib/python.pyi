@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 
 from batou.component import Component
 
@@ -20,7 +20,7 @@ class Package(Component):
 class VirtualEnv(Component):
     version: str
     executable: str | None
-    venv: "VirtualEnvPyBase"
+    venv: VirtualEnvPyBase
 
     def configure(self) -> None: ...
     @property
