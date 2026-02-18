@@ -393,7 +393,7 @@ not-subscriptable = "ignore"
 invalid-assignment = "ignore"
 
 [[tool.ty.overrides]]
-include = ["src/batou/secrets/__init__.py", "src/batou/secrets/edit.py"]
+include = ["src/batou/secrets/__init__.py", "src/batou/secrets/edit.py", "src/batou/secrets/manage.py"]
 
 [tool.ty.overrides.rules]
 unresolved-attribute = "ignore"
