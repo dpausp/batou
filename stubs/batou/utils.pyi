@@ -3,7 +3,7 @@ import types
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 # Type alias for graph structures
 type Graph = defaultdict[Any, set[Any]]
@@ -19,11 +19,11 @@ def cmd(
     cmd: str | list[str],
     silent: bool = ...,
     ignore_returncode: bool = ...,
-    communicate: bool = ...,
+    communicate: bool = ...,  # True returns tuple, False returns Popen
     env: dict[str, str] | None = ...,
     acceptable_returncodes: list[int] = ...,
     encoding: str | None = ...,
-) -> tuple[str, str] | subprocess.Popen: ...
+) -> tuple[str, str] | subprocess.Popen[str]: ...
 def dict_merge(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]: ...
 def ensure_graph_data(graph: Graph) -> Graph: ...
 def escape_macosx_string(s: str) -> str: ...
