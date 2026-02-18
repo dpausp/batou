@@ -1,6 +1,8 @@
 """Debug settings inspection command."""
 
-import typer
+import argparse
+import sys
+
 from rich.console import Console
 from rich.table import Table
 
@@ -9,14 +11,16 @@ from rich.table import Table
 from batou.debug.settings import get_debug_settings
 
 debug_settings = get_debug_settings()
-
-app = typer.Typer(no_args_is_help=True)
 console = Console()
 
 
-@app.command()
-def main() -> None:
+def main(args: list[str] | None = None) -> None:
     """Display all available debug settings."""
+    parser = argparse.ArgumentParser(
+        description="Display all available debug settings."
+    )
+    parser.parse_args(args)
+
     settings_info = debug_settings.describe()
 
     # Create table with columns as specified in SDD D-006
@@ -50,4 +54,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    app()
+    main(sys.argv[1:])
