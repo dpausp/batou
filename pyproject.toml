@@ -308,6 +308,7 @@ unresolved-attribute = "ignore"
 invalid-argument-type = "ignore"
 no-matching-overload = "ignore"
 possibly-missing-attribute = "ignore"
+invalid-assignment = "ignore"  # Attribute descriptor mode conversion
 
 [[tool.ty.overrides]]
 include = ["src/batou/lib/archive.py"]

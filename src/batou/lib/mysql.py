@@ -71,6 +71,11 @@ class Command(Component):
 
 
 class Database(Component):
+    database: str
+    charset: str
+    base_import_file: str | None
+    admin_password: str | None
+
     namevar = "database"
     charset = "UTF8"
     base_import_file = None

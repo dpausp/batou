@@ -240,9 +240,7 @@ class SyncDirectory(Component):
             raise batou.UpdateNeeded()
 
     def update(self):
-        self.cmd(
-            f"rsync {self.sync_opts} {self.exclude_arg}{self.source}/ {self.path}"
-        )
+        self.cmd(f"rsync {self.sync_opts} {self.exclude_arg}{self.source}/ {self.path}")
 
     @property
     def namevar_for_breadcrumb(self):
@@ -415,9 +413,7 @@ class ManagedContentBase(FileComponent):
                     self.content = f.read()
             else:
                 if self._delayed:
-                    raise FileNotFoundError(
-                        f"Could not find source file {self.source}"
-                    )
+                    raise FileNotFoundError(f"Could not find source file {self.source}")
                 # We need to try rendering again later.
                 self._delayed = True
                 return

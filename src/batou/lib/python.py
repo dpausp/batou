@@ -179,6 +179,9 @@ class VirtualEnvDownload(Component):
     Keeps knowledge about specific virtualenv version.
     """
 
+    workdir: str
+    venv_cmd: str
+
     namevar = "version"
     checksum = None
     download_url = (
