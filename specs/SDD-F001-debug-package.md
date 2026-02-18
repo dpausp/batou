@@ -138,31 +138,37 @@ class DebugSettings(BaseSettings):
 
 ### 3.3 CLI Module (`cli.py`)
 
-**D-003:** Typer-based CLI command for debug settings
+**D-003:** argparse-based CLI command for debug settings
 
 **Functionality:**
 - `batou debug` command displays all debug settings
 - Rich table output with columns: Field Name, Environment Variable, Possible Values, Description, Current Value
-- No-args-is-help pattern for discoverability
+- Uses argparse's built-in help system (default behavior when called without arguments shows help)
 
 **Public Interface:**
 ```python
-app = typer.Typer(no_args_is_help=True)
-
-@app.command()
 def main() -> None:
     """Display all available debug settings."""
+    parser = argparse.ArgumentParser(
+        description="Display all available debug settings."
+    )
+    parser.parse_args()  # Handles --help automatically
+    # Display settings in Rich table format
 ```
 
 **Migration Path:**
 - Move content from `batou.debug` to `batou.debug.cli`
 - CLI entry point remains `batou.debug` (backward compatible)
 - Imports DebugSettings from new location
+- Uses argparse instead of typer for CLI parsing
 
 **Rationale:**
 - Separates CLI logic from settings logic
 - Allows CLI-specific testing
 - Maintains `batou debug` command interface
+- Removes unnecessary typer dependency for simple single-command CLI
+- argparse is part of Python standard library (no external dependency)
+- Rich retained for table formatting (display concerns only)
 
 ---
 
@@ -482,7 +488,7 @@ def mock_gateway():
 ## 7. Dependencies and Constraints
 
 ### 7.1 External Dependencies
-- `typer`: CLI framework (already used)
+- `argparse`: CLI framework (Python standard library)
 - `pydantic`: Settings validation (already used)
 - `rich`: Table formatting (already used)
 
@@ -526,7 +532,7 @@ def mock_gateway():
 |-------------|--------|------|----------------|
 | D-001: Public API | `__init__.py` | Import tests | Export all public classes |
 | D-002: DebugSettings | `settings.py` | test_settings.py | Pydantic validation, describe(), show() |
-| D-003: CLI command | `cli.py` | test_cli.py | Typer app, table output |
+| D-003: CLI command | `cli.py` | test_cli.py | argparse app, table output |
 | D-004: FD tracking | `fd_tracker.py` | test_fd_tracker.py | Local/remote hooks, leak detection |
 | D-005: Profiling | `profiling.py` | test_profiling.py | cProfile wrapper, result retrieval |
 | D-006: Template stats | `template_stats.py` | test_template_stats.py | Hit/miss tracking, singleton |
