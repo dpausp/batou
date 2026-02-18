@@ -378,9 +378,7 @@ def git_pull_code(upstream, branch):
         # The batou-pull remote is correctly configured.
         break
     else:
-        cmd(
-            f"git remote add {git_origin} {upstream}"
-        )
+        cmd(f"git remote add {git_origin} {upstream}")
     cmd("git fetch batou-pull")
 
 
@@ -494,7 +492,7 @@ if __name__ == "__channelexec__":
         task, args, kw = channel.receive()
         # Support slow bootstrapping
         try:
-            import batou
+            import batou  # noqa: F401 - imported for bootstrapping availability check
         except ImportError:
             pass
         try:

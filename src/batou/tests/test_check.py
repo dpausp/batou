@@ -172,7 +172,7 @@ def test_check_only_connects_to_first_host(sample_service):
 
     for host in e.hosts.values():
 
-        def mock_start(*args, **kwargs):
+        def mock_start(*args, host=host, **kwargs):
             nonlocal start_call_count
             start_call_count += 1
             start_call_hosts.append(host.name)

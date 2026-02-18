@@ -53,9 +53,7 @@ redirect_stderr = true
         if self.dependencies is None:
             self.dependencies = (self.parent,)
         if not self.command:
-            raise ValueError(
-                f"`command` option missing for program {self.name}"
-            )
+            raise ValueError(f"`command` option missing for program {self.name}")
         if not self.directory:
             self.directory = self.workdir
         if self.command_absolute:
@@ -248,7 +246,7 @@ class RunningHelper(Component):
         try:
             pid, err = self.cmd("bin/supervisorctl pid")
             try:
-                int(pid) > 0
+                assert int(pid) > 0
             except ValueError:
                 return False
         except CmdExecutionError:
@@ -295,7 +293,7 @@ class RunningSupervisor(RunningHelper):
                 time.sleep(1)
                 continue
             try:
-                int(out) > 0
+                assert int(out) > 0
             except ValueError:
                 time.sleep(1)
                 wait -= 1

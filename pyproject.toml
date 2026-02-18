@@ -115,7 +115,11 @@ src = ["src", "stubs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "C4"]
-ignore = ["E501", "N818"]  # N818: batou exception naming convention
+ignore = [
+    "E501",  # line too long
+    "N818",  # batou exception naming convention (ReportingException, not ReportingError)
+    "B904",  # raise without from - batou exception hierarchy pattern
+]
 
 # Stub-specific ignores - stubs mirror source code conventions
 [tool.ruff.lint.per-file-ignores]
@@ -126,6 +130,38 @@ ignore = ["E501", "N818"]  # N818: batou exception naming convention
     "N818",   # Exception naming - batou convention (ReportingException, etc.)
     "ANN401", # Any in type hints - necessary for dynamic patterns
     "ANN201", # Missing return type - acceptable for void methods in stubs
+]
+"src/batou/lib/file.py" = [
+    "E402",   # Lazy imports for optional dependencies
+]
+"src/batou/lib/nagios.py" = [
+    "N802",   # ServiceCheck function name - Nagios convention
+]
+"src/batou/lib/python.py" = [
+    "N801",   # VirtualEnvPy2_7 class name - version-specific class
+]
+"src/batou/deploy.py" = [
+    "N806",   # STEPS, ACTION, SUCCESS_FORMAT constants
+]
+"src/batou/provision.py" = [
+    "N806",   # KNOWN_HOSTS_FILE constant
+]
+"src/batou/secrets/encryption.py" = [
+    "N806",   # IS_CHILD constant
+]
+"src/batou/debug/remote_fd_tracking.py" = [
+    "N806",   # FD_WARNING_THRESHOLD constant
+]
+"src/batou/remote_core.py" = [
+    "B018",   # `channel` name check for bootstrapping
+]
+# Test-specific ignores
+"**/tests/**/*.py" = [
+    "B018",   # Useless expressions - test fixtures and assertions
+    "B017",   # assert Exception - broad exception testing
+    "B015",   # Pointless comparison - test assertions
+    "N802",   # Function names like test_..._TRUE - descriptive test names
+    "N806",   # Variables like TEMPLATE, OLD_GPG_BINARY_CANDIDATES - test constants
 ]
 
 # =============================================================================

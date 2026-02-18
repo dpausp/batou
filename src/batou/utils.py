@@ -62,7 +62,7 @@ def self_id():
     system = " ".join([system[0], system[2], system[4]])
     version = importlib_metadata.version("batou")
     python = sys.implementation.name
-    python += " {}.{}.{}-{}{4}".format(*sys.version_info)
+    python += f" {sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}-{sys.version_info[3]}{sys.version_info[4]}"
     return template.format(**locals())
 
 

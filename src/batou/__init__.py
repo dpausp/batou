@@ -68,7 +68,7 @@ class ReportingException(Exception):
         """
         # generic check:
         # the other class should have: the same class as self, in both directions
-        if type(other) != type(self):
+        if type(other) is not type(self):
             return False
         # now both should have the same attributes
         # compare by all attributes except: .affected_hostname
