@@ -73,8 +73,8 @@ class Component:
     def __enter__(self) -> Self: ...
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
+        type: type[BaseException] | None,
+        value: BaseException | None,
         tb: types.TracebackType | None,
     ) -> bool | None: ...
     def __init__(self, namevar: str | Path | None = ..., **kw: Any) -> None: ...

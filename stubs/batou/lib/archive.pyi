@@ -15,8 +15,8 @@ class DMGExtractor(Component):
     def __enter__(self) -> Self: ...
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
+        type: type[BaseException] | None,
+        value: BaseException | None,
         tb: types.TracebackType | None,
     ) -> None: ...
     def get_names_from_archive(self) -> list[str]: ...
