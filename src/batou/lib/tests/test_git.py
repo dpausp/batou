@@ -75,15 +75,11 @@ def test_setting_branch_updates_on_incoming_changes(root, repos_path, git_main_b
 
 @pytest.mark.slow
 def test_setting_revision_updates_on_incoming_changes(root, repos_path):
-    cmd(
-        f'cd {repos_path}; touch bar; git add .; git commit -m "commit2"'
-    )
+    cmd(f'cd {repos_path}; touch bar; git add .; git commit -m "commit2"')
     commit1, _ = cmd(f"cd {repos_path}; git rev-parse HEAD^")
     root.component += batou.lib.git.Clone(repos_path, target="clone", revision=commit1)
     root.component.deploy()
-    cmd(
-        f'cd {repos_path}; touch qux; git add .; git commit -m "commit3"'
-    )
+    cmd(f'cd {repos_path}; touch qux; git add .; git commit -m "commit3"')
     root.component.deploy()  # Our main assertion: Nothing breaks here
     assert not os.path.isfile(
         os.path.join(root.environment.workdir_base, "mycomponent/clone/qux")
@@ -98,26 +94,20 @@ def test_branch_does_switch_branch(root, repos_path):
     )
     root.component += batou.lib.git.Clone(repos_path, target="clone", branch="bar")
     root.component.deploy()
-    stdout, stderr = cmd(
-        f"cd {root.workdir}/clone; git rev-parse --abbrev-ref HEAD"
-    )
+    stdout, stderr = cmd(f"cd {root.workdir}/clone; git rev-parse --abbrev-ref HEAD")
     assert "bar" == stdout.strip()
 
 
 @pytest.mark.slow
 def test_tag_does_switch_tag(root, repos_path):
     cmd(f"""cd {repos_path}; git tag -a v1.0 -m "version 1.0" """)
-    cmd(
-        f'cd {repos_path}; touch bar; git add .;git commit -m "commit branch"'
-    )
+    cmd(f'cd {repos_path}; touch bar; git add .;git commit -m "commit branch"')
     cmd(f"""cd {repos_path}; git tag -a v1.1 -m "version 1.1" """)
 
     for tag in ("v1.0", "v1.1"):
         root.component += batou.lib.git.Clone(repos_path, target="clone", tag=tag)
         root.component.deploy()
-        stdout, stderr = cmd(
-            f"cd {root.workdir}/clone; git describe --tags"
-        )
+        stdout, stderr = cmd(f"cd {root.workdir}/clone; git describe --tags")
         assert tag == stdout.strip()
 
 
@@ -274,9 +264,7 @@ def test_changed_remote_is_updated(root, repos_path, repos_path2, git_main_branc
     root.component += git
 
     # Fresh, unrelated repo
-    cmd(
-        f'cd {repos_path2}; echo baz >bar; git add .;git commit -m "commit"'
-    )
+    cmd(f'cd {repos_path2}; echo baz >bar; git add .;git commit -m "commit"')
 
     root.component.deploy()
     assert not os.path.exists(root.component.map("clone/bar"))

@@ -63,9 +63,7 @@ class Clone(Component):
                 return
 
             if self.has_outgoing_changesets():
-                output.annotate(
-                    f"Git clone at {self.target} has outgoing changesets."
-                )
+                output.annotate(f"Git clone at {self.target} has outgoing changesets.")
 
             if self.has_changes():
                 if self.clobber:

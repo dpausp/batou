@@ -45,9 +45,7 @@ class Download(Component):
             self._update_urllib()
 
         target_checksum = batou.utils.hash(self.target, self.checksum_function)
-        assert (
-            self.checksum == target_checksum
-        ), f"""\
+        assert self.checksum == target_checksum, f"""\
 Checksum mismatch!
 expected: {self.checksum}
 got: {target_checksum}"""

@@ -98,9 +98,7 @@ class RPCWrapper:
                         f"{self.host.fqdn}: Remote exception encountered."
                     )
                 else:
-                    raise RuntimeError(
-                        f"{self.host.fqdn}: Unknown message type {type}"
-                    )
+                    raise RuntimeError(f"{self.host.fqdn}: Unknown message type {type}")
 
         return call
 

@@ -172,9 +172,7 @@ class RSyncExtRepository(Repository):
             rsync_args.append(f"--exclude='{ignore}'")
 
         if host.require_sudo:
-            rsync_args.append(
-                f"--rsync-path='sudo -ni -u {host.service_user} rsync'"
-            )
+            rsync_args.append(f"--rsync-path='sudo -ni -u {host.service_user} rsync'")
 
         output.annotate(f"rsync-ext: {source} -> {dest}", debug=True)
         output.annotate(
@@ -184,9 +182,7 @@ class RSyncExtRepository(Repository):
             "rsync-ext: Excludes: {}".format(", ".join(self.IGNORE_LIST)), debug=True
         )
         if host.require_sudo:
-            output.annotate(
-                f"rsync-ext: Sudo user: {host.service_user}", debug=True
-            )
+            output.annotate(f"rsync-ext: Sudo user: {host.service_user}", debug=True)
         output.annotate(
             "rsync-ext: Command: rsync {opts} {source}/ {target}:{dest}".format(
                 opts=" ".join(rsync_args),

@@ -79,9 +79,7 @@ class Buildout(Component):
 
     def update(self):
         with safe_environment(self.build_env):
-            self.cmd(
-                f'bin/buildout -t {self.timeout} -c "{self.config_file_name}"'
-            )
+            self.cmd(f'bin/buildout -t {self.timeout} -c "{self.config_file_name}"')
             self.touch(".batou.buildout.success")
 
 

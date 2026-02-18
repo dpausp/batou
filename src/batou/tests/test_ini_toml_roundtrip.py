@@ -146,9 +146,9 @@ count = 42
 
         # Compare environment section values
         for key in cfg1["environment"]:
-            assert (
-                cfg1["environment"][key] == cfg2["environment"][key]
-            ), f"Mismatch in environment.{key}"
+            assert cfg1["environment"][key] == cfg2["environment"][key], (
+                f"Mismatch in environment.{key}"
+            )
 
     def test_complex_roundtrip_hosts(self, tmp_path: Path):
         """Test hosts section preservation."""

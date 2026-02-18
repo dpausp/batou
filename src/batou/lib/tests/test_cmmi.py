@@ -27,9 +27,7 @@ def test_configure_defaults_prefix_to_workdir(root):
     root.component += configure
     assert configure.prefix == root.component.workdir
     root.component.deploy()
-    assert (
-        f" --prefix={root.component.workdir}" in configure.cmd.call_args[0][0]
-    )
+    assert f" --prefix={root.component.workdir}" in configure.cmd.call_args[0][0]
 
 
 def test_configure_accepts_custom_prefix(root):
@@ -74,9 +72,7 @@ install:
 '''
 
 open('Makefile', 'w').write(Makefile_template)
-""".encode(
-    "ascii"
-)
+""".encode("ascii")
 
 
 @pytest.fixture

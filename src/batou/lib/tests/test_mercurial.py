@@ -62,9 +62,7 @@ def test_set_revision_does_not_pull_when_revision_matches(root, repos_path):
     clone.branch = None
     cmd(f'cd {repos_path}; touch bar; hg addremove; hg ci -m "commit"')
     root.component.deploy()
-    stdout, stderr = cmd(
-        f"cd {root.workdir}/clone; LANG=C hg incoming"
-    )
+    stdout, stderr = cmd(f"cd {root.workdir}/clone; LANG=C hg incoming")
     assert "changeset:   1" in stdout
 
 

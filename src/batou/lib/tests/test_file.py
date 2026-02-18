@@ -1,4 +1,3 @@
-
 import getpass
 import grp
 import json

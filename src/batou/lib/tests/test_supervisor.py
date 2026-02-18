@@ -69,9 +69,7 @@ def test_starts_stopped_program(root, supervisor):
     root.component.deploy()
     assert (
         "RUNNING"
-        in supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl status foo")[
-            0
-        ]
+        in supervisor.cmd(f"{supervisor.workdir}/bin/supervisorctl status foo")[0]
     )
 
 

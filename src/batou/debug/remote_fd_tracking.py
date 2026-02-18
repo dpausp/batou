@@ -15,7 +15,13 @@ _fd_records = {}  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
 
 def _track_fd_open(fd, path, mode="r"):
     """Track file descriptor opens and send to local channel."""
-    global _total_fd_opens, _fd_tracking_enabled, _fd_tracking_verbose, _fd_tracking_logs, _open_fds, _fd_records
+    global \
+        _total_fd_opens, \
+        _fd_tracking_enabled, \
+        _fd_tracking_verbose, \
+        _fd_tracking_logs, \
+        _open_fds, \
+        _fd_records
 
     _total_fd_opens += 1
     import datetime

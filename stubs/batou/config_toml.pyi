@@ -24,7 +24,8 @@ class EnvironmentConfig(BaseModel):
     # Field annotations intentionally omitted - runtime validation via Pydantic
     @classmethod
     def validate_resolver_ips(
-        cls, v: dict[str, str | list[str]],
+        cls,
+        v: dict[str, str | list[str]],
     ) -> dict[str, str | list[str]]: ...
     @staticmethod
     def _is_valid_ip(ip: str) -> bool: ...
@@ -53,6 +54,8 @@ class DictConfig:
     def __getitem__(self, section: str) -> DictConfigSection: ...
     def __iter__(self) -> Any: ...
     def get(
-        self, section: str, default: dict[str, str] | None = ...,
+        self,
+        section: str,
+        default: dict[str, str] | None = ...,
     ) -> DictConfigSection | dict[str, str]: ...
     def options(self, section: str) -> list[str]: ...

@@ -68,7 +68,7 @@ test = [
     "pytest-instafail",
     "pytest-timeout",
 ]
-lint = ["ruff", "ty"]
+lint = ["ruff", "ty", "types-PyYAML", "types-requests"]
 check-cmd = ["rich", "typer"]
 dev = [
     { include-group = "test" },
