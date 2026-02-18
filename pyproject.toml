@@ -190,7 +190,7 @@ exclude = [
 
 # Core exceptions - factory pattern with dynamic attributes in from_context()
 [[tool.ty.overrides]]
-include = ["src/batou/__init__.py"]
+include = ["src/batou/__init__.py", "stubs/batou/__init__.pyi"]
 
 [tool.ty.overrides.rules]
 invalid-method-override = "ignore"
