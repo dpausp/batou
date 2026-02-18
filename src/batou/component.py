@@ -792,11 +792,10 @@ class Component:
         cmd,
         silent=False,
         ignore_returncode=False,
-        communicate=True,
         env=None,
         expand=True,
     ):
-        """Perform a (shell) command.
+        """Perform a (shell) command and return (stdout, stderr).
 
         Use this to interact with the target system during ``verify``,
         ``update``, ``__enter__``, or ``__exit__``.
@@ -815,20 +814,12 @@ class Component:
         :param bool ignore_returncode: If true, do not raise an exception
             if the return code of the command indicates failure.
 
-        :param bool communicate: If ``True``, call ``communicate()`` and wait
-            for the process to finish, and process the return code. If
-            ``False`` start the process and return the :py:class:`Popen`
-            object after starting the process. You are then responsible
-            for communicating, processing, and terminating the process
-            yourself.
-
         :param bool expand: Treat the ``cmd`` as a template and process it
             through Jinja2 in the context of this component.
 
         :param dict env: Extends environment variables with given ones.
 
-        :return: (stdout, stderr) if ``communicate`` is ``True``,
-            otherwise the  :py:class:`Popen` process is returned.
+        :return: Tuple (stdout, stderr).
 
         :raises CmdExecutionError: if return code indicated failure and
             ``ignore_returncode`` was not set.
@@ -836,7 +827,26 @@ class Component:
         """
         if expand:
             cmd = self.expand(cmd)
-        return batou.utils.cmd(cmd, silent, ignore_returncode, communicate, env)
+        return batou.utils.cmd(cmd, silent, ignore_returncode, env)
+
+    def cmd_popen(self, cmd, silent=False, env=None, expand=True):
+        """Start a (shell) command and return the Popen process.
+
+        Use this when you need to interact with the process (e.g., stream output).
+
+        .. warning::
+
+            Do **not** use this during ``configure``.
+
+        :param str cmd: The command you want to execute.
+        :param bool silent: If True, suppress output annotation.
+        :param dict env: Extends environment variables with given ones.
+        :param bool expand: Treat the ``cmd`` as a template.
+        :return: subprocess.Popen process.
+        """
+        if expand:
+            cmd = self.expand(cmd)
+        return batou.utils.cmd_popen(cmd, silent, env)
 
     def map(self, path):
         """Perform a VFS mapping on the given path.

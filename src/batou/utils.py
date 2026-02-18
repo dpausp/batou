@@ -477,11 +477,21 @@ def cmd(
     cmd,
     silent=False,
     ignore_returncode=False,
-    communicate=True,
     env=None,
     acceptable_returncodes=None,
     encoding="utf-8",
 ):
+    """Execute a shell command and return (stdout, stderr).
+
+    :param cmd: Command string or list of arguments.
+    :param silent: If True, suppress output annotation.
+    :param ignore_returncode: If True, don't raise on non-zero exit.
+    :param env: Dict of environment variables to add.
+    :param acceptable_returncodes: List of acceptable return codes (default [0]).
+    :param encoding: Output encoding (default utf-8, None for bytes).
+    :return: Tuple of (stdout, stderr) as strings.
+    :raises CmdExecutionError: If return code not in acceptable_returncodes.
+    """
     if acceptable_returncodes is None:
         acceptable_returncodes = [0]
     if not isinstance(cmd, str):
@@ -507,9 +517,6 @@ def cmd(
         shell=True,
         env=env,
     )
-    if not communicate:
-        # XXX See #12550
-        return process
     stdout, stderr = process.communicate()
     if encoding is not None:
         stdout = stdout.decode(encoding, errors="replace")
@@ -518,6 +525,44 @@ def cmd(
         if not ignore_returncode:
             raise CmdExecutionError(cmd, process.returncode, stdout, stderr)
     return stdout, stderr
+
+
+def cmd_popen(
+    cmd,
+    silent=False,
+    env=None,
+):
+    """Execute a shell command and return the Popen process without waiting.
+
+    Use this when you need to interact with the process (e.g., stream output).
+
+    :param cmd: Command string or list of arguments.
+    :param silent: If True, suppress output annotation.
+    :param env: Dict of environment variables to add.
+    :return: subprocess.Popen process with stdout/stderr pipes.
+    """
+    if not isinstance(cmd, str):
+        quoted_args = []
+        for arg in cmd:
+            arg = arg.replace("'", "\\'")
+            if " " in arg:
+                arg = f"'{arg}'"
+            quoted_args.append(arg)
+        cmd = " ".join(quoted_args)
+    if env is not None:
+        add_to_env = env
+        env = os.environ.copy()
+        env.update(add_to_env)
+    output.annotate(f"cmd_popen: {cmd}", debug=True)
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        shell=True,
+        env=env,
+    )
+    return process
 
 
 def get_output(command, default=None):

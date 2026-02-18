@@ -1,4 +1,5 @@
 import contextlib
+import subprocess
 import types
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -115,10 +116,16 @@ class Component:
         cmd: str,
         silent: bool = ...,
         ignore_returncode: bool = ...,
-        communicate: bool = ...,
         env: dict[str, str] | None = ...,
         expand: bool = ...,
     ) -> tuple[str, str]: ...
+    def cmd_popen(
+        self,
+        cmd: str,
+        silent: bool = ...,
+        env: dict[str, str] | None = ...,
+        expand: bool = ...,
+    ) -> subprocess.Popen[str]: ...
     def configure(self) -> None: ...
     @property
     def defdir(self) -> str: ...

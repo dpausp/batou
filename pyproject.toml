@@ -318,6 +318,18 @@ invalid-argument-type = "ignore"
 no-matching-overload = "ignore"
 
 [[tool.ty.overrides]]
+include = ["src/batou/lib/goceptnet.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"  # Dynamic attributes from parent
+
+[[tool.ty.overrides]]
+include = ["src/batou/lib/buildout.py"]
+
+[tool.ty.overrides.rules]
+unsupported-operator = "ignore"  # list + Unknown
+
+[[tool.ty.overrides]]
 include = ["src/batou/lib/supervisor.py"]
 
 [tool.ty.overrides.rules]

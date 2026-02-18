@@ -16,6 +16,7 @@ from batou.utils import (
     NetLoc,
     call_with_optional_args,
     cmd,
+    cmd_popen,
     flatten,
     format_duration,
     hash,
@@ -458,10 +459,10 @@ def test_cmd_ignores_specified_returncodes(popen):
 
 
 @mock.patch("subprocess.Popen")
-def test_cmd_returns_process_if_no_communicate(popen):
+def test_cmd_popen_returns_process(popen):
     process = mock.Mock()
     popen.return_value = process
-    p = cmd(["asdf"], communicate=False)
+    p = cmd_popen(["asdf"])
     assert popen.communicate.call_count == 0
     assert p is process
 
