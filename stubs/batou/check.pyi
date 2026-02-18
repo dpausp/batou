@@ -4,6 +4,9 @@ from execnet.gateway_bootstrap import HostNotFound
 
 from batou.environment import Environment
 
+def check(
+    environment: str, platform: str | None = ..., timeout: int | None = ...
+) -> None: ...
 def main(environment: str, platform: None, timeout: None): ...
 
 class CheckCommand:

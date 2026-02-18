@@ -103,7 +103,7 @@ dependency_groups = ["test", "lint"]
 commands = [
     ["ruff", "check", "--fix", "."],
     ["ruff", "format", "."],
-    ["ty", "check", "."],
+    ["ty", "check", "--extra-search-path", "stubs", "."],
 ]
 
 # =============================================================================
