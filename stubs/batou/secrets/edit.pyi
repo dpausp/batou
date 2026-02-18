@@ -1,6 +1,13 @@
-from typing import Literal
+from typing import Any, Literal
 
 from batou.environment import Environment
+
+def main(
+    editor: str,
+    environment: Environment,
+    edit_file: str | None = ...,
+    **kw: Any,
+) -> None: ...
 
 class Editor:
     def __init__(

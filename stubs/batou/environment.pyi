@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from batou.component import ComponentDefinition, RootComponent
-from batou.host import Host
+from batou.host import Host, LocalHost, RemoteHost
 
 def parse_host_components(components: list[str]) -> dict[str, dict[str, Any]]: ...
 
@@ -66,7 +66,7 @@ class Environment:
     require_v6: bool | Literal["optional"]
     repository_url: str | None
     repository_root: str | None
-    host_factory: type
+    host_factory: type[Host]
     repository: Any
     deployment_base: str
     secret_provider: Any
