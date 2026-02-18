@@ -1,4 +1,14 @@
-class Download:
+from typing import Any
+
+from batou.component import Component
+
+class Download(Component):
+    uri: str
+    target: str | None
+    checksum: str | None
+    requests_kwargs: dict[str, Any] | None
+    checksum_function: str
+
     def _update_requests(self) -> None: ...
     def _update_urllib(self) -> None: ...
     def configure(self) -> None: ...

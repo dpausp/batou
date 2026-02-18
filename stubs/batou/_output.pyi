@@ -1,4 +1,9 @@
-from typing import Any
+from typing import Any, Protocol
+
+class OutputBackend(Protocol):
+    def line(self, message: str, **fmt: Any) -> None: ...
+    def sep(self, sep: str, title: str, **fmt: Any) -> None: ...
+    def write(self, content: str, **fmt: Any) -> None: ...
 
 class TerminalBackend:
     _tw: Any

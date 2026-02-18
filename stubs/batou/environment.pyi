@@ -74,7 +74,7 @@ class Environment:
     def __init__(
         self,
         name: str,
-        timeout: int | None = ...,
+        timeout: int | str | None = ...,
         platform: str | None = ...,
         basedir: str = ...,
         provision_rebuild: bool = ...,

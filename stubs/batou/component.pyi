@@ -39,7 +39,7 @@ class Attribute[T]:
     def __get__(self, obj: Any, objtype: type | None = ...) -> T: ...
     def __init__(
         self,
-        conversion: type[T] | str | Callable[..., T],
+        conversion: type[T] | str | Callable[..., T] = ...,
         default: T = ...,
         expand: bool = ...,
         map: bool = ...,  # noqa: A002

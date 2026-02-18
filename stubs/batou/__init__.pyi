@@ -43,9 +43,16 @@ class AttributeExpansionError(ConfigurationError):
     error_str: str
     key: str
 
+    @classmethod
+    def from_context(
+        cls,
+        component: Any,
+        key: str,
+        value: Any,
+        error: Exception,
+    ) -> AttributeExpansionError: ...
     @property
     def sort_key(self) -> tuple[int, str, str, str]: ...
-    # Note: from_context signature differs from parent but this is intentional
 
 class ComponentLoadingError(ReportingException):
     filename: str
@@ -65,15 +72,21 @@ class ComponentUsageError(ConfigurationError):
     message: str
     traceback: str
 
+    @classmethod
+    def from_context(cls, message: str) -> ComponentUsageError: ...
     @property
     def sort_key(self) -> tuple[int, str]: ...
-    # Note: from_context signature differs from parent but this is intentional
 
 class ComponentWithUpdateWithoutVerify(ConfigurationError):
     components: list[str]
     roots: list[str]
 
-    # Note: from_context signature differs from parent but this is intentional
+    @classmethod
+    def from_context(
+        cls,
+        components: list[Any],
+        roots: list[Any],
+    ) -> ComponentWithUpdateWithoutVerify: ...
 
 class ConfigurationError(ReportingException):
     message: str
@@ -97,15 +110,27 @@ class ConversionError(ConfigurationError):
     error_str: str
     key: str
 
+    @classmethod
+    def from_context(
+        cls,
+        component: Any,
+        key: str,
+        value: Any,
+        conversion: Any,
+        error: Exception,
+    ) -> ConversionError: ...
     @property
     def sort_key(self) -> tuple[int, str, str, str, str]: ...
-    # Note: from_context has different signature but this is intentional
 
 class CycleErrorDetected(ConfigurationError):
     error_str: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, error: Any) -> CycleErrorDetected: ...
 
 class DeploymentError(ReportingException):
+    sort_key: tuple[int, ...]
+
     def report(self): ...
 
 class DuplicateComponent(ConfigurationError):
@@ -113,32 +138,52 @@ class DuplicateComponent(ConfigurationError):
     a_filename: str
     b_filename: str
 
+    @classmethod
+    def from_context(cls, a: Any, b: Any) -> DuplicateComponent: ...
     @property
     def sort_key(self) -> tuple[int, str]: ...
-    # Note: from_context has different signature but this is intentional
 
 class DuplicateHostError(ConfigurationError):
+    @classmethod
+    def from_context(cls, hostname: str) -> DuplicateHostError: ...
     @property
     def sort_key(self) -> tuple[int, str]: ...
-    # Note: from_context has different signature but this is intentional
 
 class DuplicateHostMapping(ConfigurationError):
     a: str
     b: str
 
+    @classmethod
+    def from_context(
+        cls,
+        hostname: str,
+        a: str,
+        b: str,
+    ) -> DuplicateHostMapping: ...
     @property
     def sort_key(self) -> tuple[int, str, str, str]: ...
-    # Note: from_context has different signature but this is intentional
 
 class DuplicateOverride(ConfigurationError):
     component_name: str
     attribute: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(
+        cls,
+        component_name: str,
+        attribute: str,
+    ) -> DuplicateOverride: ...
 
 class DuplicateSecretsComponentAttribute(ConfigurationError):
     component_name: str
     attribute: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(
+        cls,
+        component_name: str,
+        attribute: str,
+    ) -> DuplicateSecretsComponentAttribute: ...
 
 class FileLockedError(ReportingException):
     filename: str
@@ -171,52 +216,78 @@ class GPGCallError(ReportingException):
 class IPAddressConfigurationError(ConfigurationError):
     address: Any
     kind: int
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, address: Any, kind: int) -> IPAddressConfigurationError: ...
 
 class InvalidIPAddressError(ConfigurationError):
     address: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, address: str) -> InvalidIPAddressError: ...
 
 class MissingComponent(ConfigurationError):
     component_name: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(
+        cls,
+        component_name: str,
+        hostname: str,
+    ) -> MissingComponent: ...
 
 class MissingEnvironment(ConfigurationError):
     environment_name: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, environment: Any) -> MissingEnvironment: ...
 
 class MissingOverrideAttributes(ConfigurationError):
     component_breadcrumbs: str
     attributes: list[str]
 
+    @classmethod
+    def from_context(
+        cls,
+        component: Any,
+        attributes: list[str],
+    ) -> MissingOverrideAttributes: ...
     @property
     def sort_key(self) -> tuple[int, str, str]: ...
-    # Note: from_context has different signature but this is intentional
 
 class NonConvergingWorkingSet(ConfigurationError):
     roots_len: int
     root_names: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, roots: Any) -> NonConvergingWorkingSet: ...
 
 class RepositoryDifferentError(DeploymentError):
     local: str
     remote: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, local: str, remote: str) -> RepositoryDifferentError: ...
 
 class SilentConfigurationError(Exception): ...
 
 class SuperfluousComponentSection(ConfigurationError):
     component_name: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, component_name: str) -> SuperfluousComponentSection: ...
 
 class SuperfluousSecretsSection(ConfigurationError):
     component_name: str
 
-    # Note: from_context has different signature but this is intentional
+    @classmethod
+    def from_context(cls, component_name: str) -> SuperfluousSecretsSection: ...
 
 class SuperfluousSection(ConfigurationError):
     section: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, section: str) -> SuperfluousSection: ...
 
 class TemplatingError(ReportingException):
     exception_str: str
@@ -235,17 +306,27 @@ class UnknownComponentConfigurationError(ConfigurationError):
     exception_repr: str
     traceback: str
 
+    @classmethod
+    def from_context(
+        cls,
+        root: Any,
+        exception: Exception,
+        tb: Any,
+    ) -> UnknownComponentConfigurationError: ...
     @property
     def sort_key(self) -> tuple[int, str, int]: ...
-    # Note: from_context has different signature but this is intentional
 
 class UnknownHostSecretsSection(ConfigurationError):
     hostname: str
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, hostname: str) -> UnknownHostSecretsSection: ...
 
 class UnsatisfiedResources(ConfigurationError):
     unsatisfied_resources: list[tuple[str, str | None, list[str]]]
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, resources: Any) -> UnsatisfiedResources: ...
 
 class UnusedComponentsInitialized(ConfigurationError):
     unused_components: list[str]
@@ -254,10 +335,17 @@ class UnusedComponentsInitialized(ConfigurationError):
     init_line_numbers: list[int]
     root_name: str
 
-    # Note: from_context has different signature but this is intentional
+    @classmethod
+    def from_context(
+        cls,
+        components: list[Any],
+        root: Any,
+    ) -> UnusedComponentsInitialized: ...
 
 class UnusedResources(ConfigurationError):
     unused_resources: list[tuple[str, str, str]]
-    # Note: from_context has different signature but this is intentional
+
+    @classmethod
+    def from_context(cls, resources: Any) -> UnusedResources: ...
 
 class UpdateNeeded(AssertionError): ...

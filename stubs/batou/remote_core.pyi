@@ -1,6 +1,9 @@
-from typing import Any
+from typing import Any, Protocol
 
-from batou._output import NullBackend
+class OutputBackend(Protocol):
+    def line(self, message: str, **fmt: Any) -> None: ...
+    def sep(self, sep: str, title: str, **fmt: Any) -> None: ...
+    def write(self, content: str, **fmt: Any) -> None: ...
 
 deployment: Deployment | None
 environment: Any
@@ -79,11 +82,11 @@ class Deployment:
 
 class Output:
     enable_debug: bool
-    backend: NullBackend
+    backend: OutputBackend
     _buffer: list[tuple[str, tuple, dict]]
     _flushing: bool
 
-    def __init__(self, backend: NullBackend) -> None: ...
+    def __init__(self, backend: OutputBackend) -> None: ...
     def annotate(
         self,
         message: str,
