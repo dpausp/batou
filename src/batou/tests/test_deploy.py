@@ -40,7 +40,7 @@ Use `batou debug` command to see all available debug settings
     patterns.main.merge("header", "empty_lines", "any")
     patterns.main.in_order(
         """\
-batou/2... (cpython 3...)
+batou/... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `errors`...
 🔍 main: Verifying repository ...
@@ -56,7 +56,7 @@ ERROR: Failed loading component file
            File: .../examples/errors/components/component6/component.py
       Exception: No module named 'asdf'
 Traceback (simplified, most recent call last):
-  File ".../examples/errors/components/component6/component.py", line 1, in <module>
+  File ".../errors/components/component6/component.py", line 1, in <module>
     import asdf  # noqa: F401 import unused
 ...
 ERROR: Missing component
@@ -118,7 +118,7 @@ Use `batou debug` command to see all available debug settings
     patterns.main.merge("header", "empty_lines", "any")
     patterns.main.in_order(
         """\
-batou/2... (cpython 3...)
+batou/... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `errorsnohost`...
 🔍 main: Verifying repository ...
