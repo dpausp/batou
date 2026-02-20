@@ -92,14 +92,14 @@ package = "wheel"
 runner = "uv-venv-lock-runner"
 setenv = {APPENV_BEST_PYTHON = "{envpython}", COLUMNS = "80", IN_TOX_TEST = "1"}
 depends = ["fix"]
-dependency_groups = ["test"]
+dependency_groups = ["test", "batommel"]
 commands = [["pytest"]]
 
 [tool.tox.env.fix]
 skip_install = true
 depends = []
 description = "Format, lint, fix whitespace, type-check"
-dependency_groups = ["test", "lint"]
+dependency_groups = ["test", "lint", "batommel"]
 commands = [
     ["ruff", "check", "--fix", "."],
     ["ruff", "format", "."],
