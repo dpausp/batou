@@ -17,9 +17,21 @@ from batou._output import TerminalBackend, output
 from batou.utils import find_basedir
 
 
+def _get_version() -> str:
+    try:
+        return importlib.metadata.version("batou")
+    except importlib.metadata.PackageNotFoundError:
+        return "unknown"
+
+
+def print_version() -> None:
+    print(_get_version())
+    sys.exit(0)
+
+
 def main(args: Optional[list] = None) -> None:
     os.chdir(find_basedir())
-    version = importlib.metadata.version("batou")
+    version = _get_version()
     parser = argparse.ArgumentParser(
         description=(
             f"batou v{version}: multi-(host|component|environment|version|platform) deployment"
@@ -103,6 +115,10 @@ def main(args: Optional[list] = None) -> None:
     # DEBUG
     p = subparsers.add_parser("debug", help="Display all available debug settings.")
     p.set_defaults(func=batou.debug.cli.main)
+
+    # VERSION
+    p = subparsers.add_parser("version", help="Print the batou version.")
+    p.set_defaults(func=print_version)
 
     # SECRETS
     secrets = subparsers.add_parser(
@@ -227,7 +243,7 @@ def main(args: Optional[list] = None) -> None:
         args.func()
         sys.exit(1)
 
-    if args.func != batou.migrate.main:
+    if args.func not in (batou.migrate.main, print_version):
         output.backend = TerminalBackend()
         batou.migrate.assert_up_to_date()
 

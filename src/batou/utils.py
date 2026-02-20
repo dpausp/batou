@@ -60,7 +60,10 @@ def self_id():
     template = "batou/{version} ({python}, {system})"
     system = os.uname()
     system = " ".join([system[0], system[2], system[4]])
-    version = importlib_metadata.version("batou")
+    try:
+        version = importlib_metadata.version("batou")
+    except importlib_metadata.PackageNotFoundError:
+        version = "unknown"
     python = sys.implementation.name
     python += f" {sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}-{sys.version_info[3]}{sys.version_info[4]}"
     return template.format(**locals())
