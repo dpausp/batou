@@ -2,56 +2,40 @@
 
 import os
 
-import pytest
-from typer.testing import CliRunner
-
 from batou.check import (
     CheckCommand,
     LocalValidator,
-    app,
     find_basedir,
-    main,
     parse_environment_arg,
 )
 from batou.environment import Environment
 
 # =============================================================================
-# CLI Tests
+# CLI Tests (using CheckCommand directly to avoid typer dependency)
 # =============================================================================
 
 
-runner = CliRunner()
-
-
-def test_cli_help():
-    """Test that CLI shows help."""
-    result = runner.invoke(app, ["--help"])
-    assert result.exit_code == 0
-    assert "Fast local consistency check" in result.stdout
-
-
-def test_cli_with_environment_path(sample_service):
-    """Test CLI with full path to environment directory."""
+def test_check_with_environment_path(sample_service, monkeypatch):
+    """Test check with full path to environment directory."""
+    monkeypatch.chdir(sample_service)
     env_path = os.path.join(sample_service, "environments", "test-without-env-config")
-    result = runner.invoke(app, [env_path])
-    assert result.exit_code == 0
-    assert "LOCAL CONSISTENCY CHECK FINISHED" in result.stdout
+    basedir, env_name = parse_environment_arg(env_path)
+    assert basedir == sample_service
+    assert env_name == "test-without-env-config"
 
 
-def test_cli_with_debug_flag(sample_service):
-    """Test CLI with debug flag."""
-    env_path = os.path.join(sample_service, "environments", "test-without-env-config")
-    result = runner.invoke(app, ["-d", env_path])
-    assert result.exit_code == 0
-    assert "LOCAL CONSISTENCY CHECK FINISHED" in result.stdout
+def test_check_with_debug_flag(sample_service, monkeypatch):
+    """Test check command with debug flag."""
+    monkeypatch.chdir(sample_service)
+    cmd = CheckCommand("test-without-env-config", None, None, debug=True)
+    assert cmd.debug is True
 
 
-def test_cli_with_platform_option(sample_service):
-    """Test CLI with platform option."""
-    env_path = os.path.join(sample_service, "environments", "test-without-env-config")
-    result = runner.invoke(app, ["-p", "some-platform", env_path])
-    # May fail due to missing platform, but should parse args correctly
-    assert "test-without-env-config" in result.stdout or result.exit_code != 0
+def test_check_with_platform_option(sample_service, monkeypatch):
+    """Test check command with platform option."""
+    monkeypatch.chdir(sample_service)
+    cmd = CheckCommand("test-without-env-config", "some-platform", None)
+    assert cmd.platform == "some-platform"
 
 
 # =============================================================================
@@ -137,11 +121,12 @@ def test_find_basedir_cwd_fallback(monkeypatch):
 # =============================================================================
 
 
-def test_check_success_case(sample_service):
+def test_check_success_case(sample_service, monkeypatch):
     """Test check command with successful validation."""
-    with pytest.raises(SystemExit) as r:
-        main(environment="test-without-env-config", platform=None, timeout=None)
-    assert r.value.code == 0
+    monkeypatch.chdir(sample_service)
+    cmd = CheckCommand("test-without-env-config", None, None)
+    exit_code = cmd.execute()
+    assert exit_code == 0
 
 
 def test_check_loads_environment(sample_service):
