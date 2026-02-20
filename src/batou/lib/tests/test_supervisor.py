@@ -92,6 +92,7 @@ def test_enable_true_reports_not_running_when_daemon_stopped(root, supervisor):
     root.component.deploy()
 
 
+@pytest.mark.slow
 def test_setting_nagios_to_True_creates_a_nagios_nrpe_service(root):
     supervisor = batou.lib.supervisor.Supervisor(nagios=True)
     root.component += supervisor
