@@ -27,6 +27,7 @@ def test_migrate__read_config__1(tmp_path):
 
 def test_migrate__read_config__2(tmp_path):
     """It raises a FileNotFoundError if the configuration file is missing."""
+    os.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
         read_config()
 
