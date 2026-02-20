@@ -6,6 +6,7 @@
 .appenv
 .batou
 .batou-lock
+.batou.json
 .lock
 .coverage
 .coverage.*
