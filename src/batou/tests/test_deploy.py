@@ -2,10 +2,8 @@ import os
 
 import pytest
 
-from batou.tests.ellipsis import Ellipsis
 
-
-def test_main_with_errors(capsys):
+def test_main_with_errors(capsys, patterns):
     os.chdir("examples/errors")
 
     from batou.deploy import main
@@ -27,23 +25,33 @@ def test_main_with_errors(capsys):
 
     out, err = capsys.readouterr()
     assert err == ""
-    # save the output to a file to compare it with the expected output
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `errors`...
 🔍 main: Verifying repository ...
 🔑 main: Loading secrets ...
-
+<empty-line>
 ERROR: Failed loading component file
            File: .../examples/errors/components/component5/component.py
       Exception: invalid syntax (component.py, line 1)
 Traceback (simplified, most recent call last):
 <no-non-remote-internal-traceback-lines-found>
-
+<empty-line>
 ERROR: Failed loading component file
            File: .../examples/errors/components/component6/component.py
       Exception: No module named 'asdf'
@@ -53,25 +61,27 @@ Traceback (simplified, most recent call last):
 ...
 ERROR: Missing component
       Component: missingcomponent
-
+<empty-line>
 ERROR: Superfluous section in environment configuration
         Section: superfluoussection
-
+<empty-line>
 ERROR: Override section for unknown component found
       Component: nonexisting-component-section
-
+<empty-line>
 ERROR: Attribute override found both in environment and secrets
       Component: component1
       Attribute: my_attribute
-
+<empty-line>
 ERROR: Secrets section for unknown component found
       Component: another-nonexisting-component-section
 ... DEPLOYMENT FAILED (during load) ...
 """
-    )  # noqa: E501 line too long
+    )
+
+    assert patterns.main == out
 
 
-def test_main_fails_if_no_host_in_environment(capsys):
+def test_main_fails_if_no_host_in_environment(capsys, patterns):
     os.chdir("examples/errorsnohost")
 
     from batou.deploy import main
@@ -93,18 +103,31 @@ def test_main_fails_if_no_host_in_environment(capsys):
 
     out, err = capsys.readouterr()
     assert err == ""
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `errorsnohost`...
 🔍 main: Verifying repository ...
 🔑 main: Loading secrets ...
 ... Connecting hosts and configuring model ... ...
-
+<empty-line>
 ERROR: No host found in environment.
 ... DEPLOYMENT FAILED (during connect) ...
 """
-    )  # noqa: E501 line too long
+    )
+
+    assert patterns.main == out

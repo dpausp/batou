@@ -3,7 +3,6 @@ import os.path
 import shutil
 
 from batou.environment import Environment
-from batou.tests.ellipsis import Ellipsis
 from batou.utils import cmd
 
 
@@ -17,144 +16,210 @@ def test_service_early_resource():
     assert env.resources.get("zeo") == ["127.0.0.1:9000"]
 
 
-def test_example_errors_early():
+def test_example_errors_early(patterns):
     os.chdir("examples/errors")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    patterns.errors.merge("header", "empty_lines")
+    patterns.errors.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `errors`...
 🔍 main: Verifying repository ...
 🔑 main: Loading secrets ...
-
+<empty-line>
 ERROR: Failed loading component file
            File: .../examples/errors/components/component5/component.py
       Exception: invalid syntax (component.py, line 1)
 Traceback (simplified, most recent call last):
 <no-non-remote-internal-traceback-lines-found>
-
+<empty-line>
 ERROR: Failed loading component file
            File: .../examples/errors/components/component6/component.py
       Exception: No module named 'asdf'
 Traceback (simplified, most recent call last):
   File ".../errors/components/component6/component.py", line 1, in <module>
     import asdf  # noqa: F401 import unused
-...
+<empty-line>
 ERROR: Missing component
       Component: missingcomponent
-
+<empty-line>
 ERROR: Superfluous section in environment configuration
         Section: superfluoussection
-
+<empty-line>
 ERROR: Override section for unknown component found
       Component: nonexisting-component-section
-
+<empty-line>
 ERROR: Attribute override found both in environment and secrets
       Component: component1
       Attribute: my_attribute
-
+<empty-line>
 ERROR: Secrets section for unknown component found
       Component: another-nonexisting-component-section
 ... DEPLOYMENT FAILED (during load) ...
 """
-    )  # noqa: E501 line too long
+    )
+
+    assert patterns.errors == out
 
 
-def test_example_errors_gpg_cannot_decrypt(monkeypatch):
+def test_example_errors_gpg_cannot_decrypt(monkeypatch, patterns):
     monkeypatch.setitem(os.environ, "GNUPGHOME", "")
     os.chdir("examples/errors")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    # GPG output is variable across versions/systems - make it optional
+    patterns.gpg.optional(
+        """\
+gpg: ...
+..."""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    patterns.errors.merge("header", "gpg", "empty_lines")
+    patterns.errors.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `errors`...
 🔍 main: Verifying repository ...
 🔑 main: Loading secrets ...
-
+<empty-line>
 ERROR: Error while calling GPG
         command: gpg --decrypt ...environments/errors/secrets.cfg.gpg
       exit code: 2
         message:
-gpg: ...
-...
+<empty-line>
 ERROR: Failed loading component file
            File: .../examples/errors/components/component5/component.py
       Exception: invalid syntax (component.py, line 1)
 Traceback (simplified, most recent call last):
 <no-non-remote-internal-traceback-lines-found>
-
+<empty-line>
 ERROR: Failed loading component file
            File: .../examples/errors/components/component6/component.py
       Exception: No module named 'asdf'
 Traceback (simplified, most recent call last):
-  File ".../examples/errors/components/component6/component.py", line 1, in <module>
+  File ".../errors/components/component6/component.py", line 1, in <module>
     import asdf  # noqa: F401 import unused
-...
+<empty-line>
 ERROR: Missing component
       Component: missingcomponent
-
+<empty-line>
 ERROR: Superfluous section in environment configuration
         Section: superfluoussection
-
+<empty-line>
 ERROR: Override section for unknown component found
       Component: nonexisting-component-section
 ... DEPLOYMENT FAILED (during load) ...
 """
-    )  # noqa: E501 line too long
+    )
+
+    assert patterns.errors == out
 
 
-def test_example_errors_late():
+def test_example_errors_late(patterns):
     os.chdir("examples/errors2")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for lines that may appear between expected content
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `errors`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
+... Connecting hosts and configuring model ... ...
 🌐 localhost: Connecting via local (1/1)
-...
+<empty-line>
 ERROR: Component usage error
-...
+<empty-line>
 ERROR: Trying to access address family IPv6...
-...
+<empty-line>
 ... DEPLOYMENT FAILED (during connect) ...
 """
     )
 
+    assert patterns.main == out
 
-def test_example_errors_missing_environment():
+
+def test_example_errors_missing_environment(patterns):
     os.chdir("examples/errors")
     out, _ = cmd("./batou deploy production", acceptable_returncodes=[1])
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    patterns.main.merge("header", "empty_lines")
+    patterns.main.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `production`...
-
+<empty-line>
 ERROR: Missing environment
     Environment: production
 ... DEPLOYMENT FAILED (during load) ...
 """
-    )  # noqa: E501 line too long
+    )
+
+    assert patterns.main == out
 
 
-def test_example_ignores():
+def test_example_ignores(patterns):
     os.chdir("examples/ignores")
     out, _ = cmd("./batou deploy ignores")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    patterns.main.merge("header", "empty_lines")
+    patterns.main.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `ignores`...
 🔍 main: Verifying repository ...
@@ -170,7 +235,9 @@ Use `batou debug` command to see all available debug settings
 Deployment took total=...s, connect=...s, deploy=...s
 ... DEPLOYMENT FINISHED ...
 """
-    )  # noqa: E501 line too long
+    )
+
+    assert patterns.main == out
 
 
 def test_example_async_sync_deployment():
@@ -212,7 +279,7 @@ def test_consistency_does_not_start_deployment():
     assert "CONSISTENCY CHECK FINISHED" not in out
 
 
-def test_diff_is_not_shown_for_keys_in_secrets(tmp_path, monkeypatch, capsys):
+def test_diff_is_not_shown_for_keys_in_secrets(tmp_path, monkeypatch, capsys, patterns):
     """It does not render diffs for files which contain secrets.
 
     Secrets might be in the config file in secrets/ or additional encrypted
@@ -226,25 +293,39 @@ def test_diff_is_not_shown_for_keys_in_secrets(tmp_path, monkeypatch, capsys):
     finally:
         if os.path.exists("work"):
             shutil.rmtree("work")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `tutorial`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
 🌐 localhost: Connecting via local (1/1)
-...
 ⚪ localhost: Scheduling component hello ...
-...
 Not showing diff as it contains sensitive data...
-...
 Deployment took total=...s...
 ... DEPLOYMENT FINISHED ...
 """
     )
 
+    assert patterns.main == out
 
-def test_diff_for_keys_in_secrets_overridable(tmp_path, monkeypatch, capsys):
+
+def test_diff_for_keys_in_secrets_overridable(tmp_path, monkeypatch, capsys, patterns):
     """It respects the "sensitive_data" flag when showing diffs for
     files which contain secrets
 
@@ -260,34 +341,59 @@ def test_diff_for_keys_in_secrets_overridable(tmp_path, monkeypatch, capsys):
     finally:
         if os.path.exists("work"):
             shutil.rmtree("work")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `local`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
 🌐 localhost: Connecting via local (1/1)
-...
 ⚪ localhost: Scheduling component sensitivevalues ...
-...
 Not showing diff as it contains sensitive data...
-...
   hostkey_sensitive_clear_ed25519.pub +ssh-ed25519 ...
-...
 Deployment took total=...s...
 ... DEPLOYMENT FINISHED ...
 """
     )
 
+    assert patterns.main == out
 
-def test_durations_are_shown_for_components():
+
+def test_durations_are_shown_for_components(patterns):
     os.chdir("examples/durations")
     out, _ = cmd("./batou deploy default")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
         """\
-batou/2... (cpython 3...)
 No expert/debug flags enabled
 Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
+        """\
+batou/2... (cpython 3...)
 ... Preparing ...
 📦 main: Loading environment `default`...
 🔍 main: Verifying repository ...
@@ -303,80 +409,142 @@ Deployment took total=...s, connect=...s, deploy=...s
 """
     )
 
+    assert patterns.main == out
 
-def test_check_consistency_works():
+
+def test_check_consistency_works(patterns):
     os.chdir("examples/tutorial-secrets")
     out, _ = cmd("./batou deploy tutorial --consistency-only")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `tutorial`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
 🌐 localhost: Connecting via local (1/1)
-...
 Consistency check took total=...s
 ... CONSISTENCY CHECK FINISHED ...
 """
     )
 
+    assert patterns.main == out
 
-def test_predicting_deployment_works():
+
+def test_predicting_deployment_works(patterns):
     os.chdir("examples/tutorial-secrets")
     out, _ = cmd("./batou deploy tutorial --predict-only")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `tutorial`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
 🌐 localhost: Connecting via local (1/1)
-...
 ⚪ localhost: Scheduling component hello ...
-...
 Not showing diff as it contains sensitive data...
-...
 Deployment took total=...s...
 ... DEPLOYMENT PREDICTION FINISHED ...
 """
     )
 
+    assert patterns.main == out
 
-def test_check_consistency_works_with_local():
+
+def test_check_consistency_works_with_local(patterns):
     os.chdir("examples/tutorial-secrets")
     out, _ = cmd("./batou deploy gocept --consistency-only --local")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `gocept`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
 ... LOCAL CONSISTENCY CHECK ...
-...
 Consistency check took total=...s
 ... CONSISTENCY CHECK (local) FINISHED ...
 """
     )
 
+    assert patterns.main == out
 
-def test_predicting_deployment_works_with_local():
+
+def test_predicting_deployment_works_with_local(patterns):
     os.chdir("examples/tutorial-secrets")
     out, _ = cmd("./batou deploy gocept --predict-only --local")
-    assert out == Ellipsis(
+
+    patterns.header.optional(
+        """\
+No expert/debug flags enabled
+Use `batou debug` command to see all available debug settings
+"""
+    )
+
+    patterns.empty_lines.optional("<empty-line>")
+
+    # Catch-all for variable output lines
+    patterns.any.optional("...")
+
+    patterns.main.merge("header", "empty_lines", "any")
+    patterns.main.in_order(
         """\
 batou/2... (cpython 3...)
-...
+... Preparing ...
 📦 main: Loading environment `gocept`...
-...
+🔍 main: Verifying repository ...
+🔑 main: Loading secrets ...
 🌐 test01: Connecting via local (1/2)
 🌐 test02: Connecting via local (2/2)
-...
 ⚪ test01: Scheduling component hello ...
 ⚪ test02: Scheduling component hello ...
-...
 Not showing diff as it contains sensitive data...
-...
 Deployment took total=...s...
 ... DEPLOYMENT PREDICTION (local) FINISHED ...
 """
     )
+
+    assert patterns.main == out

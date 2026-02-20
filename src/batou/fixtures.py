@@ -35,13 +35,6 @@ def ensure_workingdir(request):
     os.chdir(working_dir)
 
 
-def pytest_assertrepr_compare(op, left, right):
-    if left.__class__.__name__ == "Ellipsis":
-        return left.compare(right).diff
-    elif right.__class__.__name__ == "Ellipsis":
-        return right.compare(left).diff
-
-
 @pytest.fixture(autouse=True)
 def reset_resolve_overrides():
     batou.utils.resolve_override.clear()

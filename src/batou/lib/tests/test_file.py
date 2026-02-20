@@ -25,7 +25,6 @@ from batou.lib.file import (
     YAMLContent,
     ensure_path_nonexistent,
 )
-from batou.tests.ellipsis import Ellipsis
 
 
 def test_ensure_path_nonexistent_removes_normal_file(tmpdir):
@@ -476,7 +475,7 @@ def test_content_does_not_allow_both_content_and_source(root):
         root.component += Content(path, content="asdf", source="bsdf")
 
 
-def test_content_large_diff_logged(output, root):
+def test_content_large_diff_logged(output, patterns, root):
     path = "path"
     p = Content(path, content="\n".join(["asdf"] * 21))
     p._max_diff = 20
@@ -500,7 +499,10 @@ def test_content_large_diff_logged(output, root):
             + "\n"
         )
 
-    assert output.backend.output == Ellipsis(
+    out = output.backend.output
+    patterns.any.optional("...")
+    patterns.main.merge("any")
+    patterns.main.in_order(
         """\
 🚀 localhost: MyComponent > Content('work/mycomponent/path')
 More than 20 lines of diff. Showing first and last 5 lines.
@@ -518,6 +520,7 @@ see ... for the full diff.
   path +asdf
 """
     )
+    assert patterns.main == out
 
 
 def test_json_content_data_given(root):
@@ -536,7 +539,7 @@ def test_json_content_data_given(root):
         assert f.read() == p.content
 
 
-def test_json_diff(output, root):
+def test_json_diff(output, patterns, root):
     p = JSONContent("target.json", data={"asdf": 1, "bsdf": 2})
     root.component += p
 
@@ -545,7 +548,10 @@ def test_json_diff(output, root):
 
     p.deploy()
 
-    assert output.backend.output == Ellipsis(
+    out = output.backend.output
+    patterns.any.optional("...")
+    patterns.main.merge("any")
+    patterns.main.in_order(
         """\
 🚀 localhost: MyComponent > JSONContent('work/mycomponent/target.json')
   target.json ---
@@ -557,9 +563,10 @@ def test_json_diff(output, root):
   target.json  }
 """
     )
+    assert patterns.main == out
 
 
-def test_json_diff_not_for_sensitive(output, root):
+def test_json_diff_not_for_sensitive(output, patterns, root):
     p = JSONContent("target.json", data={"asdf": 1, "bsdf": 2}, sensitive_data=True)
     root.component += p
 
@@ -568,12 +575,16 @@ def test_json_diff_not_for_sensitive(output, root):
 
     p.deploy()
 
-    assert output.backend.output == Ellipsis(
+    out = output.backend.output
+    patterns.any.optional("...")
+    patterns.main.merge("any")
+    patterns.main.in_order(
         """\
 🚀 localhost: MyComponent > JSONContent('work/mycomponent/target.json')
 Not showing diff as it contains sensitive data.
 """
     )
+    assert patterns.main == out
 
 
 def test_json_content_data_given_compact(root):
@@ -714,7 +725,7 @@ asdf: 1
         assert f.read() == p.content
 
 
-def test_yaml_diff(output, root):
+def test_yaml_diff(output, patterns, root):
     p = YAMLContent("target.yaml", data={"asdf": 1, "bsdf": 2})
     root.component += p
 
@@ -723,9 +734,12 @@ def test_yaml_diff(output, root):
 
     p.deploy()
 
-    # fmt: off
-    assert output.backend.output == Ellipsis("""\
-🚀 localhost: MyComponent > YAMLContent(\'work/mycomponent/target.yaml\')
+    out = output.backend.output
+    patterns.any.optional("...")
+    patterns.main.merge("any")
+    patterns.main.in_order(
+        """\
+🚀 localhost: MyComponent > YAMLContent('work/mycomponent/target.yaml')
   target.yaml ---
   target.yaml +++
   target.yaml @@ -1,3 +1,2 @@
@@ -734,11 +748,13 @@ def test_yaml_diff(output, root):
   target.yaml -}
   target.yaml +asdf: 1
   target.yaml +bsdf: 2
-""")
+"""
+    )
+    assert patterns.main == out
     # fmt: on
 
 
-def test_yaml_diff_not_for_sensitive(output, root):
+def test_yaml_diff_not_for_sensitive(output, patterns, root):
     p = YAMLContent("target.yaml", data={"asdf": 1, "bsdf": 2}, sensitive_data=True)
     root.component += p
 
@@ -747,12 +763,16 @@ def test_yaml_diff_not_for_sensitive(output, root):
 
     p.deploy()
 
-    assert output.backend.output == Ellipsis(
+    out = output.backend.output
+    patterns.any.optional("...")
+    patterns.main.merge("any")
+    patterns.main.in_order(
         """\
 🚀 localhost: MyComponent > YAMLContent('work/mycomponent/target.yaml')
 Not showing diff as it contains sensitive data.
 """
     )
+    assert patterns.main == out
 
 
 def test_yaml_content_source_given(root):
