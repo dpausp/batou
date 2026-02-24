@@ -56,6 +56,16 @@ Repository = "https://github.com/flyingcircusio/batou"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/batou"]
+artifacts = [
+    "src/batou/secrets/tests/fixture/gnupg/pubring.gpg",
+    "src/batou/secrets/tests/fixture/gnupg/secring.gpg",
+    "src/batou/secrets/tests/fixture/gnupg/trustdb.gpg",
+    "src/batou/secrets/tests/fixture/gnupg/.gpg-v21-migrated",
+    "src/batou/secrets/tests/fixture/gnupg/private-keys-v1.d/*.key",
+    "src/batou/secrets/tests/fixture/gnupg/crls.d/DIR.txt",
+    "src/batou/secrets/tests/fixture/age/id_ed25519",
+    "src/batou/secrets/tests/fixture/age/id_ed25519.pub",
+]
 
 [tool.hatch.build.targets.sdist]
 include = ["/src", "/README.md", "/LICENSE"]

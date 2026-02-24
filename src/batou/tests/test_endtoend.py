@@ -27,9 +27,17 @@ Use `batou debug` command to see all available debug settings
 """
     )
 
+    # GPG output is variable across versions/systems - make it optional
+    # (GPG may fail in some environments like tox with long socket paths)
+    patterns.gpg.optional(
+        """\
+gpg: ...
+..."""
+    )
+
     patterns.empty_lines.optional("<empty-line>")
 
-    patterns.errors.merge("header", "empty_lines")
+    patterns.errors.merge("header", "gpg", "empty_lines")
     patterns.errors.in_order(
         """\
 batou/... (cpython 3...)
