@@ -104,7 +104,7 @@ runner = "uv-venv-lock-runner"
 setenv = {APPENV_BEST_PYTHON = "{envpython}", COLUMNS = "80", IN_TOX_TEST = "1"}
 depends = ["fix"]
 dependency_groups = ["test", "batommel"]
-commands = [["pytest"]]
+commands = [["pytest", "--basetemp={env_tmp_dir}", { replace = "posargs", extend = true }]]
 
 [tool.tox.env.fix]
 skip_install = true
