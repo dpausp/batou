@@ -14,7 +14,6 @@ import subprocess
 import sys
 import time
 from collections import defaultdict
-from typing import Optional
 
 import importlib_metadata
 
@@ -674,7 +673,7 @@ def dict_merge(a, b):
     return result
 
 
-def format_duration(duration: Optional[float]) -> str:
+def format_duration(duration: float | None) -> str:
     """
     Formats a duration (in seconds) into a human readable string.
 

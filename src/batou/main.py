@@ -4,7 +4,6 @@ import os
 import os.path
 import sys
 import textwrap
-from typing import Optional
 
 import batou
 import batou.debug.cli
@@ -29,7 +28,7 @@ def print_version() -> None:
     sys.exit(0)
 
 
-def main(args: Optional[list] = None) -> None:
+def main(args: list | None = None) -> None:
     os.chdir(find_basedir())
     version = _get_version()
     parser = argparse.ArgumentParser(

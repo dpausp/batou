@@ -5,7 +5,6 @@ import subprocess
 import sys
 import tempfile
 import traceback
-from typing import Optional
 
 from batou.environment import Environment
 
@@ -23,7 +22,7 @@ class Editor:
         self,
         editor_cmd,
         environment: Environment,
-        edit_file: Optional[str] = None,
+        edit_file: str | None = None,
     ):
         environment.load_secrets()
         self.editor_cmd = editor_cmd
@@ -121,7 +120,7 @@ class Editor:
                 self.cleartext = new_clearfile.read()
 
 
-def main(editor, environment, edit_file: Optional[str] = None, **kw):
+def main(editor, environment, edit_file: str | None = None, **kw):
     """Secrets editor console script.
 
     The main focus here is to avoid having unencrypted files accidentally
