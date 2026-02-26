@@ -1,9 +1,48 @@
 import os
 import os.path
 import shutil
+from pathlib import Path
+
+import pytest
 
 from batou.environment import Environment
 from batou.utils import cmd
+
+# Path to examples directory (relative to this test file)
+EXAMPLES_DIR = Path(__file__).parent.parent.parent.parent / "examples"
+# Path to batou repo root (for adjusting pyproject.toml paths)
+BATOU_ROOT = Path(__file__).parent.parent.parent.parent
+
+
+@pytest.fixture
+def isolated_example(tmp_path, monkeypatch):
+    """Copy an example directory to a temp location for isolated testing.
+
+    Adjusts pyproject.toml to point to the correct batou source path.
+
+    Usage:
+        def test_foo(isolated_example):
+            isolated_example("errors")
+            out, _ = cmd("./batou deploy errors")
+    """
+
+    def _copy(example_name: str) -> Path:
+        src = EXAMPLES_DIR / example_name
+        dst = tmp_path / example_name
+        shutil.copytree(src, dst)
+
+        # Adjust batou path in pyproject.toml if it exists
+        pyproject = dst / "pyproject.toml"
+        if pyproject.exists():
+            content = pyproject.read_text()
+            # Replace relative path with absolute path to batou root
+            content = content.replace('path = "../../"', f'path = "{BATOU_ROOT}"')
+            pyproject.write_text(content)
+
+        monkeypatch.chdir(dst)
+        return dst
+
+    return _copy
 
 
 def test_service_early_resource():
@@ -16,8 +55,8 @@ def test_service_early_resource():
     assert env.resources.get("zeo") == ["127.0.0.1:9000"]
 
 
-def test_example_errors_early(patterns):
-    os.chdir("examples/errors")
+def test_example_errors_early(patterns, isolated_example):
+    isolated_example("errors")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
 
     patterns.header.optional(
@@ -47,13 +86,13 @@ batou/... (cpython 3...)
 🔑 main: Loading secrets ...
 <empty-line>
 ERROR: Failed loading component file
-           File: .../examples/errors/components/component5/component.py
+           File: .../errors/components/component5/component.py
       Exception: invalid syntax (component.py, line 1)
 Traceback (simplified, most recent call last):
 <no-non-remote-internal-traceback-lines-found>
 <empty-line>
 ERROR: Failed loading component file
-           File: .../examples/errors/components/component6/component.py
+           File: .../errors/components/component6/component.py
       Exception: No module named 'asdf'
 Traceback (simplified, most recent call last):
   File ".../errors/components/component6/component.py", line 1, in <module>
@@ -81,9 +120,9 @@ ERROR: Secrets section for unknown component found
     assert patterns.errors == out
 
 
-def test_example_errors_gpg_cannot_decrypt(monkeypatch, patterns):
+def test_example_errors_gpg_cannot_decrypt(monkeypatch, patterns, isolated_example):
     monkeypatch.setitem(os.environ, "GNUPGHOME", "")
-    os.chdir("examples/errors")
+    isolated_example("errors")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
 
     patterns.header.optional(
@@ -117,13 +156,13 @@ ERROR: Error while calling GPG
         message:
 <empty-line>
 ERROR: Failed loading component file
-           File: .../examples/errors/components/component5/component.py
+           File: .../errors/components/component5/component.py
       Exception: invalid syntax (component.py, line 1)
 Traceback (simplified, most recent call last):
 <no-non-remote-internal-traceback-lines-found>
 <empty-line>
 ERROR: Failed loading component file
-           File: .../examples/errors/components/component6/component.py
+           File: .../errors/components/component6/component.py
       Exception: No module named 'asdf'
 Traceback (simplified, most recent call last):
   File ".../errors/components/component6/component.py", line 1, in <module>
@@ -144,8 +183,8 @@ ERROR: Override section for unknown component found
     assert patterns.errors == out
 
 
-def test_example_errors_late(patterns):
-    os.chdir("examples/errors2")
+def test_example_errors_late(patterns, isolated_example):
+    isolated_example("errors2")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
 
     patterns.header.optional(
@@ -182,8 +221,8 @@ ERROR: Trying to access address family IPv6...
     assert patterns.main == out
 
 
-def test_example_errors_missing_environment(patterns):
-    os.chdir("examples/errors")
+def test_example_errors_missing_environment(patterns, isolated_example):
+    isolated_example("errors")
     out, _ = cmd("./batou deploy production", acceptable_returncodes=[1])
 
     patterns.header.optional(
@@ -211,8 +250,8 @@ ERROR: Missing environment
     assert patterns.main == out
 
 
-def test_example_ignores(patterns):
-    os.chdir("examples/ignores")
+def test_example_ignores(patterns, isolated_example):
+    isolated_example("ignores")
     out, _ = cmd("./batou deploy ignores")
 
     patterns.header.optional(
@@ -248,8 +287,8 @@ Deployment took total=...s, connect=...s, deploy=...s
     assert patterns.main == out
 
 
-def test_example_async_sync_deployment():
-    os.chdir("examples/sync_async")
+def test_example_async_sync_deployment(isolated_example):
+    isolated_example("sync_async")
     out, _ = cmd("./batou -d deploy default")
     print(out)
     assert "Number of jobs: 1" in out
@@ -263,15 +302,15 @@ def test_example_async_sync_deployment():
     assert "Number of jobs: 2" in out
 
 
-def test_example_job_option_overrides_environment():
-    os.chdir("examples/sync_async")
+def test_example_job_option_overrides_environment(isolated_example):
+    isolated_example("sync_async")
     out, _ = cmd("./batou -d deploy -j 5 async")
     print(out)
     assert "Number of jobs: 5" in out
 
 
-def test_consistency_does_not_start_deployment():
-    os.chdir("examples/tutorial-helloworld")
+def test_consistency_does_not_start_deployment(isolated_example):
+    isolated_example("tutorial-helloworld")
     out, _ = cmd("./batou deploy -c tutorial")
     print(out)
     assert "Deploying" not in out
@@ -287,13 +326,13 @@ def test_consistency_does_not_start_deployment():
     assert "CONSISTENCY CHECK FINISHED" not in out
 
 
-def test_diff_is_not_shown_for_keys_in_secrets(tmp_path, monkeypatch, capsys, patterns):
+def test_diff_is_not_shown_for_keys_in_secrets(isolated_example, capsys, patterns):
     """It does not render diffs for files which contain secrets.
 
     Secrets might be in the config file in secrets/ or additional encrypted
     files belonging to the environment.
     """
-    monkeypatch.chdir("examples/tutorial-secrets")
+    isolated_example("tutorial-secrets")
     if os.path.exists("work"):
         shutil.rmtree("work")
     try:
@@ -333,7 +372,7 @@ Deployment took total=...s...
     assert patterns.main == out
 
 
-def test_diff_for_keys_in_secrets_overridable(tmp_path, monkeypatch, capsys, patterns):
+def test_diff_for_keys_in_secrets_overridable(isolated_example, capsys, patterns):
     """It respects the "sensitive_data" flag when showing diffs for
     files which contain secrets
 
@@ -341,7 +380,7 @@ def test_diff_for_keys_in_secrets_overridable(tmp_path, monkeypatch, capsys, pat
     files belonging to the environment.
     """
 
-    monkeypatch.chdir("examples/sensitive-values")
+    isolated_example("sensitive-values")
     if os.path.exists("work"):
         shutil.rmtree("work")
     try:
@@ -382,8 +421,8 @@ Deployment took total=...s...
     assert patterns.main == out
 
 
-def test_durations_are_shown_for_components(patterns):
-    os.chdir("examples/durations")
+def test_durations_are_shown_for_components(patterns, isolated_example):
+    isolated_example("durations")
     out, _ = cmd("./batou deploy default")
 
     patterns.header.optional(
@@ -420,8 +459,8 @@ Deployment took total=...s, connect=...s, deploy=...s
     assert patterns.main == out
 
 
-def test_check_consistency_works(patterns):
-    os.chdir("examples/tutorial-secrets")
+def test_check_consistency_works(patterns, isolated_example):
+    isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy tutorial --consistency-only")
 
     patterns.header.optional(
@@ -453,8 +492,8 @@ Consistency check took total=...s
     assert patterns.main == out
 
 
-def test_predicting_deployment_works(patterns):
-    os.chdir("examples/tutorial-secrets")
+def test_predicting_deployment_works(patterns, isolated_example):
+    isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy tutorial --predict-only")
 
     patterns.header.optional(
@@ -488,8 +527,8 @@ Deployment took total=...s...
     assert patterns.main == out
 
 
-def test_check_consistency_works_with_local(patterns):
-    os.chdir("examples/tutorial-secrets")
+def test_check_consistency_works_with_local(patterns, isolated_example):
+    isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy gocept --consistency-only --local")
 
     patterns.header.optional(
@@ -521,8 +560,8 @@ Consistency check took total=...s
     assert patterns.main == out
 
 
-def test_predicting_deployment_works_with_local(patterns):
-    os.chdir("examples/tutorial-secrets")
+def test_predicting_deployment_works_with_local(patterns, isolated_example):
+    isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy gocept --predict-only --local")
 
     patterns.header.optional(
