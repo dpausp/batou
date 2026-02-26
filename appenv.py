@@ -36,7 +36,7 @@ def parse_requires_python(pyproject_path):
 
     Returns tuple of (min_version, max_version) where max may be None.
     Handles patterns like:
-        ">=3.8" → ("3.8", None)
+        ">=3.8" → ("3.8", None)  # noqa: ERA001
         ">=3.11,<3.15" → ("3.11", "3.15")
         ">=3.11.0,<3.15.0" → ("3.11", "3.15")
     """
@@ -92,7 +92,7 @@ def ensure_best_python(base):
 
     if min_version is None:
         # No constraint, use default (newest available)
-        min_version = "3.8"
+        min_version = "3.10"
 
     available = find_available_pythons()
     current_python = str(Path(sys.executable).resolve())
@@ -697,9 +697,9 @@ class AppEnv:
         if not dependencies:
             dependencies = [command_name]
 
-        python_version = input("\nMinimum Python version [3.8]: ").strip()
+        python_version = input("\nMinimum Python version [3.10]: ").strip()
         if not python_version:
-            python_version = "3.8"
+            python_version = "3.10"
 
         self._create_pyproject(
             target=target,
@@ -782,7 +782,7 @@ class AppEnv:
         print(f"Found {len(dependencies)} dependency(ies): {', '.join(dependencies)}")
 
         # Parse python preference from requirements.txt
-        python_version = "3.8"
+        python_version = "3.10"
         for line in deps_content.splitlines():
             if line.startswith("# appenv-python-preference: "):
                 raw = line.split(":")[1]
@@ -983,11 +983,11 @@ requires-python = ">={python_version}"
         if lock_file.exists():
             if verbose:
                 print(f"Reading existing lockfile: {lock_file}")
-            old_lines = set(
+            old_lines = {
                 stripped
                 for line in lock_file.read_text().splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
         if args and args.diff:
             print("Checking lockfile changes ...")
@@ -1016,11 +1016,11 @@ requires-python = ">={python_version}"
 
             # Read new content
             new_content = lock_file.read_text() if lock_file.exists() else ""
-            new_lines = set(
+            new_lines = {
                 stripped
                 for line in new_content.splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
             # Show summary
             added = new_lines - old_lines

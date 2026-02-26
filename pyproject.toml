@@ -9,14 +9,13 @@ description = "A utility for automating multi-host, multi-environment software b
 readme = "README.md"
 license = "BSD-2-Clause"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Christian Theune", email = "ct@flyingcircus.io" }]
 keywords = ["deployment"]
 classifiers = [
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -95,7 +94,7 @@ dev = [
 # tox configuration
 # =============================================================================
 [tool.tox]
-env_list = ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "fix"]
+env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "fix"]
 skip_missing_interpreters = true
 
 [tool.tox.env_run_base]
@@ -121,7 +120,7 @@ commands = [
 # ruff configuration
 # =============================================================================
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 src = ["src", "stubs"]
 exclude = [
     "examples/**",  # Example projects - not batou source code

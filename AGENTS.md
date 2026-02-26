@@ -153,7 +153,7 @@ def test_missing_key_raises_error():
 - **45s timeout** for all tests (`--timeout=45`)
 - **Instafail enabled** for fast failure feedback
 - **Native traceback** (`--tb=native`)
-- **Python 3.8-3.12** supported
+- **Python 3.10-3.14** supported
 - **Bootstrap requirement**: Self-bootstrapping without non-stdlib imports in `batou/__init__.py`
 
 ## Test File Locations
