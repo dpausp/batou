@@ -24,6 +24,7 @@
 /examples/**/hostmap.json
 /examples/**/insecure-private.key
 /examples/*/.appenv
+/examples/*/.venv
 /examples/*/ssh_config_*
 /examples/*/work
 /htmlcov
