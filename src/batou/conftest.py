@@ -37,8 +37,11 @@ def ensure_age_identity(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def ensure_git_isolated(monkeypatch):
-    monkeypatch.setitem(os.environ, "GIT_CONFIG_GLOBAL", "")
+def ensure_git_isolated(monkeypatch, tmp_path_factory):
+    # Create a temp gitconfig with init.defaultBranch=main
+    gitconfig = tmp_path_factory.getbasetemp() / "gitconfig"
+    gitconfig.write_text("[init]\n\tdefaultBranch = main\n")
+    monkeypatch.setitem(os.environ, "GIT_CONFIG_GLOBAL", str(gitconfig))
     monkeypatch.setitem(os.environ, "GIT_CONFIG_SYSTEM", "")
 
 
@@ -52,7 +55,9 @@ def reset_address_defaults():
 @pytest.fixture(scope="session")
 def git_main_branch() -> str:
     with tempfile.TemporaryDirectory() as tmpdir:
-        subprocess.check_call(["git", "-C", tmpdir, "init", "."])
+        subprocess.check_call(
+            ["git", "-C", tmpdir, "init", "--initial-branch=main", "."]
+        )
         return (
             subprocess.check_output(["git", "-C", tmpdir, "branch", "--show-current"])
             .decode("ascii")
