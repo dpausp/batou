@@ -1,4 +1,5 @@
 import os.path
+import shutil
 import subprocess
 import tempfile
 
@@ -14,13 +15,15 @@ def ensure_gpg_homedir(monkeypatch):
     )
 
     with tempfile.TemporaryDirectory() as home:
-        os.system(f"cp -r {old_home}/* {home}")
-        os.system(f"gpg-agent --homedir='{home}' --daemon")
+        shutil.copytree(old_home, home, dirs_exist_ok=True)
+        subprocess.run(["gpg-agent", f"--homedir={home}", "--daemon"], check=False)
         monkeypatch.setitem(os.environ, "GNUPGHOME", home)
 
         yield
 
-        os.system(f"gpgconf --homedir='{home}' --kill gpg-agent")
+        subprocess.run(
+            ["gpgconf", f"--homedir={home}", "--kill", "gpg-agent"], check=False
+        )
 
 
 @pytest.fixture(autouse=True)

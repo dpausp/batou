@@ -7,11 +7,11 @@ import subprocess
 import sys
 import tempfile
 
-import pyrage
 from configupdater import ConfigUpdater
-from cryptography.hazmat.primitives import serialization
 
+import pyrage
 from batou import AgeCallError, FileLockedError, GPGCallError
+from cryptography.hazmat.primitives import serialization
 
 debug = False
 
@@ -71,7 +71,7 @@ class EncryptedFile:
 
     def _lock(self):
         if self.locked:
-            raise FileLockedError.from_context(self.path)
+            raise FileLockedError.from_context(str(self.path))
         if not self.path.exists():
             self.is_new = True
             self.path.touch()
@@ -89,7 +89,7 @@ class EncryptedFile:
                 ),
             )
         except BlockingIOError:
-            raise FileLockedError.from_context(self.path)
+            raise FileLockedError.from_context(str(self.path))
 
     def _unlock(self):
         if debug:
@@ -109,7 +109,7 @@ class EncryptedFile:
 
 
 class NoBackingEncryptedFile(EncryptedFile):
-    def __init__(self):
+    def __init__(self, path=None, writeable=False):
         super().__init__(pathlib.Path("/dev/null"))
         self.is_new = True
 
@@ -347,9 +347,7 @@ class AGEEncryptedFile(EncryptedFile):
         except pyrage.RecipientError:
             self.write_legacy(content, recipients, reencrypt)
 
-    def write_legacy(
-        self, content, recipients, reencrypt=False
-    ):
+    def write_legacy(self, content, recipients, reencrypt=False):
         """
         Fallback to writing secrets with the age binary via subprocesses
         """
@@ -389,9 +387,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         b = base64.b64decode(content)
         return pyrage.decrypt(b, [ident]).decode("utf-8")
 
-    def encrypt_age_string(
-        self, content, recipients
-    ):
+    def encrypt_age_string(self, content, recipients):
         b = pyrage.encrypt(content.encode("utf-8"), recipients)
         return base64.b64encode(b).decode("utf-8")
 
@@ -449,6 +445,9 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         # parse the content as ConfigUpdater
         config = ConfigUpdater()
         config.read_string(content.decode("utf-8"))
+
+        assert self._decrypted_content is not None
+        assert self._encrypted_content is not None
 
         try:
             recipients = [pyrage.ssh.Recipient.from_str(rec) for rec in recipients]

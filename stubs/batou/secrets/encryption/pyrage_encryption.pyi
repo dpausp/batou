@@ -1,10 +1,9 @@
-import base64
 import pathlib
 import types
-from typing import Protocol
+
+from configupdater import ConfigUpdater
 
 import pyrage
-from configupdater import ConfigUpdater
 
 debug: bool
 
@@ -57,7 +56,7 @@ class EncryptedFile:
     def decrypt(self) -> bytes: ...
 
 class NoBackingEncryptedFile(EncryptedFile):
-    def __init__(self) -> None: ...
+    def __init__(self, path: pathlib.Path = ..., writeable: bool = ...) -> None: ...
     @property
     def locked(self) -> bool: ...
     def _lock(self) -> None: ...
@@ -75,17 +74,22 @@ class AGEEncryptedFile(EncryptedFile):
     file_ending: str
 
     def write_legacy(
-        self, content: bytes, recipients: list[str], reencrypt: bool = ...
+        self,
+        content: bytes,
+        recipients: list[str],
+        reencrypt: bool = ...,
     ) -> None: ...
 
 class DiffableAGEEncryptedFile(EncryptedFile):
     file_ending: str
-    _decrypted_content: ConfigUpdater
-    _encrypted_content: ConfigUpdater
+    _decrypted_content: ConfigUpdater | None
+    _encrypted_content: ConfigUpdater | None
 
     def __init__(self, path: pathlib.Path, writeable: bool = ...) -> None: ...
     def decrypt_age_string(self, content: str, ident: pyrage.ssh.Identity) -> str: ...
     def encrypt_age_string(
-        self, content: str, recipients: list[pyrage.ssh.Recipient]
+        self,
+        content: str,
+        recipients: list[pyrage.ssh.Recipient],
     ) -> str: ...
     def encrypt_age_string_legacy(self, content: str, recipients: list[str]) -> str: ...

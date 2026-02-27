@@ -70,7 +70,7 @@ class EncryptedFile:
 
     def _lock(self):
         if self.locked:
-            raise FileLockedError.from_context(self.path)
+            raise FileLockedError.from_context(str(self.path))
         if not self.path.exists():
             self.is_new = True
             self.path.touch()
@@ -88,7 +88,7 @@ class EncryptedFile:
                 ),
             )
         except BlockingIOError:
-            raise FileLockedError.from_context(self.path)
+            raise FileLockedError.from_context(str(self.path))
 
     def _unlock(self):
         if debug:
@@ -108,7 +108,7 @@ class EncryptedFile:
 
 
 class NoBackingEncryptedFile(EncryptedFile):
-    def __init__(self):
+    def __init__(self, path=None, writeable=False):
         super().__init__(pathlib.Path("/dev/null"))
         self.is_new = True
 
@@ -488,6 +488,9 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         config = ConfigUpdater()
         config.read_string(content.decode("utf-8"))
 
+        assert self._decrypted_content is not None
+        assert self._encrypted_content is not None
+
         # for each section
         for section in config.sections():
             # if section is called batou, skip
@@ -508,7 +511,9 @@ class DiffableAGEEncryptedFile(EncryptedFile):
                 if reencrypt or value_has_changed:
                     new_encrypted_value = self.encrypt_age_string(new_value, recipients)
                 else:
-                    new_encrypted_value = self._encrypted_content[section][option].value
+                    new_encrypted_value = (
+                        self._encrypted_content[section][option].value or ""
+                    )
 
                 config[section][option].value = new_encrypted_value
 

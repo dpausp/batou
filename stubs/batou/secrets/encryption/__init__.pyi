@@ -1,5 +1,3 @@
-import pathlib
-import types
 from typing import Any
 
 USE_LEGACY: bool | None
