@@ -1,5 +1,6 @@
 import os
 import pathlib
+import shutil
 import sys
 import time
 
@@ -35,12 +36,15 @@ def test_untar_extracts_archive_to_target_directory(root):
     assert os.listdir(str(extract.target)) == ["foo"]
 
 
-def test_ignores_ctime_for_directories(root):
+def test_ignores_ctime_for_directories(root, tmp_path):
     # This is hard to test: ctime can not be changed directly,
     # we thus have to perform a somewhat elaborate dance to align
     # the starts as we wish.
-    # archive = resource_filename(__name__, "example.tar.gz")
-    archive = pathlib.Path(__file__).parent / "example.tar.gz"
+    # Copy archive to temp location to avoid race conditions in parallel tests
+    # (we modify the archive's timestamps with os.utime below)
+    src_archive = pathlib.Path(__file__).parent / "example.tar.gz"
+    archive = tmp_path / "example.tar.gz"
+    shutil.copy(src_archive, archive)
     extract = Extract(archive, target="example")
 
     root.component += extract

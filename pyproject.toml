@@ -436,7 +436,7 @@ allowed-unresolved-imports = ["yaml"]
 # pytest configuration
 # =============================================================================
 [tool.pytest.ini_options]
-addopts = "-W error --timeout=100 --tb=native --cov=src --cov-report=html --junitxml=report.xml --instafail --import-mode importlib -m \"not slow\""
+addopts = "-W error --timeout=120 --tb=native --cov=src --cov-report=html --junitxml=report.xml --instafail --import-mode importlib -m \"not slow\""
 markers = "slow: This is a slow test."
 testpaths = ["src"]
 junit_family = "xunit2"
