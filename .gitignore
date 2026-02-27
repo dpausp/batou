@@ -48,3 +48,4 @@ batou_fd_track_*.txt
 .venv/
 monkeytype.sqlite3
 .pymon
+pytestdebug.log
