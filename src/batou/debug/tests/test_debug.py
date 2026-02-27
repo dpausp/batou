@@ -1,6 +1,10 @@
 """Tests for batou debug command (argparse-based)."""
 
+import pytest
+
 from batou.debug.cli import main
+
+pytestmark = pytest.mark.debug
 
 
 def test_debug_command_shows_all_settings(capsys, monkeypatch):

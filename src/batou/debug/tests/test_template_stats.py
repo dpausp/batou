@@ -1,6 +1,10 @@
 """Tests for TemplateStats class."""
 
+import pytest
+
 from batou.debug.template_stats import TemplateStats
+
+pytestmark = pytest.mark.debug
 
 
 def test_template_stats_initial_values():

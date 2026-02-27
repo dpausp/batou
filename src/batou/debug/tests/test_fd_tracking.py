@@ -9,6 +9,8 @@ import pytest
 from batou.debug.fd_tracker import FileDescriptorTracker
 from batou.debug.settings import DebugSettings
 
+pytestmark = pytest.mark.debug
+
 
 @pytest.fixture(scope="module", autouse=True)
 def reset_fd_tracking_hook_module():

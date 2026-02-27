@@ -2,7 +2,11 @@
 
 import time
 
+import pytest
+
 from batou.utils import Timer, format_duration
+
+pytestmark = pytest.mark.debug
 
 
 def test_timer_basic_context_manager():

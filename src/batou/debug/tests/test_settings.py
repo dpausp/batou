@@ -2,6 +2,8 @@ import pytest
 
 from batou.debug.settings import DebugSettings
 
+pytestmark = pytest.mark.debug
+
 
 def test_default_settings(monkeypatch):
     """Test default values for DebugSettings when ENV vars not set."""

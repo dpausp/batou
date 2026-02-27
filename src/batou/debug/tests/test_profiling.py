@@ -5,7 +5,11 @@ import os
 import tempfile
 from unittest.mock import patch
 
+import pytest
+
 from batou.debug.profiling import RemoteProfiler, enable_profiling
+
+pytestmark = pytest.mark.debug
 
 
 def test_profiler_initialization():
