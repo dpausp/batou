@@ -135,6 +135,8 @@ ignore = [
     "E501",  # line too long
     "N818",  # batou exception naming convention (ReportingException, not ReportingError)
     "B904",  # raise without from - batou exception hierarchy pattern
+    "COM812",  # trailing comma missing - conflicts with formatter
+    "ISC001",  # implicitly concatenated strings - conflicts with formatter
 ]
 
 # Stub-specific ignores - stubs mirror source code conventions
