@@ -1,0 +1,8 @@
+import pathlib
+import types
+from typing import Any
+
+USE_LEGACY: bool | None
+
+def __getattr__(name: str) -> Any: ...
+def __dir__() -> list[str]: ...

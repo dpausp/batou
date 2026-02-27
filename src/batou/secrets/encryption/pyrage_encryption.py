@@ -17,17 +17,17 @@ debug = False
 
 
 class EncryptedFile:
-    file_ending: str | None = None
+    file_ending = None
 
     def __init__(self, path: "pathlib.Path", writeable: bool = False):
         self.path = path
         self.writeable = writeable
         self.fd = None
-        self.is_new: bool | None = None
-        self._decrypted: bytes | None = None
+        self.is_new = None
+        self._decrypted = None
 
     @property
-    def decrypted(self) -> bytes:
+    def decrypted(self):
         if self.is_new:
             self._decrypted = b""
         if self.path.stat().st_size == 0:
@@ -35,25 +35,21 @@ class EncryptedFile:
         if self._decrypted is None:
             self._decrypted = self.decrypt()
         if self._decrypted is None:
-            raise ValueError(
-                f"No decrypted data available for file `{self.path}`"
-            )
+            raise ValueError(f"No decrypted data available for file `{self.path}`")
         return self._decrypted
 
-    def decrypt(self) -> bytes:
+    def decrypt(self):
         raise NotImplementedError("decrypt() not implemented")
 
     @property
-    def cleartext(self) -> str:
+    def cleartext(self):
         return self.decrypted.decode("utf-8")
 
     @property
-    def locked(self) -> bool:
+    def locked(self):
         return self.fd is not None
 
-    def write(
-        self, content: bytes, recipients: list[str], reencrypt: bool = False
-    ):
+    def write(self, content, recipients, reencrypt=False):
         if debug:
             print(
                 f"EncryptedFile({self.path}).write({content!r}, {recipients}, {reencrypt})",
@@ -63,9 +59,7 @@ class EncryptedFile:
         self._write(content, recipients, reencrypt)
         self._decrypted = content
 
-    def _write(
-        self, content: bytes, recipients: list[str], reencrypt: bool = False
-    ):
+    def _write(self, content, recipients, reencrypt=False):
         raise NotImplementedError("_write() not implemented")
 
     def __enter__(self):
@@ -151,14 +145,10 @@ class GPGEncryptedFile(EncryptedFile):
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise GPGCallError.from_context(
-                e.cmd, e.returncode, e.stderr
-            ) from e
+            raise GPGCallError.from_context(e.cmd, e.returncode, e.stderr) from e
         return p.stdout
 
-    def _write(
-        self, content: bytes, recipients: list[str], reencrypt: bool = False
-    ):
+    def _write(self, content, recipients, reencrypt=False):
         if not self.locked:
             raise RuntimeError("File not locked")
         if not self.writeable:
@@ -240,9 +230,7 @@ def get_identities():
     global identities
     if identities is None:
         identities = os.environ.get("BATOU_AGE_IDENTITIES")
-        identities = (
-            [x.strip() for x in identities.split(",")] if identities else []
-        )
+        identities = [x.strip() for x in identities.split(",")] if identities else []
         if not identities:
             # ssh uses ~/.ssh/id_rsa,
             #  ~/.ssh/id_ecdsa, ~/.ssh/id_ecdsa_sk, ~/.ssh/id_ed25519,
@@ -297,10 +285,10 @@ def get_identities():
     return identities
 
 
-known_passphrases: dict[str, str] = {}
+known_passphrases = {}
 
 
-def get_passphrase(identity: str) -> str:
+def get_passphrase(identity):
     """Prompt the user for a passphrase if necessary."""
     if identity in known_passphrases:
         return known_passphrases[identity]
@@ -319,9 +307,7 @@ def get_passphrase(identity: str) -> str:
     else:
         import getpass
 
-        passphrase = getpass.getpass(
-            f"Enter passphrase for {identity}: "
-        )
+        passphrase = getpass.getpass(f"Enter passphrase for {identity}: ")
 
     known_passphrases[identity] = passphrase
     return passphrase
@@ -345,18 +331,14 @@ class AGEEncryptedFile(EncryptedFile):
                 print(f"error: {e}")
                 continue
 
-    def _write(
-        self, content: bytes, recipients: list[str], reencrypt: bool = False
-    ):
+    def _write(self, content, recipients, reencrypt=False):
         if not self.locked:
             raise ValueError("File is not locked")
         if not self.writeable:
             raise ValueError("File is not writeable")
 
         try:
-            recipients = [
-                pyrage.ssh.Recipient.from_str(rec) for rec in recipients
-            ]
+            recipients = [pyrage.ssh.Recipient.from_str(rec) for rec in recipients]
             b = pyrage.encrypt(content, recipients)
 
             with open(self.path, "wb") as f:
@@ -366,7 +348,7 @@ class AGEEncryptedFile(EncryptedFile):
             self.write_legacy(content, recipients, reencrypt)
 
     def write_legacy(
-        self, content: bytes, recipients: list[str], reencryt: bool = False
+        self, content, recipients, reencrypt=False
     ):
         """
         Fallback to writing secrets with the age binary via subprocesses
@@ -397,25 +379,23 @@ class AGEEncryptedFile(EncryptedFile):
 
 class DiffableAGEEncryptedFile(EncryptedFile):
     file_ending = ".age-diffable"
-    _decrypted_content: ConfigUpdater
-    _encrypted_content: ConfigUpdater
+    _decrypted_content = None
+    _encrypted_content = None
 
     def __init__(self, path: "pathlib.Path", writeable: bool = False):
         super().__init__(path, writeable)
 
-    def decrypt_age_string(self, content: str, ident) -> str:
+    def decrypt_age_string(self, content, ident):
         b = base64.b64decode(content)
         return pyrage.decrypt(b, [ident]).decode("utf-8")
 
     def encrypt_age_string(
-        self, content: str, recipients: list[pyrage.ssh.Recipient]
-    ) -> str:
+        self, content, recipients
+    ):
         b = pyrage.encrypt(content.encode("utf-8"), recipients)
         return base64.b64encode(b).decode("utf-8")
 
-    def encrypt_age_string_legacy(
-        self, content: str, recipients: list[str]
-    ) -> str:
+    def encrypt_age_string_legacy(self, content, recipients):
         # tmpfile -> AGEEncryptedFile -> write plaintext -> read ciphertext -> base64
         with tempfile.NamedTemporaryFile() as temp_file:
             with AGEEncryptedFile(pathlib.Path(temp_file.name), True) as ef:
@@ -465,17 +445,13 @@ class DiffableAGEEncryptedFile(EncryptedFile):
                 print(f"error: {e}")
                 raise e
 
-    def _write(
-        self, content: bytes, recipients: list[str], reencrypt: bool = False
-    ):
+    def _write(self, content, recipients, reencrypt=False):
         # parse the content as ConfigUpdater
         config = ConfigUpdater()
         config.read_string(content.decode("utf-8"))
 
         try:
-            recipients = [
-                pyrage.ssh.Recipient.from_str(rec) for rec in recipients
-            ]
+            recipients = [pyrage.ssh.Recipient.from_str(rec) for rec in recipients]
             encrypt_method = self.encrypt_age_string
         except pyrage.RecipientError:
             encrypt_method = self.encrypt_age_string_legacy
@@ -513,7 +489,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         self.is_new = False
 
 
-all_encrypted_file_types: list[type[EncryptedFile]] = [
+all_encrypted_file_types = [
     NoBackingEncryptedFile,
     GPGEncryptedFile,
     AGEEncryptedFile,
@@ -521,9 +497,7 @@ all_encrypted_file_types: list[type[EncryptedFile]] = [
 ]
 
 
-def get_encrypted_file(
-    path: "pathlib.Path", writeable: bool = False
-) -> EncryptedFile:
+def get_encrypted_file(path: "pathlib.Path", writeable: bool = False) -> EncryptedFile:
     """Return the appropriate EncryptedFile object for the given path."""
     for ef in all_encrypted_file_types:
         if ef.file_ending and path.name.endswith(ef.file_ending):
