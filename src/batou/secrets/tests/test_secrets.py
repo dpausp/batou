@@ -8,7 +8,6 @@ import pytest
 
 import batou
 from batou.secrets.encryption import (
-    AGEEncryptedFile,
     DiffableAGEEncryptedFile,
     GPGEncryptedFile,
 )

@@ -3,32 +3,28 @@ import errno
 import fcntl
 import os
 import pathlib
-import pty
 import subprocess
 import sys
 import tempfile
-from typing import Callable, Dict, List, Optional
 
 import pyrage
 from configupdater import ConfigUpdater
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
 from batou import AgeCallError, FileLockedError, GPGCallError
-from batou._output import output
 
 debug = False
 
 
 class EncryptedFile:
-    file_ending: Optional[str] = None
+    file_ending: str | None = None
 
     def __init__(self, path: "pathlib.Path", writeable: bool = False):
         self.path = path
         self.writeable = writeable
         self.fd = None
-        self.is_new: Optional[bool] = None
-        self._decrypted: Optional[bytes] = None
+        self.is_new: bool | None = None
+        self._decrypted: bytes | None = None
 
     @property
     def decrypted(self) -> bytes:
@@ -56,7 +52,7 @@ class EncryptedFile:
         return self.fd is not None
 
     def write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
+        self, content: bytes, recipients: list[str], reencrypt: bool = False
     ):
         if debug:
             print(
@@ -68,7 +64,7 @@ class EncryptedFile:
         self._decrypted = content
 
     def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
+        self, content: bytes, recipients: list[str], reencrypt: bool = False
     ):
         raise NotImplementedError("_write() not implemented")
 
@@ -151,8 +147,7 @@ class GPGEncryptedFile(EncryptedFile):
         try:
             p = subprocess.run(
                 args,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -162,7 +157,7 @@ class GPGEncryptedFile(EncryptedFile):
         return p.stdout
 
     def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
+        self, content: bytes, recipients: list[str], reencrypt: bool = False
     ):
         if not self.locked:
             raise RuntimeError("File not locked")
@@ -184,8 +179,7 @@ class GPGEncryptedFile(EncryptedFile):
             subprocess.run(
                 args,
                 input=content,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -219,7 +213,7 @@ class GPGEncryptedFile(EncryptedFile):
         raise RuntimeError(
             "Could not find gpg binary."
             " Is GPG installed? I tried looking for: {}".format(
-                ", ".join("`{}`".format(x) for x in cls.GPG_BINARY_CANDIDATES)
+                ", ".join(f"`{x}`" for x in cls.GPG_BINARY_CANDIDATES)
             )
         )
 
@@ -303,7 +297,7 @@ def get_identities():
     return identities
 
 
-known_passphrases: Dict[str, str] = {}
+known_passphrases: dict[str, str] = {}
 
 
 def get_passphrase(identity: str) -> str:
@@ -318,8 +312,7 @@ def get_passphrase(identity: str) -> str:
     elif op:
         op_process = subprocess.run(
             ["op", "read", op],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=True,
         )
         passphrase = op_process.stdout.decode("utf-8").strip()
@@ -327,7 +320,7 @@ def get_passphrase(identity: str) -> str:
         import getpass
 
         passphrase = getpass.getpass(
-            "Enter passphrase for {}: ".format(identity)
+            f"Enter passphrase for {identity}: "
         )
 
     known_passphrases[identity] = passphrase
@@ -353,7 +346,7 @@ class AGEEncryptedFile(EncryptedFile):
                 continue
 
     def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
+        self, content: bytes, recipients: list[str], reencrypt: bool = False
     ):
         if not self.locked:
             raise ValueError("File is not locked")
@@ -373,7 +366,7 @@ class AGEEncryptedFile(EncryptedFile):
             self.write_legacy(content, recipients, reencrypt)
 
     def write_legacy(
-        self, content: bytes, recipients: List[str], reencryt: bool = False
+        self, content: bytes, recipients: list[str], reencryt: bool = False
     ):
         """
         Fallback to writing secrets with the age binary via subprocesses
@@ -390,8 +383,7 @@ class AGEEncryptedFile(EncryptedFile):
             subprocess.run(
                 args,
                 input=content,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -416,13 +408,13 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         return pyrage.decrypt(b, [ident]).decode("utf-8")
 
     def encrypt_age_string(
-        self, content: str, recipients: List[pyrage.ssh.Recipient]
+        self, content: str, recipients: list[pyrage.ssh.Recipient]
     ) -> str:
         b = pyrage.encrypt(content.encode("utf-8"), recipients)
         return base64.b64encode(b).decode("utf-8")
 
     def encrypt_age_string_legacy(
-        self, content: str, recipients: List[str]
+        self, content: str, recipients: list[str]
     ) -> str:
         # tmpfile -> AGEEncryptedFile -> write plaintext -> read ciphertext -> base64
         with tempfile.NamedTemporaryFile() as temp_file:
@@ -474,7 +466,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
                 raise e
 
     def _write(
-        self, content: bytes, recipients: List[str], reencrypt: bool = False
+        self, content: bytes, recipients: list[str], reencrypt: bool = False
     ):
         # parse the content as ConfigUpdater
         config = ConfigUpdater()
@@ -521,7 +513,7 @@ class DiffableAGEEncryptedFile(EncryptedFile):
         self.is_new = False
 
 
-all_encrypted_file_types: List[type[EncryptedFile]] = [
+all_encrypted_file_types: list[type[EncryptedFile]] = [
     NoBackingEncryptedFile,
     GPGEncryptedFile,
     AGEEncryptedFile,
