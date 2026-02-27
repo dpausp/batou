@@ -1,6 +1,7 @@
 import pytest
 
 
+@pytest.mark.slow
 def test_main_with_errors(capsys, patterns, isolated_example):
     isolated_example("errors")
 
@@ -79,6 +80,7 @@ ERROR: Secrets section for unknown component found
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_main_fails_if_no_host_in_environment(capsys, patterns, isolated_example):
     isolated_example("errorsnohost")
 

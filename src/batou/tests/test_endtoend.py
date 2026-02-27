@@ -2,6 +2,8 @@ import os
 import os.path
 import shutil
 
+import pytest
+
 from batou.environment import Environment
 from batou.utils import cmd
 
@@ -16,6 +18,7 @@ def test_service_early_resource():
     assert env.resources.get("zeo") == ["127.0.0.1:9000"]
 
 
+@pytest.mark.slow
 def test_example_errors_early(patterns, isolated_example):
     isolated_example("errors")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
@@ -81,6 +84,7 @@ ERROR: Secrets section for unknown component found
     assert patterns.errors == out
 
 
+@pytest.mark.slow
 def test_example_errors_gpg_cannot_decrypt(monkeypatch, patterns, isolated_example):
     monkeypatch.setitem(os.environ, "GNUPGHOME", "")
     isolated_example("errors")
@@ -144,6 +148,7 @@ ERROR: Override section for unknown component found
     assert patterns.errors == out
 
 
+@pytest.mark.slow
 def test_example_errors_late(patterns, isolated_example):
     isolated_example("errors2")
     out, _ = cmd("./batou deploy errors", acceptable_returncodes=[1])
@@ -182,6 +187,7 @@ ERROR: Trying to access address family IPv6...
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_example_errors_missing_environment(patterns, isolated_example):
     isolated_example("errors")
     out, _ = cmd("./batou deploy production", acceptable_returncodes=[1])
@@ -211,6 +217,7 @@ ERROR: Missing environment
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_example_ignores(patterns, isolated_example):
     isolated_example("ignores")
     out, _ = cmd("./batou deploy ignores")
@@ -248,6 +255,7 @@ Deployment took total=...s, connect=...s, deploy=...s
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_example_async_sync_deployment(isolated_example):
     isolated_example("sync_async")
     out, _ = cmd("./batou -d deploy default")
@@ -263,6 +271,7 @@ def test_example_async_sync_deployment(isolated_example):
     assert "Number of jobs: 2" in out
 
 
+@pytest.mark.slow
 def test_example_job_option_overrides_environment(isolated_example):
     isolated_example("sync_async")
     out, _ = cmd("./batou -d deploy -j 5 async")
@@ -270,6 +279,7 @@ def test_example_job_option_overrides_environment(isolated_example):
     assert "Number of jobs: 5" in out
 
 
+@pytest.mark.slow
 def test_consistency_does_not_start_deployment(isolated_example):
     isolated_example("tutorial-helloworld")
     out, _ = cmd("./batou deploy -c tutorial")
@@ -287,6 +297,7 @@ def test_consistency_does_not_start_deployment(isolated_example):
     assert "CONSISTENCY CHECK FINISHED" not in out
 
 
+@pytest.mark.slow
 def test_diff_is_not_shown_for_keys_in_secrets(isolated_example, capsys, patterns):
     """It does not render diffs for files which contain secrets.
 
@@ -333,6 +344,7 @@ Deployment took total=...s...
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_diff_for_keys_in_secrets_overridable(isolated_example, capsys, patterns):
     """It respects the "sensitive_data" flag when showing diffs for
     files which contain secrets
@@ -382,6 +394,7 @@ Deployment took total=...s...
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_durations_are_shown_for_components(patterns, isolated_example):
     isolated_example("durations")
     out, _ = cmd("./batou deploy default")
@@ -420,6 +433,7 @@ Deployment took total=...s, connect=...s, deploy=...s
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_check_consistency_works(patterns, isolated_example):
     isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy tutorial --consistency-only")
@@ -453,6 +467,7 @@ Consistency check took total=...s
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_predicting_deployment_works(patterns, isolated_example):
     isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy tutorial --predict-only")
@@ -488,6 +503,7 @@ Deployment took total=...s...
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_check_consistency_works_with_local(patterns, isolated_example):
     isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy gocept --consistency-only --local")
@@ -521,6 +537,7 @@ Consistency check took total=...s
     assert patterns.main == out
 
 
+@pytest.mark.slow
 def test_predicting_deployment_works_with_local(patterns, isolated_example):
     isolated_example("tutorial-secrets")
     out, _ = cmd("./batou deploy gocept --predict-only --local")

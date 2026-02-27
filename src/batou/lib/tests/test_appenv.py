@@ -1,8 +1,11 @@
 import os.path
 
+import pytest
+
 from batou.lib.appenv import AppEnv
 
 
+@pytest.mark.slow
 def test_simple_appenv(root):
     with open("requirements.lock", "w") as f:
         # I hate using a real package and a real index here ...
@@ -67,6 +70,7 @@ def test_simple_appenv(root):
     assert first_hash not in hashes4
 
 
+@pytest.mark.slow
 def test_appenv_custom_pip_version(root):
     pip_version = "24.0"
     with open("requirements.lock", "w") as f:

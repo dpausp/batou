@@ -297,6 +297,7 @@ def test_git_remote_init_pull(tmpdir, git_main_branch):
     assert "bar" == dest.join("foo.txt").read()
 
 
+@pytest.mark.slow
 def test_Deployment_sets_os_environ_on_load(isolated_example):
     """If ``os_env`` is given to ``Deployment`` it changes os.environ, ...or
 
@@ -325,6 +326,7 @@ def test_Deployment_sets_os_environ_on_load(isolated_example):
     assert os.environ["MY_ENV_VAR"] == "MY-VALUE"
 
 
+@pytest.mark.slow
 def test_Deployment_sets_resolver_overrides(isolated_example):
     isolated_example("tutorial-helloworld")
 
