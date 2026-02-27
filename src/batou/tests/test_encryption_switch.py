@@ -11,6 +11,7 @@ def test_import_pyrage_encryption():
     assert EncryptedFile.__module__ == "batou.secrets.encryption.pyrage_encryption"
 
 
+@pytest.mark.skipif(not importlib.util.find_spec("pty"), reason="requires pty module")
 def test_import_legacy_encryption(monkeypatch):
     monkeypatch.setitem(sys.modules, "pyrage", None)
 
