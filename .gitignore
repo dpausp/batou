@@ -2,6 +2,11 @@
 *.pyc
 *.status
 *.sublime-*
+*.swp
+*.swo
+.DS_Store
+.idea/
+.vscode/
 *src/batou.egg-info/
 .appenv
 .batou
