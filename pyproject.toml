@@ -80,6 +80,9 @@ test = [
     "pytest-instafail",
     "pytest-patterns>=0.3.0",
     "pytest-timeout",
+    "pytest-ruff",
+    "pytest-ty",
+    "pytest-xdist",
 ]
 lint = ["ruff", "ty", "types-PyYAML", "types-requests"]
 batommel = ["typer", "rtoml"]
