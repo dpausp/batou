@@ -1,48 +1,9 @@
 import os
 import os.path
 import shutil
-from pathlib import Path
-
-import pytest
 
 from batou.environment import Environment
 from batou.utils import cmd
-
-# Path to examples directory (relative to this test file)
-EXAMPLES_DIR = Path(__file__).parent.parent.parent.parent / "examples"
-# Path to batou repo root (for adjusting pyproject.toml paths)
-BATOU_ROOT = Path(__file__).parent.parent.parent.parent
-
-
-@pytest.fixture
-def isolated_example(tmp_path, monkeypatch):
-    """Copy an example directory to a temp location for isolated testing.
-
-    Adjusts pyproject.toml to point to the correct batou source path.
-
-    Usage:
-        def test_foo(isolated_example):
-            isolated_example("errors")
-            out, _ = cmd("./batou deploy errors")
-    """
-
-    def _copy(example_name: str) -> Path:
-        src = EXAMPLES_DIR / example_name
-        dst = tmp_path / example_name
-        shutil.copytree(src, dst)
-
-        # Adjust batou path in pyproject.toml if it exists
-        pyproject = dst / "pyproject.toml"
-        if pyproject.exists():
-            content = pyproject.read_text()
-            # Replace relative path with absolute path to batou root
-            content = content.replace('path = "../../"', f'path = "{BATOU_ROOT}"')
-            pyproject.write_text(content)
-
-        monkeypatch.chdir(dst)
-        return dst
-
-    return _copy
 
 
 def test_service_early_resource():

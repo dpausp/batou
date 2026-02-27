@@ -1,10 +1,8 @@
-import os
-
 import pytest
 
 
-def test_main_with_errors(capsys, patterns):
-    os.chdir("examples/errors")
+def test_main_with_errors(capsys, patterns, isolated_example):
+    isolated_example("errors")
 
     from batou.deploy import main
 
@@ -47,13 +45,13 @@ batou/... (cpython 3...)
 🔑 main: Loading secrets ...
 <empty-line>
 ERROR: Failed loading component file
-           File: .../examples/errors/components/component5/component.py
+           File: .../errors/components/component5/component.py
       Exception: invalid syntax (component.py, line 1)
 Traceback (simplified, most recent call last):
 <no-non-remote-internal-traceback-lines-found>
 <empty-line>
 ERROR: Failed loading component file
-           File: .../examples/errors/components/component6/component.py
+           File: .../errors/components/component6/component.py
       Exception: No module named 'asdf'
 Traceback (simplified, most recent call last):
   File ".../errors/components/component6/component.py", line 1, in <module>
@@ -81,8 +79,8 @@ ERROR: Secrets section for unknown component found
     assert patterns.main == out
 
 
-def test_main_fails_if_no_host_in_environment(capsys, patterns):
-    os.chdir("examples/errorsnohost")
+def test_main_fails_if_no_host_in_environment(capsys, patterns, isolated_example):
+    isolated_example("errorsnohost")
 
     from batou.deploy import main
 
