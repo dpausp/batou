@@ -47,3 +47,4 @@ batou_fd_track_*.txt
 *monkeytype*
 .venv/
 monkeytype.sqlite3
+.pymon
