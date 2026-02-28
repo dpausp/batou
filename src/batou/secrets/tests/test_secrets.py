@@ -11,7 +11,11 @@ from batou.secrets.encryption import (
     DiffableAGEEncryptedFile,
     GPGEncryptedFile,
 )
-from batou.secrets.tests.conftest import FIXTURE, FIXTURE_ENCRYPTED_CONFIG
+from batou.secrets.tests.conftest import (
+    FIXTURE,
+    FIXTURE_ENCRYPTED_CONFIG,
+    Pyrage_available,
+)
 
 cleartext_file = FIXTURE / "cleartext.cfg"
 
@@ -104,6 +108,7 @@ x = 1
     assert encrypted_file.read_bytes() == FIXTURE_ENCRYPTED_CONFIG.read_bytes()
 
 
+@pytest.mark.skipif(not Pyrage_available, reason="requires pyrage")
 def test_write_and_read_age_diffable(age_encrypted_file):
     encrypted = DiffableAGEEncryptedFile(
         pathlib.Path(age_encrypted_file), writeable=True

@@ -3,6 +3,21 @@ import shutil
 
 import pytest
 
+
+def _pyrage_available():
+    """Check if pyrage and its dependencies are actually importable."""
+    try:
+        import pyrage  # noqa: F401
+
+        # Also check cryptography which pyrage_encryption needs
+        from cryptography.hazmat.primitives import serialization  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+Pyrage_available = _pyrage_available()
+
 FIXTURE = pathlib.Path(__file__).parent / "fixture"
 FIXTURE_ENCRYPTED_CONFIG = FIXTURE / "encrypted.cfg.gpg"
 FIXTURE_AGE_IDENTITY = FIXTURE / "age" / "id_ed25519"
@@ -21,6 +36,9 @@ def age_encrypted_file(tmpdir, monkeypatch):
     Creates a properly formatted AGE-diffable config file where values
     are base64-encoded AGE-encrypted strings.
     """
+    if not Pyrage_available:
+        pytest.skip("requires pyrage")
+
     # Set up AGE identity for decryption
     monkeypatch.setenv("BATOU_AGE_IDENTITIES", str(FIXTURE_AGE_IDENTITY))
 
