@@ -2,8 +2,10 @@ import argparse
 import importlib.metadata
 import os
 import os.path
+import subprocess
 import sys
 import textwrap
+from pathlib import Path
 
 import batou
 import batou.debug.cli
@@ -18,9 +20,43 @@ from batou.utils import find_basedir
 
 def _get_version() -> str:
     try:
-        return importlib.metadata.version("batou")
+        version = importlib.metadata.version("batou")
     except importlib.metadata.PackageNotFoundError:
-        return "unknown"
+        version = "unknown"
+
+    # Runtime fallback: append git SHA only if hatch-vcs didn't already add one
+    # (hatch-vcs versions contain "+" with local scheme)
+    if "+" in version:
+        return version
+
+    # Try to append git short SHA for development builds
+    try:
+        package_dir = Path(batou.__file__).resolve().parent
+        # Walk up to find .git directory (project root)
+        git_dir = package_dir
+        while git_dir.parent != git_dir:
+            if (git_dir / ".git").exists():
+                break
+            git_dir = git_dir.parent
+        else:
+            # No .git found
+            return version
+
+        result = subprocess.run(
+            ["git", "describe", "--always", "--dirty"],
+            cwd=git_dir,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            git_sha = result.stdout.strip()
+            if git_sha:
+                return f"{version}+{git_sha}"
+    except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+
+    return version
 
 
 def print_version() -> None:
