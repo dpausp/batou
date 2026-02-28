@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "batou"
-version = "2.7.0.dev5"
+version = "3.0.0.dev0"
 description = "A utility for automating multi-host, multi-environment software builds and deployments."
 readme = "README.md"
 license = "BSD-2-Clause"

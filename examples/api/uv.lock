@@ -24,7 +24,7 @@ requires-dist = [{ name = "batou", editable = "../../" }]
 
 [[package]]
 name = "batou"
-version = "2.7.0.dev5"
+version = "3.0.0.dev0"
 source = { editable = "../../" }
 dependencies = [
     { name = "configupdater" },
@@ -44,7 +44,9 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "bcrypt", marker = "extra == 'pyrage'" },
     { name = "configupdater", specifier = ">=3.2" },
+    { name = "cryptography", marker = "extra == 'pyrage'" },
     { name = "execnet", specifier = ">=1.8.1" },
     { name = "importlib-metadata" },
     { name = "importlib-resources" },
@@ -52,12 +54,14 @@ requires-dist = [
     { name = "py", specifier = ">=1.11.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
+    { name = "pyrage", marker = "extra == 'pyrage'" },
     { name = "pyyaml" },
     { name = "remote-pdb" },
     { name = "requests" },
     { name = "rich" },
     { name = "setuptools", specifier = ">=66.1.0" },
 ]
+provides-extras = ["pyrage"]
 
 [package.metadata.requires-dev]
 batommel = [
@@ -66,11 +70,15 @@ batommel = [
 ]
 dev = [
     { name = "mock" },
+    { name = "pyrage-stubs", specifier = ">=1.3.1" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-instafail" },
     { name = "pytest-patterns", specifier = ">=0.3.0" },
+    { name = "pytest-ruff" },
     { name = "pytest-timeout" },
+    { name = "pytest-ty" },
+    { name = "pytest-xdist" },
     { name = "recommonmark" },
     { name = "rtoml" },
     { name = "ruff" },
@@ -90,11 +98,15 @@ lint = [
 ]
 test = [
     { name = "mock" },
+    { name = "pyrage-stubs", specifier = ">=1.3.1" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-instafail" },
     { name = "pytest-patterns", specifier = ">=0.3.0" },
+    { name = "pytest-ruff" },
     { name = "pytest-timeout" },
+    { name = "pytest-ty" },
+    { name = "pytest-xdist" },
 ]
 
 [[package]]
