@@ -22,12 +22,13 @@ def format_version(color: bool = True) -> str:
 
     Returns formatted string:
     - Release: 2.6.2
-    - Dev with timestamp: 2.6.2-dev145 (git rev: g36bbe20a3, committed at 2026-02-28 19:00:06)
-    - Dev without timestamp: 2.6.2-dev147 (git rev: g3c7bbc6e6)
+    - Dev with timestamp: 2.6.2-dev145 (git rev: 36bbe20a3, committed at 2026-02-28 19:00:06)
+    - Dev without timestamp: 2.6.2-dev147 (git rev: 3c7bbc6e6)
     """
     version = get_version()
 
     # Pattern: version+g<sha>[.d<timestamp>][.dirty]
+    # 'g' prefix from git describe is stripped from output
     # Timestamp is optional - hatch-vcs may not always include it
     match = re.match(r"^([^+]+)\+([gd][a-f0-9]+)(?:\.d(\d{14}))?(?:\.dirty)?$", version)
 
@@ -36,7 +37,7 @@ def format_version(color: bool = True) -> str:
         return version
 
     base_version = match.group(1)
-    git_rev = match.group(2)
+    git_rev = match.group(2).lstrip("g")  # Remove 'g' prefix from git describe
     timestamp_str = match.group(3)  # May be None
 
     # Build optional timestamp part
