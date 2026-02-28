@@ -19,7 +19,7 @@ def main(args: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Display all available debug settings."
     )
-    parser.parse_args(args)
+    parser.parse_args(args or [])
 
     settings_info = debug_settings.describe()
 
