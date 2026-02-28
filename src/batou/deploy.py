@@ -142,28 +142,30 @@ class Deployment:
     def load(self):
         output.section("Preparing")
 
-        output.step(
-            "main",
-            f"Loading environment `{self.environment.name}`...",
-            icon="📦",
-        )
-        self.environment.load()
+        with self.timer.step("load"):
+            output.step(
+                "main",
+                f"Loading environment `{self.environment.name}`...",
+                icon="📦",
+            )
+            self.environment.load()
 
-        if self.jobs is not None:
-            self.jobs = self.jobs
-        elif self.environment.jobs is not None:
-            self.jobs = int(self.environment.jobs)
-        else:
-            self.jobs = 1
-        output.step("main", f"Number of jobs: {self.jobs}", debug=True, icon="⚙️")
+            if self.jobs is not None:
+                self.jobs = self.jobs
+            elif self.environment.jobs is not None:
+                self.jobs = int(self.environment.jobs)
+            else:
+                self.jobs = 1
+            output.step("main", f"Number of jobs: {self.jobs}", debug=True, icon="⚙️")
 
-        # This is located here to avoid duplicating the verification check
-        # when loading the repository on the remote environment object.
-        output.step("main", "Verifying repository ...", icon="🔍")
-        self.environment.repository.verify()
+            # This is located here to avoid duplicating the verification check
+            # when loading the repository on the remote environment object.
+            output.step("main", "Verifying repository ...", icon="🔍")
+            self.environment.repository.verify()
 
-        output.step("main", "Loading secrets ...", icon="🔑")
-        self.environment.load_secrets()
+        with self.timer.step("secrets"):
+            output.step("main", "Loading secrets ...", icon="🔑")
+            self.environment.load_secrets()
 
     def provision(self):
         if not self.environment.provisioners:
@@ -351,10 +353,12 @@ class Deployment:
             node.summarize()
 
         if self.consistency_only:
-            output.annotate(f"Consistency check took {self.timer.humanize('total')}")
+            output.annotate(
+                f"Consistency check took {self.timer.humanize('total', 'load', 'secrets')}"
+            )
         else:
             output.annotate(
-                f"Deployment took {self.timer.humanize('total', 'connect', 'deploy')}"
+                f"Deployment took {self.timer.humanize('total', 'load', 'secrets', 'connect', 'deploy')}"
             )
 
         # # Debugging/profiling
