@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from batou import ConfigurationError, ReportingException, SilentConfigurationError
 from batou._output import TerminalBackend, output
 from batou.debug.settings import get_debug_settings
+from batou.secrets.encryption import get_backend_name
 from batou.version import format_version, is_dev_version
 
 from .debug.fd_tracker import FileDescriptorTracker
@@ -173,7 +174,11 @@ class Deployment:
             self.environment.repository.verify()
 
         with self.timer.step("secrets"):
-            output.step("main", "Loading secrets ...", icon="🔑")
+            output.step(
+                "main",
+                f"Loading secrets (using {get_backend_name()} backend) ...",
+                icon="🔑",
+            )
             self.environment.load_secrets()
 
     def provision(self):

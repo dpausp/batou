@@ -1,8 +1,6 @@
 import importlib
 import sys
 
-from batou import output
-
 USE_LEGACY = None
 _encrypt_module = None
 _backend_name = None
@@ -31,8 +29,6 @@ def _pick_module():
         # Fall back to shellout if pyrage or its dependencies are missing
         _encrypt_module = importlib.import_module(".age_shellout", __name__)
         _backend_name = "age (shellout)"
-
-    output.step("secrets", f"Using {_backend_name} backend", icon="🔐")
 
     return _encrypt_module
 
