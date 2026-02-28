@@ -54,3 +54,5 @@ batou_fd_track_*.txt
 monkeytype.sqlite3
 .pymon
 pytestdebug.log
+/dist/
+uv.lock
