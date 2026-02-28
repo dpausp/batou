@@ -3,10 +3,14 @@ import errno
 import fcntl
 import os
 import pathlib
-import pty
 import subprocess
 import sys
 import tempfile
+
+try:
+    import pty
+except ImportError:
+    pty = None  # type: ignore[invalid-assignment]
 
 from configupdater import ConfigUpdater
 
@@ -304,6 +308,12 @@ class AGEEncryptedFile(EncryptedFile):
 
                 if debug:
                     print(f"Running `{args}`", file=sys.stderr)
+
+                if pty is None:
+                    raise RuntimeError(
+                        "pty module not available - age shellout encryption "
+                        "requires pty. Install pyrage for native AGE support."
+                    )
 
                 child_pid, fd = pty.fork()
 

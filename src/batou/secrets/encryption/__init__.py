@@ -1,5 +1,4 @@
 import importlib
-import importlib.util
 import sys
 
 USE_LEGACY = None
@@ -12,14 +11,14 @@ def _pick_module():
     if _encrypt_module:
         return _encrypt_module
 
-    if USE_LEGACY:
-        module_hint = ".age_shellout"
-    elif importlib.util.find_spec("pyrage") is not None:
-        module_hint = ".pyrage_encryption"
-    else:
-        module_hint = ".age_shellout"
+    module_hint = ".age_shellout" if USE_LEGACY else ".pyrage_encryption"
 
-    _encrypt_module = importlib.import_module(module_hint, __name__)
+    try:
+        _encrypt_module = importlib.import_module(module_hint, __name__)
+    except ImportError:
+        # Fall back to shellout if pyrage or its dependencies are missing
+        _encrypt_module = importlib.import_module(".age_shellout", __name__)
+
     return _encrypt_module
 
 
