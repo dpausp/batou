@@ -1,9 +1,10 @@
 import argparse
-import importlib.metadata
 import os
 import os.path
 import sys
 import textwrap
+
+from rich.console import Console
 
 import batou
 import batou.debug.cli
@@ -14,23 +15,26 @@ import batou.secrets.encryption
 import batou.secrets.manage
 from batou._output import TerminalBackend, output
 from batou.utils import find_basedir
+from batou.version import format_version, get_version, is_dev_version
 
 
-def _get_version() -> str:
-    try:
-        return importlib.metadata.version("batou")
-    except importlib.metadata.PackageNotFoundError:
-        return "unknown"
+# Backwards compatibility aliases
+_get_version = get_version
+_format_version = format_version
+_is_dev_version = is_dev_version
 
 
 def print_version() -> None:
-    print(_get_version())
+    """Print formatted version with git rev and timestamp."""
+    console = Console()
+    formatted = _format_version(color=True)
+    console.print(formatted, no_wrap=True)
     sys.exit(0)
 
 
 def main(args: list | None = None) -> None:
     os.chdir(find_basedir())
-    version = _get_version()
+    version = _format_version(color=False)
     parser = argparse.ArgumentParser(
         description=(
             f"batou v{version}: multi-(host|component|environment|version|platform) deployment"
