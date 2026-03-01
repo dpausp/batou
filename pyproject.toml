@@ -59,6 +59,7 @@ pyrage = [
     "cryptography",
     "bcrypt",
 ]
+batommel = ["typer", "rtoml"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/batou"]
@@ -94,11 +95,9 @@ test = [
     "pyrage-stubs>=1.3.1",
 ]
 lint = ["ruff", "ty", "types-PyYAML", "types-requests"]
-batommel = ["typer", "rtoml"]
 dev = [
     { include-group = "test" },
     { include-group = "lint" },
-    { include-group = "batommel" },
     "tox>=4.0",
     "tox-uv",
     "sphinx",
@@ -117,14 +116,15 @@ package = "wheel"
 runner = "uv-venv-lock-runner"
 setenv = {APPENV_BEST_PYTHON = "{envpython}", COLUMNS = "80", IN_TOX_TEST = "1"}
 depends = ["fix"]
-dependency_groups = ["test", "batommel"]
+dependency_groups = ["test"]
+extras = ["batommel", "pyrage"]
 commands = [["pytest", "--basetemp={env_tmp_dir}", { replace = "posargs", extend = true }]]
 
 [tool.tox.env.fix]
 skip_install = true
 depends = []
 description = "Format, lint, fix whitespace, type-check"
-dependency_groups = ["test", "lint", "batommel"]
+dependency_groups = ["test", "lint"]
 commands = [
     ["ruff", "check", "--fix", "."],
     ["ruff", "format", "."],
