@@ -11,6 +11,7 @@ from batou import ConfigurationError, ReportingException, SilentConfigurationErr
 from batou._output import TerminalBackend, output
 from batou.debug.settings import get_debug_settings
 from batou.secrets.encryption import get_backend_name
+from batou.version import is_dev_version
 
 from .debug.fd_tracker import FileDescriptorTracker
 from .debug.profiler import Profiler
@@ -388,7 +389,13 @@ def main(
     provision_rebuild,
 ):
     output.backend = TerminalBackend()
-    output.line(self_id())
+
+    # Show version with red highlight for dev versions
+    version_line = self_id()
+    if is_dev_version():
+        output.line(version_line, red=True)
+    else:
+        output.line(version_line)
 
     # Log expert/debug flags
     get_debug_settings().show()

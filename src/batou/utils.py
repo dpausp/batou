@@ -67,7 +67,7 @@ def self_id():
 
     # Add dev warning prefix for development versions
     if is_dev_version():
-        result = f"⚠️  {result} [DEV]"
+        result = f"DEVELOPMENT VERSION: {result}"
 
     return result
 
