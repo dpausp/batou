@@ -399,7 +399,9 @@ def git_update_working_copy(branch):
 
 def build_batou():
     os.chdir(deployment_base)
-    cmd("./batou --help")
+    stdout, stderr = cmd("./batou version")
+    if Output.enable_debug:
+        output.annotate(stdout.decode("utf-8", errors="replace").strip())
 
 
 def setup_deployment(*args):
