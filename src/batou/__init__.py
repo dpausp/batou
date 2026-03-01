@@ -283,7 +283,7 @@ class ConversionError(ConfigurationError):
         )
 
         # Show source location in debug mode
-        if output.debug:
+        if output.enable_debug:
             import inspect
             import linecache
 
@@ -619,7 +619,7 @@ class ComponentLoadingError(ConfigurationError):
         output.annotate(self.traceback, red=True)
 
         # Show full traceback in debug mode
-        if output.debug:
+        if output.enable_debug:
             output.annotate("\n" + "=" * 60, red=True)
             output.annotate("FULL TRACEBACK (debug mode):", red=True)
             output.annotate("=" * 60, red=True)
@@ -934,7 +934,7 @@ class IPAddressConfigurationError(ConfigurationError):
         )
 
         # Show where Address was instantiated in debug mode
-        if output.debug:
+        if output.enable_debug:
             import inspect
             import linecache
 
