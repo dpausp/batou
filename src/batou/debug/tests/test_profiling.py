@@ -1,7 +1,6 @@
 """Tests for RemoteProfiler class."""
 
 import glob
-import os
 import tempfile
 from unittest.mock import patch
 

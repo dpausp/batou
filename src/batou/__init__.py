@@ -290,7 +290,6 @@ class ConversionError(ConfigurationError):
             # Walk the stack to find where the attribute was set
             for frame_info in inspect.stack():
                 # Look for attribute assignment in component code
-                frame = frame_info.frame
                 code_context = frame_info.code_context
                 lineno = frame_info.lineno
                 filename = frame_info.filename

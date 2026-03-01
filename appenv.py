@@ -803,7 +803,7 @@ class AppEnv:
                 print(f"pyproject.toml already has [project] section in {target}.")
                 print("Nothing to do.")
                 return
-            print(f"Adding [project] section to existing pyproject.toml.\n")
+            print("Adding [project] section to existing pyproject.toml.\n")
 
         if not requirements_file.exists():
             print(f"No requirements.txt found in {target}.")
@@ -1189,11 +1189,11 @@ requires-python = ">={python_version}"
         if lock_file.exists():
             if verbose:
                 print(f"Reading existing lockfile: {lock_file}")
-            old_lines = set(
+            old_lines = {
                 stripped
                 for line in lock_file.read_text().splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
         if args and args.diff:
             print("Checking lockfile changes ...")
@@ -1222,11 +1222,11 @@ requires-python = ">={python_version}"
 
             # Read new content
             new_content = lock_file.read_text() if lock_file.exists() else ""
-            new_lines = set(
+            new_lines = {
                 stripped
                 for line in new_content.splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            )
+            }
 
             # Show summary
             added = new_lines - old_lines

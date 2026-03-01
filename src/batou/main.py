@@ -17,7 +17,6 @@ from batou._output import TerminalBackend, output
 from batou.utils import find_basedir
 from batou.version import format_version, get_version, is_dev_version
 
-
 # Backwards compatibility aliases
 _get_version = get_version
 _format_version = format_version
