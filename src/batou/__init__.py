@@ -281,9 +281,45 @@ class ConversionError(ConfigurationError):
             f"{self.conversion_name}({self.value_repr})",
             red=True,
         )
-        # TODO provide traceback in debug output
-        # provide file, line number, excerpt of attribute definition
-        # see: https://github.com/flyingcircusio/batou/issues/316
+
+        # Show source location in debug mode
+        if output.debug:
+            import inspect
+            import linecache
+
+            # Walk the stack to find where the attribute was set
+            for frame_info in inspect.stack():
+                # Look for attribute assignment in component code
+                frame = frame_info.frame
+                code_context = frame_info.code_context
+                lineno = frame_info.lineno
+                filename = frame_info.filename
+
+                # Skip internal batou frames
+                if "batou/" in filename and "__init__.py" in filename:
+                    continue
+
+                # Check if this frame contains attribute access
+                if code_context and self.key in "".join(code_context):
+                    output.annotate("\n" + "=" * 60, red=True)
+                    output.annotate("ATTRIBUTE DEFINITION (debug mode):", red=True)
+                    output.annotate("=" * 60, red=True)
+                    output.tabular("File", f"{filename}:{lineno}", red=True)
+
+                    # Show source context
+                    start_line = max(1, lineno - 2)
+                    end_line = lineno + 2
+                    output.annotate("\nSource context:", red=True)
+                    for i in range(start_line, end_line + 1):
+                        line = linecache.getline(filename, i)
+                        if line:
+                            marker = ">>>" if i == lineno else "   "
+                            output.annotate(
+                                f"{marker} {i:4d} | {line.rstrip()}", red=True
+                            )
+
+                    output.annotate("=" * 60 + "\n", red=True)
+                    break
 
 
 class SilentConfigurationError(Exception):
@@ -566,6 +602,7 @@ class ComponentLoadingError(ConfigurationError):
     def from_context(cls, filename, exception, tb):
         self = cls()
         self.filename = filename
+        self.exception = exception
         self.exception_str = str(exception)
 
         self.traceback = prepare_traceback(tb)
@@ -581,8 +618,18 @@ class ComponentLoadingError(ConfigurationError):
         output.annotate("Traceback (simplified, most recent call last):", red=True)
         output.annotate(self.traceback, red=True)
 
-        # TODO provide traceback in debug output
-        # see: https://github.com/flyingcircusio/batou/issues/316
+        # Show full traceback in debug mode
+        if output.debug:
+            output.annotate("\n" + "=" * 60, red=True)
+            output.annotate("FULL TRACEBACK (debug mode):", red=True)
+            output.annotate("=" * 60, red=True)
+            full_tb = traceback.format_exception(
+                type(self.exception), self.exception, self.exception.__traceback__
+            )
+            for line in "".join(full_tb).split("\n"):
+                if line.strip():
+                    output.annotate(f"  {line}", red=True)
+            output.annotate("=" * 60 + "\n", red=True)
 
 
 class MissingComponent(ConfigurationError):
@@ -886,8 +933,45 @@ class IPAddressConfigurationError(ConfigurationError):
             red=True,
         )
 
-        # TODO provide traceback/line numbers/excerpt
-        # see: https://github.com/flyingcircusio/batou/issues/316
+        # Show where Address was instantiated in debug mode
+        if output.debug:
+            import inspect
+            import linecache
+
+            # Walk the stack to find Address instantiation
+            for frame_info in inspect.stack():
+                frame = frame_info.frame
+                filename = frame_info.filename
+                lineno = frame_info.lineno
+
+                # Skip internal batou frames
+                if "batou/" in filename and (
+                    "__init__.py" in filename or "utils.py" in filename
+                ):
+                    continue
+
+                # Check if Address was instantiated in this frame
+                local_vars = frame.f_locals
+                if any("Address" in str(v) for v in local_vars.values()):
+                    output.annotate("\n" + "=" * 60, red=True)
+                    output.annotate("ADDRESS INSTANTIATION (debug mode):", red=True)
+                    output.annotate("=" * 60, red=True)
+                    output.tabular("File", f"{filename}:{lineno}", red=True)
+
+                    # Show source context
+                    start_line = max(1, lineno - 2)
+                    end_line = lineno + 2
+                    output.annotate("\nSource context:", red=True)
+                    for i in range(start_line, end_line + 1):
+                        line = linecache.getline(filename, i)
+                        if line:
+                            marker = ">>>" if i == lineno else "   "
+                            output.annotate(
+                                f"{marker} {i:4d} | {line.rstrip()}", red=True
+                            )
+
+                    output.annotate("=" * 60 + "\n", red=True)
+                    break
 
 
 class TemplatingError(ReportingException):
