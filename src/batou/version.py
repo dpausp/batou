@@ -10,7 +10,7 @@ def get_version() -> str:
     try:
         return importlib.metadata.version("batou")
     except importlib.metadata.PackageNotFoundError:
-        return "unknown"
+        return "3.0.0.dev0"
 
 
 def format_version(color: bool = True) -> str:

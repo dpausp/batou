@@ -78,7 +78,7 @@ include = ["/src", "/README.md", "/LICENSE"]
 
 [tool.hatch.version]
 source = "vcs"
-raw-options = { version_scheme = "no-guess-dev", local_scheme = "node-and-timestamp", fallback_version = "2.6.2" }
+raw-options = { version_scheme = "no-guess-dev", local_scheme = "node-and-timestamp", fallback_version = "3.0.0.dev0" }
 
 [dependency-groups]
 test = [
