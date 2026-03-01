@@ -12,7 +12,7 @@ from configupdater import ConfigUpdater
 import pyrage
 from batou import AgeCallError, FileLockedError, GPGCallError
 from cryptography.hazmat.primitives import (
-    serialization,  # type: ignore[unresolved-import]
+    serialization,
 )
 
 debug = False
