@@ -11,7 +11,6 @@ from batou import ConfigurationError, ReportingException, SilentConfigurationErr
 from batou._output import TerminalBackend, output
 from batou.debug.settings import get_debug_settings
 from batou.secrets.encryption import get_backend_name
-from batou.version import format_version, is_dev_version
 
 from .debug.fd_tracker import FileDescriptorTracker
 from .debug.profiler import Profiler
@@ -143,14 +142,6 @@ class Deployment:
 
     def load(self):
         output.section("Preparing")
-
-        if is_dev_version():
-            output.step(
-                "main",
-                f"DEVELOPMENT VERSION: {format_version(color=False)}",
-                red=True,
-                icon="⚠️",
-            )
 
         with self.timer.step("load"):
             output.step(
