@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import cast
 
@@ -36,7 +37,7 @@ def parse_requires_python(pyproject_path):
 
     Returns tuple of (min_version, max_version) where max may be None.
     Handles patterns like:
-        ">=3.8" → ("3.8", None)  # noqa: ERA001
+        ">=3.13" → ("3.13", None)
         ">=3.11,<3.15" → ("3.11", "3.15")
         ">=3.11.0,<3.15.0" → ("3.11", "3.15")
     """
@@ -76,6 +77,41 @@ def find_available_pythons():
     return pythons
 
 
+def version_satisfies_constraints(version, min_version, max_version=None):
+    """Check if a version satisfies min/max constraints.
+
+    Args:
+        version: Version string like "3.10" or "3.10.1"
+        min_version: Minimum version string (inclusive)
+        max_version: Maximum version string (exclusive), optional
+
+    Returns:
+        True if version >= min_version and (version < max_version if max set)
+
+    Examples:
+        >>> version_satisfies_constraints("3.12", "3.10")
+        True
+        >>> version_satisfies_constraints("3.9", "3.10")
+        False
+        >>> version_satisfies_constraints("3.14", "3.10", "3.14")
+        False
+        >>> version_satisfies_constraints("3.13", "3.10", "3.14")
+        True
+    """
+    ver_parts = [int(p) for p in version.split(".")]
+    min_parts = [int(p) for p in min_version.split(".")]
+
+    if ver_parts < min_parts:
+        return False
+
+    if max_version is not None:
+        max_parts = [int(p) for p in max_version.split(".")]
+        if ver_parts >= max_parts:
+            return False
+
+    return True
+
+
 def ensure_best_python(base):
     """Ensure best Python for pyproject.toml workflow.
 
@@ -98,20 +134,8 @@ def ensure_best_python(base):
     current_python = str(Path(sys.executable).resolve())
 
     for version, path in available:
-        ver_parts = [int(p) for p in version.split(".")]
-
-        # Check minimum version
-        min_parts = [int(p) for p in min_version.split(".")]
-        if ver_parts < min_parts:
-            # Too old, skip
+        if not version_satisfies_constraints(version, min_version, max_version):
             continue
-
-        # Check maximum version (if specified)
-        if max_version is not None:
-            max_parts = [int(p) for p in max_version.split(".")]
-            if ver_parts >= max_parts:
-                # Too new (max is exclusive), skip
-                continue
 
         path = str(Path(path).resolve())
         if path == current_python:
@@ -165,8 +189,9 @@ def cmd(c, merge_stderr=True, quiet=False, cwd=None):
         stderr = subprocess.STDOUT if merge_stderr else None
         return subprocess.check_output(cmd_list, shell=is_shell, stderr=stderr, cwd=cwd)
     except subprocess.CalledProcessError as e:
-        print(f"{c} returned with exit code {e.returncode}")
-        print(e.output.decode("utf-8", "replace"))
+        if not quiet:
+            print(f"{c} returned with exit code {e.returncode}")
+            print(e.output.decode("utf-8", "replace"))
         raise ValueError(e.output.decode("utf-8", "replace")) from e
 
 
@@ -326,6 +351,7 @@ def get_uv_bin(base=None):
 
         # Check if version is recent enough (>= 0.5)
         if result.returncode == 0 and uv_local.exists():
+            # SPEC: SRS-F004-uv-version-check - Handle nix-built uv check failures
             try:
                 version_result = subprocess.run(
                     [str(uv_local), "--version"],
@@ -498,7 +524,7 @@ def extract_package_name_from_path(path, base_dir):
 
 class AppEnv:
     def __init__(self, base, original_cwd):
-        self.base = Path(base)
+        self.base = Path(base).resolve()
         self.appenv_dir = self.base / ".appenv"
         self.original_cwd = Path(original_cwd)
 
@@ -555,6 +581,30 @@ class AppEnv:
         )
         p.set_defaults(func=self.run_uv)
 
+        # profiling subcommand with list/show
+        p = subparsers.add_parser("profiling", help="Manage profiling data.")
+        profiling_subparsers = p.add_subparsers(dest="profiling_command")
+
+        p_list = profiling_subparsers.add_parser("list", help="List recent profiles.")
+        p_list.add_argument(
+            "-n", "--count", type=int, default=10, help="Number of profiles to show."
+        )
+        p_list.set_defaults(func=self.profiling_list)
+
+        p_show = profiling_subparsers.add_parser(
+            "show", help="Show latest profile with pstats."
+        )
+        p_show.add_argument("file", nargs="?", help="Specific profile file to show.")
+        p_show.set_defaults(func=self.profiling_show)
+
+        p_snakeviz = profiling_subparsers.add_parser(
+            "snakeviz", help="Show latest profile with snakeviz (interactive web UI)."
+        )
+        p_snakeviz.add_argument(
+            "file", nargs="?", help="Specific profile file to show."
+        )
+        p_snakeviz.set_defaults(func=self.profiling_snakeviz)
+
         args, remaining = parser.parse_known_args()
 
         if not hasattr(args, "func"):
@@ -568,7 +618,32 @@ class AppEnv:
         argv = [str(cmd_path)] + argv
         os.environ["APPENV_BASEDIR"] = str(self.base)
         os.chdir(self.original_cwd)
-        os.execv(str(cmd_path), argv)
+
+        # Profiling support via APPENV_PROFILE=1
+        if os.environ.get("APPENV_PROFILE"):
+            if os.environ.get("APPENV_PROFILE_OUTPUT"):
+                profile_output = os.environ["APPENV_PROFILE_OUTPUT"]
+            else:
+                profiling_dir = self.appenv_dir / "profiling"
+                profiling_dir.mkdir(parents=True, exist_ok=True)
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                profile_output = str(profiling_dir / f"{command}-{timestamp}.prof")
+            print(f"Profile written to: {profile_output}")
+            venv_python = env_dir / "bin" / "python"
+            os.execv(
+                str(venv_python),
+                [
+                    str(venv_python),
+                    "-m",
+                    "cProfile",
+                    "-o",
+                    profile_output,
+                    str(cmd_path),
+                ]
+                + argv[1:],
+            )
+        else:
+            os.execv(str(cmd_path), argv)
 
     def prepare(self, args=None, remaining=None):
         os.chdir(self.base)
@@ -684,8 +759,6 @@ class AppEnv:
         if not command_name:
             command_name = "app"
 
-        description = input("Description []: ").strip()
-
         print("\nEnter dependencies (one per line, empty line to finish):")
         print(f"  Default: {command_name}")
         dependencies = []
@@ -697,13 +770,19 @@ class AppEnv:
         if not dependencies:
             dependencies = [command_name]
 
-        python_version = input("\nMinimum Python version [3.10]: ").strip()
+        project_name = input(f"\nProject name [{command_name}-app]: ").strip()
+        if not project_name:
+            project_name = f"{command_name}-app"
+
+        description = input("Description []: ").strip()
+
+        python_version = input("Minimum Python version [3.10]: ").strip()
         if not python_version:
             python_version = "3.10"
 
         self._create_pyproject(
             target=target,
-            project_name=command_name,
+            project_name=project_name,
             description=description,
             dependencies=dependencies,
             editable_sources={},
@@ -717,10 +796,14 @@ class AppEnv:
         requirements_file = target / "requirements.txt"
         pyproject_file = target / PYPROJECT_TOML
 
+        existing_pyproject = None
         if pyproject_file.exists():
-            print(f"pyproject.toml already exists in {target}.")
-            print("Nothing to do.")
-            return
+            existing_pyproject = pyproject_file.read_text()
+            if self._has_project_section(existing_pyproject):
+                print(f"pyproject.toml already has [project] section in {target}.")
+                print("Nothing to do.")
+                return
+            print(f"Adding [project] section to existing pyproject.toml.\n")
 
         if not requirements_file.exists():
             print(f"No requirements.txt found in {target}.")
@@ -807,10 +890,20 @@ class AppEnv:
             editable_sources=editable_sources,
             python_version=python_version,
             command_name=None,  # Find existing symlinks
+            existing_content=existing_pyproject,
         )
         print(
             "\nrequirements.txt kept as legacy. Delete it when migration is complete."
         )
+
+    @staticmethod
+    def _has_project_section(content):
+        """Check if TOML content has a [project] section."""
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped == "[project]" or stripped.startswith("[project."):
+                return True
+        return False
 
     def _create_pyproject(
         self,
@@ -821,19 +914,20 @@ class AppEnv:
         editable_sources,
         python_version,
         command_name,
+        existing_content=None,
     ):
         """Create pyproject.toml, appenv bootstrap, symlink, and lockfile."""
         pyproject_file = target / PYPROJECT_TOML
         appenv_script = target / "appenv"
 
-        # Generate pyproject.toml
+        # Generate [project] section
         if dependencies:
             deps_toml = ",\n    ".join(f'"{dep}"' for dep in dependencies)
             deps_block = f"[\n    {deps_toml},\n]"
         else:
             deps_block = "[]"
 
-        pyproject_content = f"""[project]
+        project_section = f"""[project]
 name = "{project_name}"
 version = "0.1.0"
 description = "{description}"
@@ -841,6 +935,8 @@ dependencies = {deps_block}
 requires-python = ">={python_version}"
 """
 
+        # Generate [tool.uv.sources] section if needed
+        sources_section = ""
         if editable_sources:
             sources_lines = ["[tool.uv.sources]"]
             for pkg_name, src_config in sorted(editable_sources.items()):
@@ -848,10 +944,20 @@ requires-python = ">={python_version}"
                 sources_lines.append(
                     f'{pkg_name} = {{ path = "{path}", editable = true }}'
                 )
-            pyproject_content += "\n" + "\n".join(sources_lines) + "\n"
+            sources_section = "\n" + "\n".join(sources_lines) + "\n"
+
+        # Merge with existing content or create new
+        if existing_content:
+            # Ensure existing content ends with newline for clean merge
+            pyproject_content = existing_content.rstrip() + "\n\n" + project_section
+            if sources_section:
+                pyproject_content += sources_section
+            print(f"\nUpdated {PYPROJECT_TOML}")
+        else:
+            pyproject_content = project_section + sources_section
+            print(f"\nCreated {PYPROJECT_TOML}")
 
         pyproject_file.write_text(pyproject_content)
-        print(f"\nCreated {PYPROJECT_TOML}")
 
         # Create appenv bootstrap if needed
         if not appenv_script.exists():
@@ -915,6 +1021,106 @@ requires-python = ">={python_version}"
     def show_version(self, args=None, remaining=None):
         """Show appenv version."""
         print(f"appenv {__version__}")
+
+    def profiling_list(self, args, remaining=None):
+        """List recent profiling files."""
+        profiling_dir = self.appenv_dir / "profiling"
+        if not profiling_dir.exists():
+            print("No profiling data found.")
+            return
+
+        profiles = sorted(
+            profiling_dir.glob("*.prof"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+
+        if not profiles:
+            print("No profiling data found.")
+            return
+
+        count = min(args.count, len(profiles))
+        print(f"Showing {count} of {len(profiles)} profiles:\n")
+        for i, profile in enumerate(profiles[:count], 1):
+            mtime = datetime.fromtimestamp(profile.stat().st_mtime)
+            size = profile.stat().st_size
+            print(
+                f"  {i:3}. {profile.name}  ({size:,} bytes, {mtime:%Y-%m-%d %H:%M:%S})"
+            )
+
+    def profiling_show(self, args, remaining=None):
+        """Show profile with pstats."""
+        profiling_dir = self.appenv_dir / "profiling"
+
+        if args.file:
+            profile_path = profiling_dir / args.file
+            if not profile_path.exists():
+                print(f"Profile not found: {args.file}")
+                sys.exit(EXIT_CODE_NOINPUT)
+        else:
+            if not profiling_dir.exists():
+                print("No profiling data found.")
+                sys.exit(EXIT_CODE_NOINPUT)
+
+            profiles = sorted(
+                profiling_dir.glob("*.prof"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+
+            if not profiles:
+                print("No profiling data found.")
+                sys.exit(EXIT_CODE_NOINPUT)
+
+            profile_path = profiles[0]
+            print(f"Showing latest profile: {profile_path.name}\n")
+
+        import pstats
+
+        stats = pstats.Stats(str(profile_path))
+        stats.sort_stats("cumulative")
+        stats.print_stats(20)
+
+    def profiling_snakeviz(self, args, remaining=None):
+        """Show profile with snakeviz (interactive web UI)."""
+        profiling_dir = self.appenv_dir / "profiling"
+
+        if args.file:
+            profile_path = profiling_dir / args.file
+            if not profile_path.exists():
+                print(f"Profile not found: {args.file}")
+                sys.exit(EXIT_CODE_NOINPUT)
+        else:
+            if not profiling_dir.exists():
+                print("No profiling data found.")
+                sys.exit(EXIT_CODE_NOINPUT)
+
+            profiles = sorted(
+                profiling_dir.glob("*.prof"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+
+            if not profiles:
+                print("No profiling data found.")
+                sys.exit(EXIT_CODE_NOINPUT)
+
+            profile_path = profiles[0]
+            print(f"Opening latest profile: {profile_path.name}")
+
+        os.execv(
+            sys.executable,
+            [
+                sys.executable,
+                "-m",
+                "uv",
+                "run",
+                "--with",
+                "snakeviz",
+                "snakeviz",
+                str(profile_path),
+            ],
+        )
 
     def reset(self, args=None, remaining=None):
         """Reset all virtual environments."""
@@ -983,11 +1189,11 @@ requires-python = ">={python_version}"
         if lock_file.exists():
             if verbose:
                 print(f"Reading existing lockfile: {lock_file}")
-            old_lines = {
+            old_lines = set(
                 stripped
                 for line in lock_file.read_text().splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            }
+            )
 
         if args and args.diff:
             print("Checking lockfile changes ...")
@@ -1016,11 +1222,11 @@ requires-python = ">={python_version}"
 
             # Read new content
             new_content = lock_file.read_text() if lock_file.exists() else ""
-            new_lines = {
+            new_lines = set(
                 stripped
                 for line in new_content.splitlines()
                 if (stripped := line.strip()) and not stripped.startswith("#")
-            }
+            )
 
             # Show summary
             added = new_lines - old_lines
