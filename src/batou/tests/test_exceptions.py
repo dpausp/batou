@@ -98,7 +98,7 @@ def test_component_loading_error_debug_output():
     test_backend = _TestBackend()
     with mock.patch.object(output, "backend", test_backend):
         # Test normal mode (simplified traceback)
-        output.debug = False
+        output.enable_debug = False
         error.report()
         normal_output = test_backend.output
         assert "Test inner error" in normal_output
@@ -109,7 +109,7 @@ def test_component_loading_error_debug_output():
         test_backend.output = ""
 
         # Test debug mode (full traceback)
-        output.debug = True
+        output.enable_debug = True
         error.report()
         debug_output = test_backend.output
         assert "Test inner error" in debug_output
