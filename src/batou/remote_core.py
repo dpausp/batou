@@ -122,6 +122,47 @@ class Output:
         self.flush_buffer()
         self.step("WARN", message, yellow=True)
 
+    def debug_section(self, title: str, data: dict, debug=True):
+        """Show structured debug information in a formatted section.
+
+        Args:
+            title: Section title
+            data: Dictionary with debug data (supports nested dicts and lists)
+            debug: Only show if debug mode is enabled (default: True)
+        """
+        if debug and not self.enable_debug:
+            return
+        self.flush_buffer()
+
+        self.section(f"DEBUG: {title}", debug=True)
+        self._render_debug_data(data, indent=0)
+        self.backend.sep("=", "", debug=True)
+
+    def _render_debug_data(self, data: dict, indent: int = 0):
+        """Recursively render debug data with proper indentation."""
+        prefix = "  " * indent
+
+        for key, value in data.items():
+            if isinstance(value, dict):
+                self.annotate(f"{prefix}{key}:", debug=True)
+                self._render_debug_data(value, indent + 1)
+            elif isinstance(value, (list, tuple)):
+                self.annotate(f"{prefix}{key}:", debug=True)
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        self.annotate(f"{prefix}  [{i}]:", debug=True)
+                        self._render_debug_data(item, indent + 2)
+                    else:
+                        self.annotate(f"{prefix}  [{i}] {item}", debug=True)
+            elif isinstance(value, str) and "\n" in value:
+                # Multi-line string
+                self.tabular(f"{prefix}{key}", "", debug=True)
+                for line in value.split("\n"):
+                    self.annotate(f"{prefix}    {line}", debug=True)
+            else:
+                # Simple value
+                self.tabular(f"{prefix}{key}", str(value), debug=True)
+
 
 class ChannelBackend:
     def __init__(self, channel):

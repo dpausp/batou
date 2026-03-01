@@ -1026,6 +1026,108 @@ class Component:
             return None
         return getattr(self, self.namevar, None)
 
+    @property
+    def breadcrumb_trail(self) -> list[dict]:
+        """Get full component hierarchy as structured data with source locations.
+
+        Returns:
+            List of dicts with component info, file paths, and line numbers.
+            Ordered from root to current component.
+
+        Example:
+            [
+                {
+                    "name": "MyApp",
+                    "file": "/path/to/component.py",
+                    "line": 15,
+                    "breadcrumb": "MyApp"
+                },
+                {
+                    "name": "Database",
+                    "file": "/path/to/component.py",
+                    "line": 42,
+                    "breadcrumb": "MyApp > Database('postgres')"
+                }
+            ]
+        """
+        trail = []
+        current = self
+
+        # Walk up the hierarchy
+        components = []
+        while isinstance(current, Component):
+            components.append(current)
+            current = current.parent
+
+        # Reverse to get root-to-current order
+        components.reverse()
+
+        for comp in components:
+            # Get source location
+            try:
+                source_file = inspect.getfile(comp.__class__)
+                source_lines = inspect.getsourcelines(comp.__class__)
+                line_number = source_lines[1]
+            except (TypeError, OSError):
+                # Fallback for built-in components or if source unavailable
+                source_file = comp.__class__.__module__
+                line_number = None
+
+            trail.append(
+                {
+                    "name": comp.__class__.__name__,
+                    "file": source_file,
+                    "line": line_number,
+                    "breadcrumb": comp._breadcrumb,
+                    "full_breadcrumb": comp._breadcrumbs,
+                }
+            )
+
+        return trail
+
+    def format_breadcrumb_trail(self, include_source: bool = False) -> str:
+        """Format breadcrumb trail for output.
+
+        Args:
+            include_source: Include file:line references (default: False, use output.debug if needed)
+
+        Returns:
+            Formatted string with component hierarchy
+
+        Example:
+            MyApp
+              → Database('postgres')
+                → Schema('main')
+        """
+        # If debug mode is enabled, always include source
+        if output.enable_debug:
+            include_source = True
+
+        lines = []
+        trail = self.breadcrumb_trail
+
+        for i, crumb in enumerate(trail):
+            indent = "  " * i
+            arrow = "→ " if i > 0 else ""
+            name = crumb["name"]
+
+            if crumb["breadcrumb"] != name:
+                # Has namevar
+                name = crumb["breadcrumb"]
+
+            line = f"{indent}{arrow}{name}"
+            lines.append(line)
+
+            if include_source and crumb["line"]:
+                # Show source location on next line
+                file_short = crumb["file"]
+                # Shorten common paths
+                if "site-packages/" in file_short:
+                    file_short = file_short.split("site-packages/")[-1]
+                lines.append(f"{indent}  {file_short}:{crumb['line']}")
+
+        return "\n".join(lines)
+
     def checksum(self, value=None):
         if getattr(self, "_checksum", None) is None:
             self._checksum = hashlib.new("sha256")
