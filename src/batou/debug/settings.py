@@ -29,7 +29,7 @@ class DebugSettings(BaseSettings):
     track_fds: Annotated[Literal[0, 1, 2], BeforeValidator(_int_to_literal)] = (
         0  # FD tracking verbosity level (0=disabled, 1=simple, 2=verbose)
     )
-    fd_output_dir: str = "/tmp/"  # Directory for FD tracking report files
+    fd_output_dir: str = "/tmp"  # Directory for FD tracking and profiling report files
 
     # Profiling
     profile: bool = False
