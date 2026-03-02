@@ -13,7 +13,6 @@ wheels = [
 
 [[package]]
 name = "batou"
-version = "3.0.0.dev0"
 source = { editable = "../../" }
 dependencies = [
     { name = "configupdater" },
@@ -48,15 +47,13 @@ requires-dist = [
     { name = "remote-pdb" },
     { name = "requests" },
     { name = "rich" },
+    { name = "rtoml", marker = "extra == 'batommel'" },
     { name = "setuptools", specifier = ">=66.1.0" },
+    { name = "typer", marker = "extra == 'batommel'" },
 ]
-provides-extras = ["pyrage"]
+provides-extras = ["batommel", "pyrage"]
 
 [package.metadata.requires-dev]
-batommel = [
-    { name = "rtoml" },
-    { name = "typer" },
-]
 dev = [
     { name = "mock" },
     { name = "pyrage-stubs", specifier = ">=1.3.1" },
@@ -69,13 +66,11 @@ dev = [
     { name = "pytest-ty" },
     { name = "pytest-xdist" },
     { name = "recommonmark" },
-    { name = "rtoml" },
     { name = "ruff" },
     { name = "sphinx" },
     { name = "tox", specifier = ">=4.0" },
     { name = "tox-uv" },
     { name = "ty" },
-    { name = "typer" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
 ]
