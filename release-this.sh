@@ -1,41 +1,36 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 if [ "$current_branch" != "main" ]; then
-    set +x
-    echo
-    echo
-    echo "ERROR: can only release from main. We are on $current_branch"
-    echo
+    echo "ERROR: can only release from main. We are on $current_branch" >&2
     exit 1
 fi
 
 changes=$(git status --porcelain)
 if [ -n "$changes" ]; then
-    set +x
-    echo
-    echo
-    echo "ERROR: there are changes."
-    echo
+    echo "ERROR: there are uncommitted changes." >&2
     git status
     exit 1
 fi
 
-cd $(dirname $0)
-chmod u+w bin/*ctivate* || true
-python3 -m venv .
-bin/pip install zest.releaser scriv
-bin/pip install -e .
+cd "$(dirname "$0")"
 
-bin/scriv collect
-sed  -i .orig '/- Nothing changed yet./ { N; d; } ' CHANGES.md
+# Collect changelog entries with scriv
+uvx scriv collect
+
+# Remove "Nothing changed yet" section (macOS/BSD sed compatible)
+sed -i '' '/- Nothing changed yet./ { N; d; }' CHANGES.md
+
 git add -A .
 git status
 PAGER= git diff --cached
-echo "Press enter to commit, Ctrl-C to abort."
-read
+
+echo "Press enter to commit changelog and start release, Ctrl-C to abort."
+read -r
+
 git commit -m "Prepare changelog for release"
 
-bin/fullrelease
+# Run fullrelease via uv
+uvx --from zest.releaser fullrelease
