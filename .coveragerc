@@ -1,6 +1,0 @@
-[run]
-branch = true
-source = batou
-
-[report]
-precision = 2
