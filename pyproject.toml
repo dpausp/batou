@@ -64,14 +64,18 @@ batommel = ["typer", "rtoml"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/batou"]
 artifacts = [
-    "src/batou/secrets/tests/fixture/gnupg/pubring.gpg",
-    "src/batou/secrets/tests/fixture/gnupg/secring.gpg",
-    "src/batou/secrets/tests/fixture/gnupg/trustdb.gpg",
-    "src/batou/secrets/tests/fixture/gnupg/.gpg-v21-migrated",
-    "src/batou/secrets/tests/fixture/gnupg/private-keys-v1.d/*.key",
-    "src/batou/secrets/tests/fixture/gnupg/crls.d/DIR.txt",
-    "src/batou/secrets/tests/fixture/age/id_ed25519",
-    "src/batou/secrets/tests/fixture/age/id_ed25519.pub",
+    # Init template for `batou init`
+    "src/batou/init-template/**/*",
+    # Test fixtures
+    "src/batou/tests/fixture/**/*",
+    "src/batou/secrets/tests/fixture/**/*",
+    # Resource templates
+    "src/batou/lib/resources/**/*",
+    # Additional data files
+    "src/batou/insecure-private.key",
+    "src/batou/**/*.txt",
+    "src/batou/**/*.in",
+    "src/batou/**/*.key",
 ]
 
 [tool.hatch.build.targets.sdist]
