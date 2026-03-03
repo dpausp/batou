@@ -2,7 +2,7 @@
 
 from typing import Annotated, Literal
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,18 +22,34 @@ class DebugSettings(BaseSettings):
     """Batou expert/debug configuration settings from environment variables."""
 
     # Diff control
-    show_diff: Literal["full", "summary", "none"] = "full"
-    show_secret_diffs: bool = False
+    show_diff: Literal["full", "summary", "none"] = Field(
+        default="full",
+        description="Show file changes during deployment",
+    )
+    show_secret_diffs: bool = Field(
+        default=False,
+        description="Show diffs for encrypted/secret files (⚠️ dangerous)",
+    )
 
     # FD tracking
-    track_fds: Annotated[Literal[0, 1, 2], BeforeValidator(_int_to_literal)] = (
-        0  # FD tracking verbosity level (0=disabled, 1=simple, 2=verbose)
+    track_fds: Annotated[Literal[0, 1, 2], BeforeValidator(_int_to_literal)] = Field(
+        default=0,
+        description="Track file descriptor usage to detect leaks",
     )
-    fd_output_dir: str = "/tmp"  # Directory for FD tracking and profiling report files
+    fd_output_dir: str = Field(
+        default="/tmp",
+        description="Output directory for FD tracking logs",
+    )
 
     # Profiling
-    profile: bool = False
-    profile_lines: int = 30
+    profile: bool = Field(
+        default=False,
+        description="Profile remote execution for performance analysis",
+    )
+    profile_lines: int = Field(
+        default=30,
+        description="Number of profiling output lines to show",
+    )
 
     model_config = SettingsConfigDict(
         env_prefix="BATOU_",
@@ -46,7 +62,7 @@ class DebugSettings(BaseSettings):
         """Return structured information about all debug settings.
 
         Returns a list of dictionaries with field name, environment variable name,
-        possible values, description, and current value.
+        possible values, description, current value, and default value.
         """
         settings_info = []
 
@@ -79,6 +95,9 @@ class DebugSettings(BaseSettings):
             # Get current value
             current_value = getattr(self, field_name)
 
+            # Get default value from field
+            default_value = field_info.default
+
             # Get description from field (Pydantic V2 uses description attribute)
             description = field_info.description or ""
 
@@ -89,6 +108,7 @@ class DebugSettings(BaseSettings):
                     "possible_values": possible_values,
                     "description": description,
                     "current_value": current_value,
+                    "default_value": default_value,
                 }
             )
 

@@ -5,6 +5,7 @@ import sys
 
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 
 # Import batou._settings with alias to avoid shadowing batou.settings instance
 # SPEC: SDD-F001 - Import pattern to prevent namespace collision
@@ -27,9 +28,10 @@ def main(args: list[str] | None = None) -> None:
     table = Table(title="Debug Settings")
     table.add_column("Field Name", style="cyan", no_wrap=True)
     table.add_column("Environment Variable", style="green")
-    table.add_column("Possible Values", style="yellow")
     table.add_column("Description", style="white")
-    table.add_column("Current Value", style="bold")
+    table.add_column("Current Value")  # No default style - applied per row
+    table.add_column("Possible Values", style="yellow")
+    table.add_column("Default", style="dim")
 
     for info in settings_info:
         # Format possible values for display
@@ -41,13 +43,25 @@ def main(args: list[str] | None = None) -> None:
         else:
             values_str = str(possible_values)
 
+        # Format current value - bold if different from default
+        current = info["current_value"]
+        default = info["default_value"]
+        current_str = str(current)
+
+        # Use Text object for styling
+        if current != default:
+            current_text = Text(current_str, style="bold")
+        else:
+            current_text = Text(current_str)
+
         # Add row to table
         table.add_row(
             info["field_name"],
             info["env_var"],
-            values_str,
             info["description"],
-            str(info["current_value"]),
+            current_text,
+            values_str,
+            str(default),
         )
 
     console.print(table)
