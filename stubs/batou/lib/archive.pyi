@@ -1,10 +1,10 @@
 import types
-from typing import Any, Literal
+from typing import Any, Final, Literal, override
 
 from batou.component import Component
 
 class DMGVolume:
-    HDIUTIL: str
+    HDIUTIL: Final[str]
     path: str
     name: str
     volume_path: str | None
@@ -19,14 +19,18 @@ class DMGExtractor(Extractor):
     suffixes: tuple[str, ...]
     volume: DMGVolume
 
+    @override
     def __enter__(self) -> None: ...
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         tb: types.TracebackType | None,
     ) -> None: ...
+    @override
     def get_names_from_archive(self) -> list[str]: ...
+    @override
     def update(self) -> None: ...
 
 class Extract(Component):
@@ -37,8 +41,10 @@ class Extract(Component):
     strip: int
     extractor: Extractor
 
+    @override
     def configure(self) -> None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
 
 class Extractor(Component):
@@ -52,11 +58,13 @@ class Extractor(Component):
 
     @classmethod
     def can_handle(cls, archive: str) -> bool: ...
+    @override
     def configure(self) -> None: ...
     @classmethod
     def extract_base_name(cls, archive: str) -> str | None: ...
     def get_names_from_archive(self) -> list[str]: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
     def verify(self) -> None: ...
 
@@ -65,12 +73,17 @@ class Untar(Extractor):
     exclude: tuple[str, ...] | str
     _supports_strip: bool
 
+    @override
     def configure(self) -> None: ...
+    @override
     def get_names_from_archive(self) -> list[str]: ...
+    @override
     def update(self) -> None: ...
 
 class Unzip(Extractor):
     suffixes: tuple[str, ...]
 
+    @override
     def get_names_from_archive(self) -> list[str]: ...
+    @override
     def update(self) -> None: ...

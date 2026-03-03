@@ -3,7 +3,7 @@ import types
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 # Type alias for graph structures
 type Graph = defaultdict[Any, set[Any]]
@@ -12,7 +12,7 @@ type Graph = defaultdict[Any, set[Any]]
 notify: Callable[[str, str], None]
 resolve_override: dict[str, str]
 resolve_v6_override: dict[str, str]
-ADDR_DEFAULT: object
+ADDR_DEFAULT: Final[object]
 
 def call_with_optional_args(func: Callable, **kw: Any) -> Any: ...
 def cmd(

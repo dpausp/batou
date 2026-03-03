@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from batou.component import Component, HookComponent
 
@@ -10,6 +10,7 @@ class RotatedLogfile(HookComponent):
     prerotate: str | None
     postrotate: str | None
 
+    @override
     def configure(self) -> None: ...
 
 class Logrotate(Component):
@@ -18,4 +19,5 @@ class Logrotate(Component):
     logfiles: list[RotatedLogfile]
     logrotate_conf: Any
 
+    @override
     def configure(self) -> None: ...

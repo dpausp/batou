@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, Final
 
-USE_LEGACY: bool | None
+USE_LEGACY: Final[bool | None]
 
 def __getattr__(name: str) -> Any: ...
 def __dir__() -> list[str]: ...

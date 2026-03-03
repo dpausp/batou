@@ -1,8 +1,8 @@
-from typing import Any, Literal
+from typing import Any, Final, Literal, override
 
 from batou.component import Component
 
-USE_SUDO: Any
+USE_SUDO: Final[bool]
 
 class Command(Component):
     namevar: Literal["statement"]
@@ -15,11 +15,15 @@ class Command(Component):
     statement: str
     tmp: str
 
+    @override
     def configure(self) -> None: ...
     def _mysql(self, cmd: str) -> tuple[str, str]: ...
+    @override
     def verify(self) -> None: ...
+    @override
     def update(self) -> None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
 
 class Database(Component):
@@ -29,6 +33,7 @@ class Database(Component):
     base_import_file: str | None
     admin_password: str | Any | None
 
+    @override
     def configure(self) -> None: ...
 
 class User(Component):
@@ -36,8 +41,9 @@ class User(Component):
     password: str | None
     allow_from_hostname: str
     admin_password: str | Any | None
-    SET_PASSWORD_QUERY: str
+    SET_PASSWORD_QUERY: Final[str]
 
+    @override
     def configure(self) -> None: ...
 
 class Grant(Command):

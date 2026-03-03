@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, override
 
 from batou.component import Component
 
@@ -7,19 +7,25 @@ class VirtualEnv(Component):
     python_version: str
     pip_version: str | None
 
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class LockedRequirements(Component):
     python: str
 
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class CleanupUnused(Component):
     cleanup: tuple[str, ...]
 
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class AppEnv(Component):
@@ -31,6 +37,8 @@ class AppEnv(Component):
     env_ready: str
     last_env_hash: str | None
 
+    @override
     def configure(self) -> None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...

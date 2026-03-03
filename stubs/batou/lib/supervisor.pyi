@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from batou.component import Component
 from batou.utils import Address
@@ -18,16 +18,20 @@ class Program(Component):
     config: str
     _evaded: bool
 
+    @override
     def configure(self) -> None: ...
     def ctl(self, args: str, **kw: Any) -> tuple[str, str]: ...
     def evade(self, component: RunningSupervisor) -> None: ...
     def is_running(self) -> bool: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class Eventlistener(Program):
     events: str | tuple[str, ...]
 
+    @override
     def configure(self) -> None: ...
 
 class Supervisor(Component):
@@ -51,6 +55,7 @@ class Supervisor(Component):
     socketpath: str
     check_contact_groups: str | None
 
+    @override
     def configure(self) -> None: ...
 
 class RunningHelper(Component):
@@ -62,9 +67,13 @@ class RunningSupervisor(RunningHelper):
     service: Any
 
     def reload_supervisor(self) -> None: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class StoppedSupervisor(RunningHelper):
+    @override
     def verify(self) -> None: ...
+    @override
     def update(self) -> None: ...

@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from batou.component import Component
 
@@ -9,8 +9,11 @@ class Configure(Component):
     prefix: str | None
     build_environment: dict[str, Any] | None
 
+    @override
     def configure(self) -> None: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class Make(Component):
@@ -18,7 +21,9 @@ class Make(Component):
     path: str
     build_environment: dict[str, Any] | None
 
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class Build(Component):
@@ -29,6 +34,8 @@ class Build(Component):
     prefix: str | None
     build_environment: dict[str, Any] | None
 
+    @override
     def configure(self) -> None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...

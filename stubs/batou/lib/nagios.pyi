@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from batou.component import Component, HookComponent
 
@@ -18,6 +18,7 @@ class Service(HookComponent):
 
     @property
     def check_command(self) -> str: ...
+    @override
     def configure(self) -> None: ...
 
 class NRPEService(Service):
@@ -25,7 +26,9 @@ class NRPEService(Service):
     servicegroups: str
 
     @property
+    @override
     def check_command(self) -> str: ...
+    @override
     def configure(self) -> None: ...
     @property
     def nrpe_command(self) -> str: ...
@@ -35,10 +38,12 @@ class NagiosServer(Component):
     static: str
     services: list[Service]
 
+    @override
     def configure(self) -> None: ...
 
 class NRPEHost(Component):
     nrpe_cfg: str
     services: list[NRPEService]
 
+    @override
     def configure(self) -> None: ...

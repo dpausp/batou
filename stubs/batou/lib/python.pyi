@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, override
 
 from batou.component import Component
 
@@ -11,10 +11,14 @@ class Package(Component):
     env: dict[str, str] | None
     install_options: tuple[str, ...]
 
+    @override
     def configure(self) -> None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class VirtualEnv(Component):
@@ -23,6 +27,7 @@ class VirtualEnv(Component):
     executable: str | None
     venv: VirtualEnvPyBase
 
+    @override
     def configure(self) -> None: ...
     @property
     def python(self) -> str: ...
@@ -35,12 +40,17 @@ class VirtualEnvDownload(Component):
     download_url: str
     venv_cmd: str
 
+    @override
     def configure(self) -> None: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class VirtualEnvPy(Component):
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class VirtualEnvPy2_7(VirtualEnvPy):  # noqa: N801
@@ -51,8 +61,11 @@ class VirtualEnvPy2_7(VirtualEnvPy):  # noqa: N801
     pypi_url: str
     base: VirtualEnvDownload
 
+    @override
     def configure(self) -> None: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class VirtualEnvPyBase(Component):
@@ -64,7 +77,9 @@ class VirtualEnvPyBase(Component):
 
     def easy_install(self, pkg: Package) -> None: ...
     def pip_install(self, pkg: Package) -> None: ...
+    @override
     def update(self) -> None: ...
     def update_pkg(self, pkg: Package) -> None: ...
+    @override
     def verify(self) -> None: ...
     def verify_pkg(self, pkg: Package) -> None: ...

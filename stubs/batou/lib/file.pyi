@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, Literal
+from typing import Any, Literal, override, override as override_decorator
 
 from batou.component import Component
 
@@ -31,9 +31,12 @@ class File(Component):
     path: str
     _unmapped_path: str
 
+    @override
     def configure(self): ...
+    @override
     def last_updated(self, key: str = ...) -> float | None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
 
 class BinaryFile(File):
@@ -47,11 +50,16 @@ class Presence(Component):
     leading: bool
     path: str
 
+    @override
     def configure(self): ...
+    @override
     def last_updated(self, key: str = ...) -> float | None: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
 
 class SyncDirectory(Component):
@@ -62,12 +70,16 @@ class SyncDirectory(Component):
     sync_opts: str
     path: str
 
+    @override
     def configure(self): ...
     @property
     def exclude_arg(self) -> str: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
 
 class Directory(Component):
@@ -79,11 +91,16 @@ class Directory(Component):
     sync_opts: str | None
     path: str
 
+    @override
     def configure(self): ...
+    @override
     def last_updated(self, key: str = ...) -> float: ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
 
 class FileComponent(Component):
@@ -92,8 +109,10 @@ class FileComponent(Component):
     original_path: str
     path: str
 
+    @override
     def configure(self): ...
     @property
+    @override
     def namevar_for_breadcrumb(self) -> str: ...
 
 class ManagedContentBase(FileComponent):
@@ -108,9 +127,12 @@ class ManagedContentBase(FileComponent):
     diff_dir: str
 
     def _render(self) -> None: ...
+    @override
     def configure(self) -> None: ...
     def render(self) -> None: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(
         self,
         predicting: bool = ...,
@@ -122,6 +144,7 @@ class Content(ManagedContentBase):
     template_context: Component | None
     template_args: dict[str, Any] | None
 
+    @override
     def render(self): ...
 
 class JSONContent(ManagedContentBase):
@@ -131,24 +154,30 @@ class JSONContent(ManagedContentBase):
     content_compact: str | None
     content_readable: str | None
 
+    @override_decorator
     def render(self): ...
 
 class YAMLContent(ManagedContentBase):
     data: Any
     override: dict[str, Any] | None
 
+    @override_decorator
     def render(self): ...
 
 class Owner(FileComponent):
     owner: str | int | None
 
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
 
 class Group(FileComponent):
     group: str | int | None
 
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
 
 class Mode(FileComponent):
@@ -157,8 +186,11 @@ class Mode(FileComponent):
     _chmod: Any
 
     def _select_stat_implementation(self) -> None: ...
+    @override
     def configure(self) -> None: ...
+    @override
     def update(self) -> None: ...
+    @override
     def verify(self) -> None: ...
 
 class Symlink(Component):
@@ -166,14 +198,20 @@ class Symlink(Component):
     source: str | None
     target: str
 
+    @override
     def configure(self): ...
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
 
 class Purge(Component):
     namevar: str
     pattern: str
 
+    @override
     def configure(self): ...
+    @override
     def update(self): ...
+    @override
     def verify(self): ...
