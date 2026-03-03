@@ -1,16 +1,11 @@
 import sys
 
-import pytest
-
 from batou.component import Component
 from batou.lib.python import VirtualEnv
 
 
-@pytest.mark.skipif(
-    sys.version_info >= (3, 7),
-    reason="python 2.7 only available in tests with python 3.6",
-)
-def test_venv_updates_if_python_changes(root):
+def test_venv_creates_correct_python_version(root):
+    """Test that VirtualEnv creates a venv with the requested Python version."""
     import ast
 
     class Playground(Component):
@@ -20,26 +15,22 @@ def test_venv_updates_if_python_changes(root):
             self.venv = VirtualEnv(self.version)
             self += self.venv
 
-    playground = Playground("2.7")
-    root.component += playground
-    playground.deploy()
-    root.component.sub_components.remove(playground)
-
-    playground = Playground("3")
+    # Use current Python version (e.g., "3.14")
+    version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    playground = Playground(version)
     root.component += playground
     playground.deploy()
 
-    out, err = playground.cmd(
+    # Verify the venv was created with correct Python version
+    out, _ = playground.cmd(
         f'{playground.workdir}/bin/python -c "import sys; print(sys.version_info[:2])"'
     )
-    assert 3 == ast.literal_eval(out)[0]
+    assert (sys.version_info.major, sys.version_info.minor) == ast.literal_eval(out)
 
 
-@pytest.mark.skipif(
-    sys.version_info >= (3, 7),
-    reason="python 2.7 only available in tests with python 3.6",
-)
 def test_venv_does_not_update_if_python_does_not_change(root):
+    """Test that VirtualEnv is idempotent when Python version stays the same."""
+
     class Playground(Component):
         namevar = "version"
 
@@ -47,9 +38,13 @@ def test_venv_does_not_update_if_python_does_not_change(root):
             self.venv = VirtualEnv(self.version)
             self += self.venv
 
-    playground = Playground("2.7")
+    # Use current Python version (e.g., "3.14")
+    version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    playground = Playground(version)
     root.component += playground
     playground.deploy()
     assert playground.changed
+
+    # Deploy again with same version - should not change
     playground.deploy()
     assert not playground.changed
