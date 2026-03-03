@@ -5,7 +5,6 @@ from batou.component import Component
 class Package(Component):
     package: str
     version: str | None
-    check_package_is_module: bool
     timeout: int | None
     dependencies: bool
     env: dict[str, str] | None

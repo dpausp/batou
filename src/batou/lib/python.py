@@ -64,7 +64,7 @@ class VirtualEnvPyBase(Component):
         self.cmd("chmod -R u+w bin/ lib/ include/ .Python || true")
         self.cmd("rm -rf bin/ lib/ include/ .Python")
 
-    def verify_pkg(self, pkg):
+    def verify_pkg(self, pkg: "Package") -> None:
         try:
             self.cmd(
                 "bin/python -c '"
@@ -76,7 +76,7 @@ class VirtualEnvPyBase(Component):
         except CmdExecutionError:
             raise batou.UpdateNeeded()
 
-    def update_pkg(self, pkg):
+    def update_pkg(self, pkg: "Package") -> None:
         if self.installer == "pip":
             self.pip_install(pkg)
         else:

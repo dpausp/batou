@@ -6,8 +6,7 @@ import os.path
 import pathlib
 import sys
 from configparser import RawConfigParser
-
-from importlib_metadata import entry_points
+from importlib.metadata import entry_points
 
 import batou.c
 import batou.utils
