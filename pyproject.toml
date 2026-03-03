@@ -504,3 +504,4 @@ categories = ""
 
 [tool.uv.sources]
 pytest-deduplicate = { path = "../pytest_deduplicate" }
+pytest-patterns = { path = "../pytest-patterns" }
