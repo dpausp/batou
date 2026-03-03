@@ -947,10 +947,12 @@ def test_mode_ensures_mode_for_directories(root):
     assert not mode.changed
 
 
-@pytest.mark.skipif(not hasattr(os, "lchmod"), reason="requires lchmod")
+@pytest.mark.skipif(
+    not hasattr(os, "lchmod"),
+    reason="BSD/macOS only (lchmod support required)",
+)
 def test_mode_ensures_mode_for_symlinks(root):
-    # This test is only relevant on platforms that support managing the mode of
-    # symlinks.
+    """Ensure Mode component can set symlink permissions on supported platforms."""
     link_to = "link_to"
     open(link_to, "w").close()
     os.symlink(link_to, "work/mycomponent/path")
@@ -968,11 +970,12 @@ def test_mode_ensures_mode_for_symlinks(root):
     assert not mode.changed
 
 
-@pytest.mark.skipif(hasattr(os, "lchmod"), reason="requires no lchmod")
-def test_mode_does_not_break_on_platforms_without_lchmod(root):
-    # This test is only relevant on platforms without lchmod. We basically
-    # ensure that deploying the component doesn't break but it's a noop
-    # anyway.
+@pytest.mark.skipif(
+    hasattr(os, "lchmod"),
+    reason="Linux/Windows only (no lchmod support)",
+)
+def test_mode_handles_symlinks_gracefully_without_lchmod(root):
+    """Ensure Mode component works on platforms without symlink permissions."""
     path = "path"
     link_to = "link_to"
     open(link_to, "w").close()
