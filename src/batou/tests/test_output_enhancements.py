@@ -2,8 +2,6 @@
 
 from unittest import mock
 
-import pytest
-
 from batou._output import TestBackend as _TestBackend
 from batou._output import output
 
@@ -133,12 +131,6 @@ class TestComponentBreadcrumbs:
 
         assert isinstance(formatted, str)
         assert root.component.__class__.__name__ in formatted
-
-    def test_format_breadcrumb_trail_with_subcomponent(self, sample_service):
-        """format_breadcrumb_trail should show hierarchy with arrows."""
-        # Skip this test for now - complex setup required
-        # The basic functionality is tested in other tests
-        pytest.skip("Requires complex environment setup with sub-components")
 
     def test_format_breadcrumb_trail_with_source_in_debug_mode(self, root):
         """In debug mode, source locations should be included."""
