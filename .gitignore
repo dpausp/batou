@@ -55,4 +55,3 @@ monkeytype.sqlite3
 .pymon
 pytestdebug.log
 /dist/
-uv.lock
