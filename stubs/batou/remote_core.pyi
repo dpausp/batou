@@ -96,6 +96,17 @@ class Output:
     ) -> None: ...
     def buffer(self, cmd: str, *args: Any, **kw: Any) -> None: ...
     def clear_buffer(self) -> None: ...
+    def debug_section(
+        self,
+        title: str,
+        data: dict[str, Any],
+        debug: bool = ...,
+    ) -> None: ...
+    def _render_debug_data(
+        self,
+        data: dict[str, Any],
+        indent: int = ...,
+    ) -> str: ...
     def error(
         self,
         message: str,

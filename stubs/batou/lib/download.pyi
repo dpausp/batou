@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Any, Literal
 
 from batou.component import Component
 
 class Download(Component):
+    namevar: Literal["uri"]
     uri: str
     target: str | None
     checksum: str | None

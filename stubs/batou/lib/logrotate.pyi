@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Any, Literal
 
 from batou.component import Component, HookComponent
 
 class RotatedLogfile(HookComponent):
+    namevar: Literal["path"]
     path: str
     key: str
     args: str

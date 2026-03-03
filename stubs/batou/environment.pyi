@@ -70,6 +70,10 @@ class Environment:
     repository: Any
     deployment_base: str
     secret_provider: Any
+    _toml_config: Any
+    _resolve_override: dict[str, str]
+    _resolve_v6_override: dict[str, str]
+    deployment: Any
 
     def __init__(
         self,
@@ -80,6 +84,7 @@ class Environment:
         provision_rebuild: bool = ...,
         check_and_predict_local: bool = ...,
     ) -> None: ...
+    def _ensure_environment_dir(self) -> None: ...
     def _environment_path(self, path: str = ...) -> str: ...
     def _host_data(self) -> dict[str, dict[str, Any]]: ...
     def _load_host_components(self, host: Host, component_list: list[str]) -> None: ...

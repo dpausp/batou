@@ -11,4 +11,12 @@ class PrivateFormat:
 
 class NoEncryption: ...
 
+class _PrivateKey:
+    def private_bytes(
+        self,
+        encoding: Any,
+        format: Any,
+        encryption_algorithm: Any,
+    ) -> bytes: ...
+
 def load_ssh_private_key(data: bytes, password: bytes | None) -> Any: ...

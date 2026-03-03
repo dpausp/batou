@@ -1,11 +1,11 @@
-from typing import Any
+from typing import Any, Literal
 
 from batou.component import Component
 
 USE_SUDO: Any
 
 class Command(Component):
-    namevar: str = "statement"
+    namevar: Literal["statement"]
     admin_password: str | Any
     admin_user: str
     hostname: str | None
@@ -23,7 +23,8 @@ class Command(Component):
     def namevar_for_breadcrumb(self) -> str: ...
 
 class Database(Component):
-    namevar: str = "database"
+    namevar: Literal["database"]
+    database: str
     charset: str
     base_import_file: str | None
     admin_password: str | Any | None
@@ -31,7 +32,7 @@ class Database(Component):
     def configure(self) -> None: ...
 
 class User(Component):
-    namevar: str = "user"
+    namevar: Literal["user"]
     password: str | None
     allow_from_hostname: str
     admin_password: str | Any | None
@@ -40,7 +41,7 @@ class User(Component):
     def configure(self) -> None: ...
 
 class Grant(Command):
-    namevar: str = "grant_db"
+    namevar: Literal["grant_db"]
     user: str
     allow_from_hostname: str
     statement: str

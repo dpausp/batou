@@ -1,3 +1,4 @@
+import socket
 from traceback import StackSummary
 from typing import Any
 
@@ -58,6 +59,7 @@ class ComponentLoadingError(ReportingException):
     filename: str
     exception_str: str
     traceback: str
+    exception: Exception
 
     @classmethod
     def from_context(
@@ -80,6 +82,7 @@ class ComponentUsageError(ConfigurationError):
 class ComponentWithUpdateWithoutVerify(ConfigurationError):
     components: list[str]
     roots: list[str]
+    sort_key: tuple[int, str]
 
     @classmethod
     def from_context(
@@ -192,7 +195,7 @@ class FileLockedError(ReportingException):
     def from_context(cls, filename: str) -> FileLockedError: ...
     def report(self): ...
 
-class GetAddressInfoError(ReportingException):
+class GetAddressInfoError(ReportingException, socket.gaierror):
     hostname: str
     error: str
 
@@ -258,6 +261,7 @@ class MissingOverrideAttributes(ConfigurationError):
 class NonConvergingWorkingSet(ConfigurationError):
     roots_len: int
     root_names: str
+    sort_key: tuple[int]
 
     @classmethod
     def from_context(cls, roots: Any) -> NonConvergingWorkingSet: ...
@@ -292,6 +296,7 @@ class SuperfluousSection(ConfigurationError):
 class TemplatingError(ReportingException):
     exception_str: str
     template_identifier: str
+    sort_key: tuple[int]
 
     @classmethod
     def from_context(
@@ -334,6 +339,7 @@ class UnusedComponentsInitialized(ConfigurationError):
     init_file_paths: list[str]
     init_line_numbers: list[int]
     root_name: str
+    sort_key: tuple[int, str]
 
     @classmethod
     def from_context(
@@ -344,6 +350,7 @@ class UnusedComponentsInitialized(ConfigurationError):
 
 class UnusedResources(ConfigurationError):
     unused_resources: list[tuple[str, str, str]]
+    sort_key: tuple[int, str]
 
     @classmethod
     def from_context(cls, resources: Any) -> UnusedResources: ...

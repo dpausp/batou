@@ -3,6 +3,7 @@ from typing import Literal
 from batou.component import Component
 
 class Package(Component):
+    namevar: Literal["package"]
     package: str
     version: str | None
     timeout: int | None
@@ -17,6 +18,7 @@ class Package(Component):
     def verify(self) -> None: ...
 
 class VirtualEnv(Component):
+    namevar: Literal["version"]
     version: str
     executable: str | None
     venv: VirtualEnvPyBase
@@ -26,7 +28,9 @@ class VirtualEnv(Component):
     def python(self) -> str: ...
 
 class VirtualEnvDownload(Component):
+    namevar: Literal["version"]
     version: str
+    workdir: str
     checksum: str | None
     download_url: str
     venv_cmd: str
@@ -58,6 +62,7 @@ class VirtualEnvPyBase(Component):
     installer: Literal["pip", "easy_install"]
     install_options: tuple[str, ...]
 
+    def easy_install(self, pkg: Package) -> None: ...
     def pip_install(self, pkg: Package) -> None: ...
     def update(self) -> None: ...
     def update_pkg(self, pkg: Package) -> None: ...

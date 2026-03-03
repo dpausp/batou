@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import typer
 
@@ -28,5 +28,5 @@ def migrate(
     output: str | None = ...,
     dry_run: bool = ...,
     force: bool = ...,
-    infer_types: str = ...,
+    infer_types: Literal["none", "safe", "full"] = ...,
 ) -> None: ...

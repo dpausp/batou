@@ -31,4 +31,3 @@ class TestBackend:
 from batou.remote_core import Output  # noqa: E402
 
 output: Output
-enable_debug: bool
