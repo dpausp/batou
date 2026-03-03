@@ -89,7 +89,6 @@ def test_manage__summary__1(capsys, monkeypatch):
     assert err == ""
 
 
-@pytest.mark.skip
 def test_manage__summary__2(capsys, monkeypatch):
     """It prints an error message on decoding problems."""
     monkeypatch.chdir("examples/errors")
