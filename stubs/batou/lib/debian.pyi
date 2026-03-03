@@ -1,7 +1,7 @@
-import batou.lib.logrotate
-import batou.lib.supervisor
 from typing import override
 
+import batou.lib.logrotate
+import batou.lib.supervisor
 from batou.component import Component
 
 class RebootCronjob(Component):

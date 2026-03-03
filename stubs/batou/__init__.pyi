@@ -2,7 +2,7 @@ import socket
 from traceback import StackSummary
 from typing import Any
 
-from batou.component import Component
+from batou.component import Component, ComponentDefinition, RootComponent
 
 __version__: str
 output: Any  # from _output module
@@ -35,7 +35,7 @@ class AgeCallError(ReportingException):
         exitcode: int,
         output: bytes,
     ) -> AgeCallError: ...
-    def report(self): ...
+    def report(self) -> None: ...
 
 class AttributeExpansionError(ConfigurationError):
     component_breadcrumbs: str
@@ -47,7 +47,7 @@ class AttributeExpansionError(ConfigurationError):
     @classmethod
     def from_context(
         cls,
-        component: Any,
+        component: Component,
         key: str,
         value: Any,
         error: Exception,
@@ -68,7 +68,7 @@ class ComponentLoadingError(ReportingException):
         exception: Exception,
         tb: Any,
     ) -> ComponentLoadingError: ...
-    def report(self): ...
+    def report(self) -> None: ...
 
 class ComponentUsageError(ConfigurationError):
     message: str
@@ -87,8 +87,8 @@ class ComponentWithUpdateWithoutVerify(ConfigurationError):
     @classmethod
     def from_context(
         cls,
-        components: list[Any],
-        roots: list[Any],
+        components: list[Component],
+        roots: list[Component],
     ) -> ComponentWithUpdateWithoutVerify: ...
 
 class ConfigurationError(ReportingException):
@@ -102,7 +102,7 @@ class ConfigurationError(ReportingException):
         message: str,
         component: Component | None = ...,
     ) -> ConfigurationError: ...
-    def report(self): ...
+    def report(self) -> None: ...
     @property
     def sort_key(self) -> tuple[int, str]: ...
 
@@ -116,7 +116,7 @@ class ConversionError(ConfigurationError):
     @classmethod
     def from_context(
         cls,
-        component: Any,
+        component: Component,
         key: str,
         value: Any,
         conversion: Any,
@@ -134,7 +134,7 @@ class CycleErrorDetected(ConfigurationError):
 class DeploymentError(ReportingException):
     sort_key: tuple[int, ...]
 
-    def report(self): ...
+    def report(self) -> None: ...
 
 class DuplicateComponent(ConfigurationError):
     a_name: str
@@ -142,7 +142,9 @@ class DuplicateComponent(ConfigurationError):
     b_filename: str
 
     @classmethod
-    def from_context(cls, a: Any, b: Any) -> DuplicateComponent: ...
+    def from_context(
+        cls, a: ComponentDefinition, b: ComponentDefinition,
+    ) -> DuplicateComponent: ...
     @property
     def sort_key(self) -> tuple[int, str]: ...
 
@@ -193,7 +195,7 @@ class FileLockedError(ReportingException):
 
     @classmethod
     def from_context(cls, filename: str) -> FileLockedError: ...
-    def report(self): ...
+    def report(self) -> None: ...
 
 class GetAddressInfoError(ReportingException, socket.gaierror):
     hostname: str
@@ -214,7 +216,7 @@ class GPGCallError(ReportingException):
         exitcode: int,
         output: bytes,
     ) -> GPGCallError: ...
-    def report(self): ...
+    def report(self) -> None: ...
 
 class IPAddressConfigurationError(ConfigurationError):
     address: Any
@@ -252,7 +254,7 @@ class MissingOverrideAttributes(ConfigurationError):
     @classmethod
     def from_context(
         cls,
-        component: Any,
+        component: Component,
         attributes: list[str],
     ) -> MissingOverrideAttributes: ...
     @property
@@ -314,7 +316,7 @@ class UnknownComponentConfigurationError(ConfigurationError):
     @classmethod
     def from_context(
         cls,
-        root: Any,
+        root: RootComponent,
         exception: Exception,
         tb: Any,
     ) -> UnknownComponentConfigurationError: ...
@@ -344,8 +346,8 @@ class UnusedComponentsInitialized(ConfigurationError):
     @classmethod
     def from_context(
         cls,
-        components: list[Any],
-        root: Any,
+        components: list[Component],
+        root: RootComponent,
     ) -> UnusedComponentsInitialized: ...
 
 class UnusedResources(ConfigurationError):

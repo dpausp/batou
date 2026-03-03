@@ -1,10 +1,12 @@
 from collections.abc import Callable
 from typing import Any
 
+import execnet
 from execnet.xspec import XSpec
 
 from batou.component import RootComponent
 from batou.environment import ConfigSection, Environment
+from batou.provision import Provisioner
 from batou.utils import BagOfAttributes
 
 def new_ssh_args(spec: XSpec) -> list[str]: ...
@@ -39,12 +41,12 @@ class Host:
     @property
     def name(self) -> str: ...
     @property
-    def provisioner(self) -> Any | None: ...
+    def provisioner(self) -> Provisioner | None: ...
     def root_dependencies(self) -> Any: ...
     def summarize(self) -> None: ...
 
 class LocalHost(Host):
-    gateway: Any
+    gateway: execnet.Gateway
     channel: Any
     remote_repository: Any
     remote_base: str
@@ -60,7 +62,7 @@ class RPCWrapper:
     def __init__(self, host: Host) -> None: ...
 
 class RemoteHost(Host):
-    gateway: Any | None
+    gateway: execnet.Gateway | None
     channel: Any
     remote_repository: Any
     remote_base: str

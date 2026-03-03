@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Literal, Self
 from weakref import WeakKeyDictionary
 
+import jinja2
+
 from batou.environment import Environment
 from batou.host import Host
 from batou.utils import Timer
@@ -61,9 +63,9 @@ class Component:
     sub_components: list[Component]
     timer: Timer
     _instances: list[Component]
-    _template_engine: Any
+    _template_engine: jinja2.Environment | None
     _platform_component: Component | None
-    _event_handlers: dict[str, list[Callable]]
+    _event_handlers: dict[str, list[Callable[[Component], None]]]
     _init_file_path: str
     _init_line_number: int
     _init_breadcrumbs: list[str]

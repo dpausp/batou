@@ -1,5 +1,6 @@
 from collections.abc import Iterator
-from typing import Any, Literal, override, override as override_decorator
+from typing import Any, Literal, override
+from typing import override as override_decorator
 
 from batou.component import Component
 

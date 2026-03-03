@@ -1,9 +1,9 @@
+from typing import Any, Self
+
 class FCDevVM:
     def __init__(self, name: str): ...
     @classmethod
     def from_config_section(cls, name: str, section: dict[str, str]) -> FCDevVM: ...
-
-from typing import Any, Self
 
 class Provisioner:
     name: str

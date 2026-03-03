@@ -15,7 +15,7 @@ class _PrivateKey:
     def private_bytes(
         self,
         encoding: Any,
-        format: Any,
+        format_type: Any,
         encryption_algorithm: Any,
     ) -> bytes: ...
 

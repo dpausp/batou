@@ -4,7 +4,12 @@ from pathlib import Path
 from typing import Any, Literal
 
 from batou.component import ComponentDefinition, RootComponent
+from batou.debug.template_stats import TemplateStats
 from batou.host import Host
+from batou.provision import Provisioner
+from batou.repository import Repository
+from batou.resources import Resources
+from batou.secrets import SecretProvider
 
 def parse_host_components(components: list[str]) -> dict[str, dict[str, Any]]: ...
 
@@ -25,7 +30,7 @@ class ConfigSection(dict):
 class Environment:
     name: str
     hosts: dict[str, Host]
-    resources: Any
+    resources: Resources
     overrides: dict[str, dict[str, str]]
     secret_data: set[str]
     exceptions: list[Exception]
@@ -39,8 +44,8 @@ class Environment:
     base_dir: str
     workdir_base: str
     secret_files: dict[str, str]
-    provisioners: dict[str, Any]
-    template_stats: Any
+    provisioners: dict[str, Provisioner]
+    template_stats: TemplateStats
     service_user: str | None
     require_sudo: bool | None
     host_domain: str | None
@@ -67,9 +72,9 @@ class Environment:
     repository_url: str | None
     repository_root: str | None
     host_factory: type[Host]
-    repository: Any
+    repository: Repository | None
     deployment_base: str
-    secret_provider: Any
+    secret_provider: SecretProvider | None
     _toml_config: Any
     _resolve_override: dict[str, str]
     _resolve_v6_override: dict[str, str]

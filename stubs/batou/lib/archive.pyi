@@ -1,5 +1,5 @@
 import types
-from typing import Any, Final, Literal, override
+from typing import Any, Final, Literal, Self, override
 
 from batou.component import Component
 
@@ -20,7 +20,7 @@ class DMGExtractor(Extractor):
     volume: DMGVolume
 
     @override
-    def __enter__(self) -> None: ...
+    def __enter__(self) -> Self: ...
     @override
     def __exit__(
         self,
