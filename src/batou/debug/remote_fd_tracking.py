@@ -4,9 +4,13 @@ import os
 import traceback
 from typing import Any, NotRequired, TypedDict
 
-# Reuse types pattern
-FDTuple = tuple[int, str, str, str]  # (fd, path, mode, open_time)
-LogTuple = tuple[str, int, str, str, str]  # (time, count, path, mode, action)
+from batou.debug.fd_tracker import (
+    FDTrackingLogEntry,
+    FileDescriptorInfo,
+    OpenFileState,
+)
+
+# Type for fd_records dictionary
 FDRecordDict = dict[
     str, dict[str, Any]
 ]  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
@@ -19,8 +23,8 @@ class RemoteFDTrackingStats(TypedDict):
     total_closes: int
     open_fds: int
     fd_leak: bool
-    leaked_fds: NotRequired[list[FDTuple]]
-    logs: NotRequired[list[LogTuple]]
+    leaked_fds: NotRequired[list[FileDescriptorInfo]]
+    logs: NotRequired[list[FDTrackingLogEntry]]
     fd_records: NotRequired[FDRecordDict]
 
 
@@ -29,8 +33,8 @@ _fd_tracking_enabled = False
 _fd_tracking_verbose = False
 _total_fd_opens = 0
 _total_fd_closes = 0
-_open_fds = {}  # fd -> (path, mode, open_time)
-_fd_tracking_logs = []
+_open_fds: dict[int, OpenFileState] = {}  # fd -> OpenFileState
+_fd_tracking_logs: list[FDTrackingLogEntry] = []
 _fd_records = {}  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
 
 
@@ -49,8 +53,10 @@ def _track_fd_open(fd, path, mode="r"):
 
     now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
-    _open_fds[fd] = (path, mode, now)
-    _fd_tracking_logs.append((now, _total_fd_opens, path, mode, "open"))
+    _open_fds[fd] = OpenFileState(path, mode, now)
+    _fd_tracking_logs.append(
+        FDTrackingLogEntry(now, _total_fd_opens, path, mode, "open")
+    )
 
     # Track in fd_records for detailed analysis (like local)
     if path not in _fd_records:
@@ -83,7 +89,7 @@ def _track_fd_open(fd, path, mode="r"):
     FD_WARNING_THRESHOLD = 200  # Common default limit is 256
     if len(_open_fds) > FD_WARNING_THRESHOLD:
         _fd_tracking_logs.append(
-            (
+            FDTrackingLogEntry(
                 now,
                 _total_fd_opens,
                 f"WARNING: {len(_open_fds)} FDs open (threshold: {FD_WARNING_THRESHOLD})",
@@ -104,12 +110,14 @@ def _track_fd_close(fd):
     if fd in _open_fds:
         path, mode, open_time = _open_fds.pop(fd)
         _total_fd_closes += 1
-        _fd_tracking_logs.append((now, _total_fd_opens, path, mode, "close"))
+        _fd_tracking_logs.append(
+            FDTrackingLogEntry(now, _total_fd_opens, path, mode, "close")
+        )
     else:
         # Low-level fd (like from mkstemp) - log it
         _total_fd_closes += 1
         _fd_tracking_logs.append(
-            (
+            FDTrackingLogEntry(
                 now,
                 _total_fd_opens,
                 f"fd:{fd} (low-level)",
@@ -168,7 +176,7 @@ def get_remote_fd_tracking_stats() -> RemoteFDTrackingStats:
     }
     if _open_fds:
         stats["leaked_fds"] = [
-            (fd, path, mode, open_time)
+            FileDescriptorInfo(fd, path, mode, open_time)
             for fd, (path, mode, open_time) in _open_fds.items()
         ]
     if _fd_tracking_logs:

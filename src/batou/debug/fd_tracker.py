@@ -4,13 +4,36 @@ import builtins
 import datetime
 import os
 import socket
-from typing import NotRequired, TypedDict
+from typing import NamedTuple, NotRequired, TypedDict
 
 from batou import output
 
-# Tuple types for clarity
-FDTuple = tuple[int, str, str, str]  # (fd, path, mode, open_time)
-LogTuple = tuple[str, int, str, str, str]  # (time, count, path, mode, action)
+
+class FileDescriptorInfo(NamedTuple):
+    """Information about an open file descriptor."""
+
+    fd: int
+    path: str
+    mode: str
+    open_time: str
+
+
+class FDTrackingLogEntry(NamedTuple):
+    """A single FD tracking log entry."""
+
+    time: str
+    count: int
+    path: str
+    mode: str
+    action: str
+
+
+class OpenFileState(NamedTuple):
+    """State of an open file for leak detection."""
+
+    path: str
+    mode: str
+    open_time: str
 
 
 class FDTrackingStats(TypedDict):
@@ -20,8 +43,8 @@ class FDTrackingStats(TypedDict):
     total_closes: int
     open_fds: int
     fd_leak: bool
-    leaked_fds: NotRequired[list[FDTuple]]
-    logs: NotRequired[list[LogTuple]]
+    leaked_fds: NotRequired[list[FileDescriptorInfo]]
+    logs: NotRequired[list[FDTrackingLogEntry]]
 
 
 class FileDescriptorTracker:
@@ -42,8 +65,8 @@ class FileDescriptorTracker:
         self.total_opens = 0
         self.total_closes = 0
         self.remote_opens = {}  # Track FD opens per remote host
-        self._open_fds = {}  # fd -> (path, mode, open_time) for leak detection
-        self._fd_tracking_logs = []  # Structured logging tuples
+        self._open_fds: dict[int, OpenFileState] = {}  # fd -> OpenFileState
+        self._fd_tracking_logs: list[FDTrackingLogEntry] = []  # Structured logs
 
         # Install local FD tracking hook during initialization
         self._install_local_hook()
@@ -137,10 +160,12 @@ class FileDescriptorTracker:
         now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
         # Track in _open_fds for leak detection (like remote)
-        self._open_fds[fd] = (path, mode, now)
+        self._open_fds[fd] = OpenFileState(path, mode, now)
 
         # Structured logging (like remote)
-        self._fd_tracking_logs.append((now, self.total_opens, path, mode, "open"))
+        self._fd_tracking_logs.append(
+            FDTrackingLogEntry(now, self.total_opens, path, mode, "open")
+        )
 
     def _track_close(self, fd):
         if not self.enabled:
@@ -152,12 +177,14 @@ class FileDescriptorTracker:
             path, mode, open_time = self._open_fds.pop(fd)
             self.total_closes += 1
             # Structured logging (like remote)
-            self._fd_tracking_logs.append((now, self.total_opens, path, mode, "close"))
+            self._fd_tracking_logs.append(
+                FDTrackingLogEntry(now, self.total_opens, path, mode, "close")
+            )
         else:
             # Low-level fd (like from mkstemp) - log it
             self.total_closes += 1
             self._fd_tracking_logs.append(
-                (
+                FDTrackingLogEntry(
                     now,
                     self.total_opens,
                     f"fd:{fd} (low-level)",
@@ -423,7 +450,7 @@ stats = get_statistics()
             "open_fds": len(self._open_fds),
             "fd_leak": len(self._open_fds) > 200,
             "leaked_fds": [
-                (fd, path, mode, open_time)
+                FileDescriptorInfo(fd, path, mode, open_time)
                 for fd, (path, mode, open_time) in self._open_fds.items()
             ],
             "logs": self._fd_tracking_logs,
