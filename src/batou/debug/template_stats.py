@@ -1,7 +1,17 @@
 """Template cache statistics tracking for debugging."""
 
+from typing import TypedDict
+
 from batou import output
 from batou.component import Component
+
+
+class TemplateCacheStats(TypedDict):
+    """Snapshot of template cache statistics."""
+
+    hits: int
+    misses: int
+    size: int
 
 
 class TemplateStats:
@@ -40,7 +50,7 @@ class TemplateStats:
                 self.record_miss(stats["misses"])
                 self.update_size(stats["currsize"])
 
-    def get_stats(self):
+    def get_stats(self) -> TemplateCacheStats:
         """Return current statistics as a dictionary."""
         return {"hits": self.hits, "misses": self.misses, "size": self.size}
 

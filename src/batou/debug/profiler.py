@@ -32,5 +32,5 @@ class Profiler:
                 profile = host.rpc.get_profiling_results()
                 if profile:
                     output.annotate(
-                        f"Profiling for {profile['host']}: {profile['profile_path']}"
+                        f"Profiling for {profile.host}: {profile.profile_path}"
                     )

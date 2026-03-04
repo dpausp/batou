@@ -474,7 +474,7 @@ def deploy(root, predict_only=False):
             red=True,
         )
         # Show leaked FD details
-        for fd, (path, mode, open_time) in list(stats["leaked_fds"])[:10]:
+        for fd, path, mode, open_time in list(stats["leaked_fds"])[:10]:
             output.line(f"  FD {fd}: {path} ({mode}) since {open_time}")
         if len(stats["leaked_fds"]) > 10:
             output.line(f"  ... and {len(stats['leaked_fds']) - 10} more")

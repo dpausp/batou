@@ -2,6 +2,27 @@
 
 import os
 import traceback
+from typing import Any, NotRequired, TypedDict
+
+# Reuse types pattern
+FDTuple = tuple[int, str, str, str]  # (fd, path, mode, open_time)
+LogTuple = tuple[str, int, str, str, str]  # (time, count, path, mode, action)
+FDRecordDict = dict[
+    str, dict[str, Any]
+]  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
+
+
+class RemoteFDTrackingStats(TypedDict):
+    """File descriptor tracking statistics from remote side."""
+
+    total_opens: int
+    total_closes: int
+    open_fds: int
+    fd_leak: bool
+    leaked_fds: NotRequired[list[FDTuple]]
+    logs: NotRequired[list[LogTuple]]
+    fd_records: NotRequired[FDRecordDict]
+
 
 # FD Tracking
 _fd_tracking_enabled = False
@@ -137,9 +158,9 @@ def init_remote_fd_tracking(track_fds_level: int):
     _fd_tracking_verbose = track_fds_level > 1
 
 
-def get_remote_fd_tracking_stats():
+def get_remote_fd_tracking_stats() -> RemoteFDTrackingStats:
     """Get FD tracking statistics from remote side."""
-    stats = {
+    stats: RemoteFDTrackingStats = {
         "total_opens": _total_fd_opens,
         "total_closes": _total_fd_closes,
         "open_fds": len(_open_fds),

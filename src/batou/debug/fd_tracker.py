@@ -4,8 +4,24 @@ import builtins
 import datetime
 import os
 import socket
+from typing import NotRequired, TypedDict
 
 from batou import output
+
+# Tuple types for clarity
+FDTuple = tuple[int, str, str, str]  # (fd, path, mode, open_time)
+LogTuple = tuple[str, int, str, str, str]  # (time, count, path, mode, action)
+
+
+class FDTrackingStats(TypedDict):
+    """File descriptor tracking statistics snapshot."""
+
+    total_opens: int
+    total_closes: int
+    open_fds: int
+    fd_leak: bool
+    leaked_fds: NotRequired[list[FDTuple]]
+    logs: NotRequired[list[LogTuple]]
 
 
 class FileDescriptorTracker:
@@ -399,7 +415,7 @@ stats = get_statistics()
                     f.write(f"    ... and {len(self._open_fds) - 10} more\n")
                 f.write("\n")
 
-    def get_fd_tracking_stats(self):
+    def get_fd_tracking_stats(self) -> FDTrackingStats:
         """Get FD tracking statistics (same structure as remote)."""
         return {
             "total_opens": self.total_opens,

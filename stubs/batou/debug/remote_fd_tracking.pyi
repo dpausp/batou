@@ -1,7 +1,15 @@
 from pathlib import Path
 from posix import DirEntry
+from typing import Any, TypedDict
 
-from batou.remote_core import FDTrackingStats
+class FDTrackingStats(TypedDict, total=False):
+    total_opens: int
+    total_closes: int
+    open_fds: int
+    fd_leak: bool
+    leaked_fds: list[tuple[int, str, str, str]]
+    logs: list[str]
+    fd_records: list[Any]
 
 def _track_fd_close(fd: int) -> None: ...
 def _track_fd_open(fd: int, path: DirEntry | str | Path, mode: str = ...) -> None: ...

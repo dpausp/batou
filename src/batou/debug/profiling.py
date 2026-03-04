@@ -1,7 +1,17 @@
 """Remote profiling with cProfile integration."""
 
 import io
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class ProfilingResults:
+    """Profiling results from remote host execution."""
+
+    host: str
+    profile_path: Path
+    content: str
 
 
 class RemoteProfiler:
@@ -40,7 +50,7 @@ class RemoteProfiler:
 
         return result
 
-    def get_profiling_results(self):
+    def get_profiling_results(self) -> ProfilingResults | None:
         """Retrieve profiling results from remote host."""
         profile_path = self.output_dir / f"batou_remote_profile_{self.host_name}.txt"
         if not profile_path.exists():
@@ -49,11 +59,11 @@ class RemoteProfiler:
         with open(profile_path) as f:
             content = f.read()
 
-        return {
-            "host": self.host_name,
-            "profile_path": str(profile_path),
-            "content": content,
-        }
+        return ProfilingResults(
+            host=self.host_name,
+            profile_path=profile_path,
+            content=content,
+        )
 
 
 def enable_profiling(host_name: str, profile_lines: int, func):

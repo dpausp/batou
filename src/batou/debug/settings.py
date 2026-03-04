@@ -1,9 +1,20 @@
 """DebugSettings configuration from environment variables."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal, TypedDict
 
 from pydantic import BeforeValidator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class DebugSettingInfo(TypedDict):
+    """Structured information about a single debug setting field."""
+
+    field_name: str
+    env_var: str
+    possible_values: str | list[Any]
+    description: str
+    current_value: Any
+    default_value: Any
 
 
 def _int_to_literal(value):
@@ -58,7 +69,7 @@ class DebugSettings(BaseSettings):
         extra="ignore",
     )
 
-    def describe(self):
+    def describe(self) -> list[DebugSettingInfo]:
         """Return structured information about all debug settings.
 
         Returns a list of dictionaries with field name, environment variable name,
