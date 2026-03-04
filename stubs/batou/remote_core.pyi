@@ -3,8 +3,6 @@ from typing import Any, Protocol, TypedDict
 class FDTrackingStats(TypedDict, total=False):
     total_opens: int
     total_closes: int
-    open_fds: int
-    fd_leak: bool
     leaked_fds: list[tuple[int, str, str, str]]
     logs: list[str]
     fd_records: list[Any]

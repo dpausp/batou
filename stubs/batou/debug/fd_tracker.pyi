@@ -1,8 +1,32 @@
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, NamedTuple, TypedDict
 
 from batou.debug.settings import DebugSettings
 from batou.host import Host
+
+class FDTrackingLogEntry(NamedTuple):
+    """A single FD tracking log entry."""
+
+    time: str
+    count: int
+    path: str
+    mode: str
+    action: str
+
+class FileDescriptorState(NamedTuple):
+    """State of an open file for leak detection."""
+
+    path: str
+    mode: str
+    open_time: str
+
+class FDTrackingStats(TypedDict):
+    """File descriptor tracking statistics snapshot."""
+
+    total_opens: int
+    total_closes: int
+    leaked_fds: list[tuple[int, str, str, str]]
+    logs: list[FDTrackingLogEntry]
 
 class FileDescriptorTracker:
     enabled: bool

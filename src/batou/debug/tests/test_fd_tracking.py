@@ -90,8 +90,8 @@ def test_fd_tracker_remote_stats_serialization(monkeypatch):
     remote_stats = {
         "total_opens": 10,
         "total_closes": 5,
-        "open_fds": 5,
-        "fd_leak": False,
+        "leaked_fds": [],
+        "logs": [],
         "fd_records": {
             "/remote/path/file1.txt": {
                 "open_count": 5,
@@ -481,7 +481,9 @@ def test_fd_tracker_generate_reports_with_remote_rpc(monkeypatch):
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 15,
-        "open_fds": 5,
+        "total_closes": 10,
+        "leaked_fds": [],
+        "logs": [],
         "fd_records": {
             "/remote/file1.txt": {
                 "open_count": 10,
@@ -555,7 +557,9 @@ def test_fd_tracker_generate_reports_remote_stats_zero_opens(monkeypatch):
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 0,
-        "open_fds": 0,
+        "total_closes": 0,
+        "leaked_fds": [],
+        "logs": [],
         "fd_records": {},
     }
 
@@ -582,7 +586,9 @@ def test_fd_tracker_generate_reports_remote_stats_without_fd_records(
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 5,
-        "open_fds": 0,
+        "total_closes": 5,
+        "leaked_fds": [],
+        "logs": [],
         # NO fd_records key (line 405 branch)
     }
 
@@ -609,8 +615,8 @@ def test_fd_tracker_generate_reports_verbose_logging(monkeypatch):
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 20,
-        "open_fds": 0,
-        "fd_records": {},
+        "total_closes": 20,
+        "leaked_fds": [],
         "logs": [
             ("10:15:23.456", 1, "/path/to/file1.txt", "r", "open"),
             ("10:15:24.789", 2, "/path/to/file2.txt", "w", "open"),
@@ -647,7 +653,9 @@ def test_fd_tracker_generate_reports_merges_existing_paths(
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 3,
-        "open_fds": 0,
+        "total_closes": 3,
+        "leaked_fds": [],
+        "logs": [],
         "fd_records": {
             "/remote/file.txt": {
                 "open_count": 3,
@@ -690,7 +698,9 @@ def test_fd_tracker_generate_reports_merges_existing_modes(
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 2,
-        "open_fds": 0,
+        "total_closes": 2,
+        "leaked_fds": [],
+        "logs": [],
         "fd_records": {
             "/remote/file.txt": {
                 "open_count": 2,
@@ -723,7 +733,9 @@ def test_fd_tracker_generate_reports_appends_stack_traces(
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 5,
-        "open_fds": 0,
+        "total_closes": 5,
+        "leaked_fds": [],
+        "logs": [],
         "fd_records": {
             "/remote/file.txt": {
                 "open_count": 5,
@@ -764,8 +776,8 @@ def test_fd_tracker_generate_reports_many_logs(monkeypatch):
     host.rpc = mock.Mock()
     host.rpc.get_fd_tracking_stats.return_value = {
         "total_opens": 15,
-        "open_fds": 0,
-        "fd_records": {},
+        "total_closes": 15,
+        "leaked_fds": [],
         "logs": [
             (f"10:15:{i:02d}.456", i, f"/path/to/file{i}.txt", "r", "open")
             for i in range(1, 16)

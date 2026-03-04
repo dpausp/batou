@@ -466,11 +466,12 @@ def deploy(root, predict_only=False):
 
     # Report FD tracking stats using debug package function
     stats = get_remote_fd_tracking_stats()
-    if stats["open_fds"] > 200:
+    open_fds = len(stats["leaked_fds"])
+    if open_fds > 200:
         from batou._output import output
 
         output.line(
-            f"FD Leak Warning: {stats['open_fds']} FDs still open after deployment",
+            f"FD Leak Warning: {open_fds} FDs still open after deployment",
             red=True,
         )
         # Show leaked FD details

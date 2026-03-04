@@ -6,8 +6,7 @@ from typing import Any, NotRequired, TypedDict
 
 from batou.debug.fd_tracker import (
     FDTrackingLogEntry,
-    FileDescriptorInfo,
-    OpenFileState,
+    FileDescriptorState,
 )
 
 # Type for fd_records dictionary
@@ -21,10 +20,8 @@ class RemoteFDTrackingStats(TypedDict):
 
     total_opens: int
     total_closes: int
-    open_fds: int
-    fd_leak: bool
-    leaked_fds: NotRequired[list[FileDescriptorInfo]]
-    logs: NotRequired[list[FDTrackingLogEntry]]
+    leaked_fds: list[tuple[int, str, str, str]]
+    logs: list[FDTrackingLogEntry]
     fd_records: NotRequired[FDRecordDict]
 
 
@@ -33,7 +30,7 @@ _fd_tracking_enabled = False
 _fd_tracking_verbose = False
 _total_fd_opens = 0
 _total_fd_closes = 0
-_open_fds: dict[int, OpenFileState] = {}  # fd -> OpenFileState
+_open_fds: dict[int, FileDescriptorState] = {}  # fd -> FileDescriptorState
 _fd_tracking_logs: list[FDTrackingLogEntry] = []
 _fd_records = {}  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
 
@@ -53,7 +50,7 @@ def _track_fd_open(fd, path, mode="r"):
 
     now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
-    _open_fds[fd] = OpenFileState(path, mode, now)
+    _open_fds[fd] = FileDescriptorState(path, mode, now)
     _fd_tracking_logs.append(
         FDTrackingLogEntry(now, _total_fd_opens, path, mode, "open")
     )
@@ -171,16 +168,12 @@ def get_remote_fd_tracking_stats() -> RemoteFDTrackingStats:
     stats: RemoteFDTrackingStats = {
         "total_opens": _total_fd_opens,
         "total_closes": _total_fd_closes,
-        "open_fds": len(_open_fds),
-        "fd_leak": len(_open_fds) > 200,  # Same threshold as warning
-    }
-    if _open_fds:
-        stats["leaked_fds"] = [
-            FileDescriptorInfo(fd, path, mode, open_time)
+        "leaked_fds": [
+            (fd, path, mode, open_time)
             for fd, (path, mode, open_time) in _open_fds.items()
-        ]
-    if _fd_tracking_logs:
-        stats["logs"] = _fd_tracking_logs
+        ],
+        "logs": _fd_tracking_logs,
+    }
     if _fd_records:
         stats["fd_records"] = _fd_records
     return stats

@@ -4,18 +4,9 @@ import builtins
 import datetime
 import os
 import socket
-from typing import NamedTuple, NotRequired, TypedDict
+from typing import NamedTuple, TypedDict
 
 from batou import output
-
-
-class FileDescriptorInfo(NamedTuple):
-    """Information about an open file descriptor."""
-
-    fd: int
-    path: str
-    mode: str
-    open_time: str
 
 
 class FDTrackingLogEntry(NamedTuple):
@@ -28,7 +19,7 @@ class FDTrackingLogEntry(NamedTuple):
     action: str
 
 
-class OpenFileState(NamedTuple):
+class FileDescriptorState(NamedTuple):
     """State of an open file for leak detection."""
 
     path: str
@@ -41,10 +32,8 @@ class FDTrackingStats(TypedDict):
 
     total_opens: int
     total_closes: int
-    open_fds: int
-    fd_leak: bool
-    leaked_fds: NotRequired[list[FileDescriptorInfo]]
-    logs: NotRequired[list[FDTrackingLogEntry]]
+    leaked_fds: list[tuple[int, str, str, str]]
+    logs: list[FDTrackingLogEntry]
 
 
 class FileDescriptorTracker:
@@ -65,7 +54,7 @@ class FileDescriptorTracker:
         self.total_opens = 0
         self.total_closes = 0
         self.remote_opens = {}  # Track FD opens per remote host
-        self._open_fds: dict[int, OpenFileState] = {}  # fd -> OpenFileState
+        self._open_fds: dict[int, FileDescriptorState] = {}  # fd -> FileDescriptorState
         self._fd_tracking_logs: list[FDTrackingLogEntry] = []  # Structured logs
 
         # Install local FD tracking hook during initialization
@@ -160,7 +149,7 @@ class FileDescriptorTracker:
         now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
         # Track in _open_fds for leak detection (like remote)
-        self._open_fds[fd] = OpenFileState(path, mode, now)
+        self._open_fds[fd] = FileDescriptorState(path, mode, now)
 
         # Structured logging (like remote)
         self._fd_tracking_logs.append(
@@ -447,10 +436,8 @@ stats = get_statistics()
         return {
             "total_opens": self.total_opens,
             "total_closes": self.total_closes,
-            "open_fds": len(self._open_fds),
-            "fd_leak": len(self._open_fds) > 200,
             "leaked_fds": [
-                FileDescriptorInfo(fd, path, mode, open_time)
+                (fd, path, mode, open_time)
                 for fd, (path, mode, open_time) in self._open_fds.items()
             ],
             "logs": self._fd_tracking_logs,
@@ -531,21 +518,20 @@ stats = get_statistics()
             f"Local FD tracking: "
             f"{local_stats.get('total_opens', 0)} opens, "
             f"{local_stats.get('total_closes', 0)} closes, "
-            f"{local_stats.get('open_fds', 0)} still open",
+            f"{len(local_stats['leaked_fds'])} still open",
         )
 
         # Show leaked FDs if any (local)
-        if local_stats.get("fd_leak", False):
+        if len(local_stats["leaked_fds"]) > 200:
             output.annotate(
                 f"Local FD leak warning: "
-                f"{local_stats.get('open_fds', 0)} FDs still open",
+                f"{len(local_stats['leaked_fds'])} FDs still open",
                 red=True,
             )
-            if "leaked_fds" in local_stats:
-                for fd, path, mode, open_time in local_stats["leaked_fds"][:5]:
-                    output.line(f"  FD {fd}: {path} ({mode}) since {open_time}")
-                if len(local_stats["leaked_fds"]) > 5:
-                    output.line(f"  ... and {len(local_stats['leaked_fds']) - 5} more")
+            for fd, path, mode, open_time in local_stats["leaked_fds"][:5]:
+                output.line(f"  FD {fd}: {path} ({mode}) since {open_time}")
+            if len(local_stats["leaked_fds"]) > 5:
+                output.line(f"  ... and {len(local_stats['leaked_fds']) - 5} more")
 
         if self.remote_opens:
             local_opens = self.total_opens - sum(self.remote_opens.values())

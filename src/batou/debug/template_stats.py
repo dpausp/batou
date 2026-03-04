@@ -44,11 +44,15 @@ class TemplateStats:
     def collect_component_stats(self, components: list[Component]):
         """Collect template cache statistics from components."""
         for component in components:
-            if hasattr(component, "_template_engine"):
-                stats = component._template_engine.retrieve_cache_stats()
-                self.record_hit(stats["hits"])
-                self.record_miss(stats["misses"])
-                self.update_size(stats["currsize"])
+            template_engine = getattr(component, "_template_engine", None)
+            if template_engine is not None:
+                retrieve_stats = getattr(template_engine, "retrieve_cache_stats", None)
+                if callable(retrieve_stats):
+                    stats = retrieve_stats()
+                    if stats:
+                        self.record_hit(stats["hits"])
+                        self.record_miss(stats["misses"])
+                        self.update_size(stats["currsize"])
 
     def get_stats(self) -> TemplateCacheStats:
         """Return current statistics as a dictionary."""
