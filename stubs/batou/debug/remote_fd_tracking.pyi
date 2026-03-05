@@ -5,8 +5,9 @@ from typing import Any, NotRequired, TypedDict
 from batou.debug.fd_tracker import FDTrackingLogEntry
 
 # Type for fd_records dictionary
-FDRecordDict = dict[
-    str, dict[str, Any]
+type FDRecordDict = dict[
+    str,
+    dict[str, Any],
 ]  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
 
 class RemoteFDTrackingStats(TypedDict):

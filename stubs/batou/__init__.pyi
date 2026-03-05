@@ -143,7 +143,9 @@ class DuplicateComponent(ConfigurationError):
 
     @classmethod
     def from_context(
-        cls, a: ComponentDefinition, b: ComponentDefinition,
+        cls,
+        a: ComponentDefinition,
+        b: ComponentDefinition,
     ) -> DuplicateComponent: ...
     @property
     def sort_key(self) -> tuple[int, str]: ...
