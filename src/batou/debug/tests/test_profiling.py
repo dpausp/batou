@@ -2,11 +2,10 @@
 
 import glob
 import tempfile
-from unittest.mock import patch
 
 import pytest
 
-from batou.debug.profiling import RemoteProfiler, enable_profiling
+from batou.debug.profiling import RemoteProfiler
 
 pytestmark = pytest.mark.debug
 
@@ -85,21 +84,3 @@ def test_get_profiling_results_no_file():
 
     results = profiler.get_profiling_results()
     assert results is None
-
-
-def test_enable_profiling_wrapper():
-    """Test enable_profiling wrapper function."""
-
-    def test_func():
-        return "wrapped-result"
-
-    # Mock RemoteProfiler to verify it's called
-    with patch("batou.debug.profiling.RemoteProfiler") as MockProfiler:
-        mock_profiler_instance = MockProfiler.return_value
-        mock_profiler_instance.profile_execution.return_value = "mocked-result"
-
-        result = enable_profiling("test-host", 30, test_func)
-
-        assert result == "mocked-result"
-        MockProfiler.assert_called_once_with("test-host", 30)
-        mock_profiler_instance.profile_execution.assert_called_once_with(test_func)

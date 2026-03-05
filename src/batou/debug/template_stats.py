@@ -22,12 +22,6 @@ class TemplateStats:
         self.misses = 0
         self.size = 0
 
-    def reset(self):
-        """Reset all statistics."""
-        self.hits = 0
-        self.misses = 0
-        self.size = 0
-
     def record_hit(self, count=1):
         """Record template cache hit(s)."""
         self.hits += count
@@ -57,16 +51,6 @@ class TemplateStats:
     def get_stats(self) -> TemplateCacheStats:
         """Return current statistics as a dictionary."""
         return {"hits": self.hits, "misses": self.misses, "size": self.size}
-
-    def humanize(self):
-        """Format statistics for human-readable display."""
-        if self.hits + self.misses == 0:
-            return ""
-        hit_rate = 100 * self.hits / (self.hits + self.misses)
-        return (
-            f"Template cache: {self.hits} hits, {self.misses} misses, "
-            f"{self.size} cached templates ({hit_rate:.1f}% hit rate)"
-        )
 
     def show_stats(self):
         stats = self.get_stats()

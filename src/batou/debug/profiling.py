@@ -64,9 +64,3 @@ class RemoteProfiler:
             profile_path=profile_path,
             content=content,
         )
-
-
-def enable_profiling(host_name: str, profile_lines: int, func):
-    """Context-aware profiling wrapper."""
-    profiler = RemoteProfiler(host_name, profile_lines)
-    return profiler.profile_execution(func)

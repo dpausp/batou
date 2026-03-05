@@ -356,50 +356,6 @@ def test_fd_tracker_performance_overhead_enabled(monkeypatch, tmpdir):
     tracker.report("local", "test_env")
 
 
-@mock.patch("builtins.open")
-def test_fd_tracker_remote_hook_installation(mock_open, monkeypatch):
-    """Test that remote hook is installed via execnet gateway."""
-    monkeypatch.setenv("BATOU_TRACK_FDS", "1")
-
-    tracker = FileDescriptorTracker("test", DebugSettings())
-
-    # Mock execnet gateway
-    mock_gateway = mock.Mock()
-    mock_gateway.remote_exec.return_value.receive.return_value = {
-        "fd_records": {},
-        "total_opens": 10,
-    }
-
-    # Install remote hook
-    tracker.install_remote_hook(mock_gateway)
-
-    # Verify remote_exec was called
-    assert mock_gateway.remote_exec.called
-
-    # Verify get_remote_logs works
-    stats = tracker.get_remote_logs(mock_gateway)
-    assert stats is not None
-    assert stats["total_opens"] == 10
-
-
-def test_fd_tracker_remote_hook_not_installed_when_disabled(monkeypatch):
-    """Test that remote hook is not installed when tracking is disabled."""
-    monkeypatch.delenv("BATOU_TRACK_FDS", raising=False)
-
-    tracker = FileDescriptorTracker("test", DebugSettings())
-
-    # Mock execnet gateway
-    mock_gateway = mock.Mock()
-    tracker.install_remote_hook(mock_gateway)
-
-    # Verify remote_exec was not called
-    assert not mock_gateway.remote_exec.called
-
-    # Verify get_remote_logs returns None
-    stats = tracker.get_remote_logs(mock_gateway)
-    assert stats is None
-
-
 def test_fd_tracker_report_ascii_trend_graph(monkeypatch, tmpdir):
     """Test that report generates ASCII trend graph."""
     monkeypatch.setenv("BATOU_TRACK_FDS", "1")

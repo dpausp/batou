@@ -181,19 +181,3 @@ def get_debug_settings():
         # Create fresh instance - Pydantic reads current os.environ here
         _debug_settings_singleton = DebugSettings()
     return _debug_settings_singleton
-
-
-def set_debug_settings(value):
-    """Set the debug_settings singleton (for test fixtures)."""
-    global _debug_settings_singleton
-    _debug_settings_singleton = value
-
-
-def reset_debug_settings():
-    """Reset the debug_settings singleton (for testing).
-
-    This forces recreation on next access with fresh environment variables.
-    Test fixtures should call this after monkeypatching environment variables.
-    """
-    global _debug_settings_singleton
-    _debug_settings_singleton = None
