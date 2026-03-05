@@ -3,7 +3,7 @@
 **Status:** Design
 **Feature:** F-006 - Batommel CLI Consolidation
 **Date:** 2026-02-17
-**Mode:** Refactor (behavior-preserving)
+**Mode:** Build (deploy subcommand) + Refactor (CLI consolidation)
 
 ---
 
@@ -18,7 +18,9 @@ This Software Design Document (SDD) describes the consolidation of batou's stand
 - Create new `batommel` top-level CLI command
 - Convert `migrate_toml.py` from argparse to Typer CLI framework
 - Consolidate `check` and `migrate-toml` as subcommands
+- Add `deploy` subcommand for TOML-based deployments
 - Remove standalone entry points from pyproject.toml
+- Remove TOML loading from batou core environment.py
 - Preserve all existing functionality and UX
 
 ### 1.3 Design Goals
@@ -98,8 +100,13 @@ batommel (entry point)
             ├── batou.migrate_toml:app (migrate-toml subcommand)
             │       └── Migration functions
             │
-            └── batou.toml_to_ini:app (toml-to-ini subcommand)
-                    └── Reuses config_toml.to_legacy_format()
+            ├── batou.toml_to_ini:app (toml-to-ini subcommand)
+            │       └── Reuses config_toml.to_legacy_format()
+            │
+            └── batou.deploy:app (deploy subcommand) [NEW]
+                    ├── Converts environment.toml → environment.cfg
+                    ├── Shows diff before overwriting
+                    └── Calls batou.main:main with deployment args
 ```
 
 **Key Design Decision:** Existing modules remain self-contained. The batommel package only handles registration, not implementation.
@@ -114,6 +121,7 @@ batommel (entry point)
 | `batommel check` | Subcommand | Same as former `batou-check` |
 | `batommel migrate-toml` | Subcommand | Same as former `batou-migrate-toml` |
 | `batommel toml-to-ini` | Subcommand | Converts environment.toml → environment.cfg |
+| `batommel deploy` | Subcommand | Converts TOML → INI, then calls batou deploy |
 
 ---
 
@@ -305,6 +313,92 @@ app.add_typer(toml_to_ini_app, name="toml-to-ini")
 
 ---
 
+### D-012: Add deploy Subcommand for TOML-based Deployments
+
+**Context:** Users with TOML configs need seamless deployment without manual conversion. TOML loading in batou core (environment.py) creates dependency issues for users without batommel extra.
+
+**Options:**
+
+1. Keep TOML in core - violates isolation requirement, causes ModuleNotFoundError
+2. Require manual conversion (toml-to-ini + batou deploy) - poor UX, error-prone
+3. Add batommel deploy wrapper - seamless TOML deployment, clean separation
+
+**Decision:** Create new `deploy` subcommand that converts TOML → INI, then calls batou deploy.
+
+**Implementation:**
+- Reuse existing `toml_to_ini.convert_toml_to_ini()` for conversion
+- Show unified diff before overwriting environment.cfg
+- Delegate to `batou.main:main()` with all deployment arguments
+- Remove TOML imports from `batou/environment.py:206-213`
+
+**Consequences:**
+
+- (+) Clean TOML isolation - batou core has zero TOML dependencies
+- (+) Seamless deployment workflow for TOML users
+- (+) TOML as source of truth, INI as generated artifact
+- (+) Transparent argument passthrough to batou deploy
+- (-) Additional subcommand increases batommel surface area
+
+**Constraint Mapping:** C-008-toml-isolation (MUST), C-009-deploy-wrapper (MUST)
+
+---
+
+### D-013: Deploy Subcommand Shows Diff Before Overwriting
+
+**Context:** Users need visibility when environment.cfg changes to review modifications before deployment proceeds.
+
+**Options:**
+
+1. Silent overwrite - users can't review changes
+2. Show diff and require confirmation - blocks CI/CD automation
+3. Show diff by default, skip with --quiet flag - balances visibility and automation
+
+**Decision:** Show unified diff before overwriting environment.cfg. Use --quiet flag for CI/CD automation.
+
+**Implementation:**
+- Use `difflib.unified_diff()` for diff generation
+- Display with Rich syntax highlighting
+- Skip diff display if --quiet or --force flag present
+
+**Consequences:**
+
+- (+) Transparency - users see what changed
+- (+) CI/CD friendly with --quiet flag
+- (+) Consistent with batou's diff-display patterns
+- (-) Additional flag complexity
+
+**Constraint Mapping:** C-010-diff-transparency (SHOULD)
+
+---
+
+### D-014: TOML Takes Precedence Over Manual INI Edits
+
+**Context:** When both environment.toml and environment.cfg exist, need clear precedence to avoid confusion.
+
+**Options:**
+
+1. INI wins - TOML is secondary, manual edits preserved
+2. Error on conflict - force user to choose
+3. TOML wins - TOML is source of truth, INI regenerated
+
+**Decision:** TOML always wins. Manual INI edits are user's responsibility. batommel deploy regenerates INI from TOML on each deployment.
+
+**Rationale:**
+- TOML is the source of truth in TOML-based workflows
+- Generated INI is deployment artifact, not configuration source
+- Clear mental model: edit TOML, deploy regenerates INI
+
+**Consequences:**
+
+- (+) Predictable behavior - TOML is authoritative
+- (+) No merge conflict resolution complexity
+- (-) Manual INI edits lost on each deployment
+- (-) Users must commit to TOML workflow
+
+**Constraint Mapping:** C-011-toml-precedence (MUST)
+
+---
+
 ## 5. Module Design
 
 ### 5.1 Main App Module (`batommel/__init__.py`)
@@ -485,6 +579,71 @@ def convert(
 
 ---
 
+### 5.5 Deploy Subcommand (`deploy.py`)
+
+**D-015:** New module for TOML-based deployment wrapper
+
+**Responsibilities:**
+
+- Create Typer app for deploy subcommand
+- Accept all batou deploy arguments (environment, --timeout, --dirty, etc.)
+- Convert environment.toml → environment.cfg using `toml_to_ini.convert_toml_to_ini()`
+- Show unified diff before overwriting (unless --quiet or --force)
+- Delegate to `batou.main:main()` with deployment arguments
+- Handle errors from conversion and deployment phases
+
+**Public Interface:**
+```python
+import typer
+from typing import Annotated
+from pathlib import Path
+import difflib
+from batou.toml_to_ini import convert_toml_to_ini, format_ini
+from batou.config_toml import load_toml_config, to_legacy_format
+
+app = typer.Typer(
+    no_args_is_help=True,
+    help="Deploy using TOML configuration (converts to INI first).",
+)
+
+@app.command()
+def deploy(
+    environment: Annotated[str, typer.Argument(help="Environment to deploy")],
+    timeout: Annotated[int, typer.Option(help="Deployment timeout")] = 120,
+    dirty: Annotated[bool, typer.Option(help="Allow dirty working directory")] = False,
+    quiet: Annotated[bool, typer.Option("-q", "--quiet", help="Suppress diff output")] = False,
+    force: Annotated[bool, typer.Option("-f", "--force", help="Overwrite without confirmation")] = False,
+    # ... additional batou deploy arguments
+):
+    """Deploy using TOML configuration (converts to INI first)."""
+    # 1. Find environment.toml
+    # 2. Convert to INI using toml_to_ini
+    # 3. Show diff (unless quiet/force)
+    # 4. Call batou.main:main() with args
+```
+
+**Workflow:**
+1. Locate `environments/<env>/environment.toml`
+2. Load TOML with `load_toml_config()`
+3. Convert to legacy format with `to_legacy_format()`
+4. Generate INI string with `format_ini()`
+5. If environment.cfg exists: show unified diff (unless --quiet/--force)
+6. Write environment.cfg
+7. Call `batou.main:main()` with deployment arguments
+
+**Reused Components:**
+
+| Function | Source Module | Purpose |
+|----------|---------------|---------|
+| `load_toml_config()` | config_toml | Parse and validate TOML |
+| `to_legacy_format()` | config_toml | Convert to legacy dict |
+| `format_ini()` | toml_to_ini | Format dict as INI |
+| `main()` | batou.main | Actual deployment execution |
+
+**Constraint Mapping:** C-008-toml-isolation (MUST), C-009-deploy-wrapper (MUST), C-010-diff-transparency (SHOULD), C-011-toml-precedence (MUST)
+
+---
+
 ## 6. Entry Point Changes
 
 ### 6.1 pyproject.toml Updates
@@ -522,6 +681,10 @@ batommel = "batou.batommel:app"
 | (new) | `batommel toml-to-ini` | Converts environment.toml → environment.cfg |
 | (new) | `batommel toml-to-ini --dry-run` | Shows what would be generated |
 | (new) | `batommel toml-to-ini -o output.cfg` | Writes to specified output file |
+| (new) | `batommel deploy prod` | Converts TOML → INI, then deploys |
+| (new) | `batommel deploy prod --dirty` | Allows dirty working directory |
+| (new) | `batommel deploy prod --quiet` | Suppresses diff output |
+| (new) | `batommel deploy prod --force` | Overwrites INI without confirmation |
 
 ---
 
@@ -540,6 +703,10 @@ batommel = "batou.batommel:app"
 | D-009: toml-to-ini subcommand | toml_to_ini.py | Test INI output matches expected format |
 | D-010: Consistent CLI pattern | toml_to_ini.py | Verify options match migrate-toml |
 | D-011: Reuse to_legacy_format | toml_to_ini.py | Import verification, unit tests |
+| D-012: Deploy subcommand | deploy.py | Test TOML → INI → deploy workflow |
+| D-013: Diff before overwrite | deploy.py | Test diff display with/without --quiet |
+| D-014: TOML precedence | deploy.py | Test that TOML overwrites manual INI edits |
+| D-015: Deploy module design | deploy.py | Code review, integration tests |
 
 ---
 
@@ -554,6 +721,10 @@ batommel = "batou.batommel:app"
 | C-005-rich-output | MUST | D-005, D-007 | check.py Rich tables preserved |
 | C-006-reuse-legacy-format | MUST | D-009, D-011 | Import from config_toml.py |
 | C-007-cli-pattern-consistency | MUST | D-010 | Option names match migrate-toml |
+| C-008-toml-isolation | MUST | D-012 | No TOML imports in environment.py |
+| C-009-deploy-wrapper | MUST | D-012, D-015 | Delegation to batou.main:main() |
+| C-010-diff-transparency | SHOULD | D-013 | Diff display in deploy.py |
+| C-011-toml-precedence | MUST | D-014 | TOML overwrites INI on deploy |
 
 ---
 
@@ -598,6 +769,19 @@ Usage: batommel toml-to-ini [OPTIONS] [PATH]
   Convert batou environment.toml to environment.cfg.
 ```
 
+### batommel deploy (new)
+```
+Usage: batommel deploy [OPTIONS] ENVIRONMENT
+  Deploy using TOML configuration (converts to INI first).
+
+Options:
+  --timeout INTEGER  Deployment timeout  [default: 120]
+  --dirty            Allow dirty working directory
+  -q, --quiet        Suppress diff output
+  -f, --force        Overwrite without confirmation
+  --help             Show this message and exit.
+```
+
 ---
 
 ## Appendix B: migrate_toml.py Conversion Checklist
@@ -635,6 +819,50 @@ Usage: batommel toml-to-ini [OPTIONS] [PATH]
 - [ ] Handle force mode (overwrite existing)
 - [ ] Add `if __name__ == "__main__": app()` for direct execution
 - [ ] Register in `batommel/__init__.py` with `app.add_typer(toml_to_ini_app, name="toml-to-ini")`
+
+---
+
+## Appendix D: deploy.py Implementation Checklist
+
+- [ ] Create `src/batou/deploy.py` module
+- [ ] Create `app = typer.Typer()` instance
+- [ ] Add `no_args_is_help=True` to app
+- [ ] Import `load_toml_config`, `to_legacy_format` from `batou.config_toml`
+- [ ] Import `format_ini`, `convert_toml_to_ini` from `batou.toml_to_ini`
+- [ ] Import `main` from `batou.main` for delegation
+- [ ] Import `difflib` for unified diff generation
+- [ ] Define `environment` positional argument with `Annotated[str, typer.Argument()]`
+- [ ] Define batou deploy options: `--timeout`, `--dirty`, `--consistency-timeout`, etc.
+- [ ] Define `--quiet` flag to suppress diff output
+- [ ] Define `--force` flag to skip confirmation
+- [ ] Create `deploy()` function with `@app.command()` decorator
+- [ ] Implement TOML file location: `environments/<env>/environment.toml`
+- [ ] Load TOML using `load_toml_config()`
+- [ ] Convert to legacy format using `to_legacy_format()`
+- [ ] Generate INI string using `format_ini()`
+- [ ] Check if environment.cfg exists
+- [ ] If exists and not --force/--quiet: generate and display unified diff
+- [ ] Write environment.cfg to `environments/<env>/environment.cfg`
+- [ ] Construct sys.argv for batou.main:main()
+- [ ] Call `main()` with deployment arguments
+- [ ] Handle errors from both conversion and deployment phases
+- [ ] Add `if __name__ == "__main__": app()` for direct execution
+- [ ] Register in `batommel/__init__.py` with `app.command(name="deploy")(deploy)`
+
+---
+
+## Appendix E: environment.py TOML Removal Checklist
+
+- [ ] Remove TOML imports from `src/batou/environment.py`:
+  - [ ] Remove `import pathlib`
+  - [ ] Remove `from batou.config_toml import ConfigLoadError, DictConfig, load_toml_config, to_legacy_format`
+- [ ] Remove TOML file detection logic (lines 206-213)
+- [ ] Remove `toml_file` path construction
+- [ ] Remove conditional TOML loading block
+- [ ] Ensure only INI loading remains (configparser)
+- [ ] Update docstring if it mentions TOML support
+- [ ] Run tests to verify INI-only loading works
+- [ ] Verify no other modules import TOML-related functions from environment.py
 
 ---
 
