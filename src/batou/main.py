@@ -17,6 +17,68 @@ from batou._output import TerminalBackend, output
 from batou.utils import find_basedir
 from batou.version import format_version, get_version, is_dev_version
 
+
+def ssh_main(
+    environment: str, host: str, command: str, check_hostkey: bool = True
+) -> None:
+    """Execute SSH command on remote host (experimental)."""
+    from pathlib import Path
+
+    from batou.environment import Environment
+    from batou.ssh import SSHClient, SSHConfig, SSHError
+
+    try:
+        # Load environment
+        env = Environment(environment)
+        env.load()
+
+        # Get target host
+        target_host = env.get_host(host)
+
+        # Build SSH config
+        ssh_config_path = None
+        env_ssh_config = Path(f"ssh_config_{environment}")
+        if env_ssh_config.exists():
+            ssh_config_path = str(env_ssh_config)
+
+        ssh_config = SSHConfig(
+            hostname=target_host.fqdn, ssh_config_path=ssh_config_path
+        )
+
+        # Create client
+        client = SSHClient(ssh_config)
+
+        # Check host key if requested
+        if check_hostkey:
+            if not client.ensure_known_host():
+                output.error(f"Failed to verify host key for {target_host.fqdn}")
+                sys.exit(1)
+
+        # Execute command
+        result = client.run(command)
+
+        # Show output
+        if result["stdout"]:
+            output.line(result["stdout"])
+        if result["stderr"]:
+            output.line(result["stderr"], red=True)
+
+        output.tabular("Exit code", str(result["returncode"]))
+
+        if result["returncode"] != 0:
+            sys.exit(result["returncode"])
+
+        # Close connection
+        client.close()
+
+    except SSHError as e:
+        output.error(f"SSH error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        output.error(f"Unexpected error: {e}")
+        sys.exit(1)
+
+
 # Backwards compatibility aliases
 _get_version = get_version
 _format_version = format_version
@@ -231,6 +293,23 @@ def main(args: list | None = None) -> None:
         help="Used internally when bootstrapping a new batou project.",
     )
     migrate.set_defaults(func=batou.migrate.main)
+
+    # SSH (experimental)
+    p = subparsers.add_parser(
+        "ssh",
+        help="Execute SSH command on remote host (experimental).",
+    )
+    p.set_defaults(func=p.print_usage)
+    p.add_argument("environment", help="Environment name")
+    p.add_argument("host", help="Host name")
+    p.add_argument("command", help="Command to execute")
+    p.add_argument(
+        "--check-hostkey",
+        action="store_true",
+        default=True,
+        help="Check host key before connection",
+    )
+    p.set_defaults(func=ssh_main)
 
     args: argparse.Namespace = parser.parse_args(args)
 
