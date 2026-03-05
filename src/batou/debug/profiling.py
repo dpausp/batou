@@ -26,6 +26,14 @@ class RemoteProfiler:
 
     def profile_execution(self, func):
         """Execute function with profiling enabled."""
+        import os
+
+        # Check if profiling is enabled via environment variable
+        if not os.environ.get("BATOU_PROFILE"):
+            # Profiling disabled - just execute function without profiling
+            return func()
+
+        # Profiling enabled - proceed with cProfile
         import cProfile
         import pstats
 

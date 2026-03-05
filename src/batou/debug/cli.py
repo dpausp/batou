@@ -12,7 +12,7 @@ from rich.text import Text
 from batou.debug.settings import get_debug_settings
 
 debug_settings = get_debug_settings()
-console = Console()
+console = Console(width=200)
 
 
 def main(args: list[str] | None = None) -> None:
