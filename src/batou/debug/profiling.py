@@ -50,7 +50,7 @@ class RemoteProfiler:
 
         return result
 
-    def get_profiling_results(self) -> ProfilingResults | None:
+    def get_profiling_results(self) -> dict | None:
         """Retrieve profiling results from remote host."""
         profile_path = self.output_dir / f"batou_remote_profile_{self.host_name}.txt"
         if not profile_path.exists():
@@ -59,8 +59,8 @@ class RemoteProfiler:
         with open(profile_path) as f:
             content = f.read()
 
-        return ProfilingResults(
-            host=self.host_name,
-            profile_path=profile_path,
-            content=content,
-        )
+        return {
+            "host": self.host_name,
+            "profile_path": str(profile_path),
+            "content": content,
+        }

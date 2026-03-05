@@ -71,8 +71,8 @@ def test_get_profiling_results_with_existing_file():
         results = profiler.get_profiling_results()
 
         assert results is not None
-        assert results.host == "test-host-existing"
-        assert expected_content in results.content
+        assert results["host"] == "test-host-existing"
+        assert expected_content in results["content"]
 
 
 def test_get_profiling_results_no_file():
