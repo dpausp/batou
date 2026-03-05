@@ -30,3 +30,8 @@ design_file = "./specs/design/debug-settings.md"
 [features.F-006]
 slug = "batommel-cli"
 design_file = "./specs/SDD-F006-batommel-cli.md"
+
+[features.F-007]
+slug = "ssh-feature"
+requirements_file = "./specs/requirements/ssh-feature.md"
+design_file = "./specs/design/ssh-feature.md"
