@@ -19,6 +19,7 @@ def test_remote_deployment_initializable(sample_service):
     Deployment(env, platform="", jobs=1, timeout=30, dirty=False)
 
 
+@pytest.mark.slow
 def test_remote_bundle_breaks_on_missing_head(sample_service):
     cmd("hg init")
     env = mock.Mock()

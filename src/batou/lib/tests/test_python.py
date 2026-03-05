@@ -1,9 +1,12 @@
 import sys
 
+import pytest
+
 from batou.component import Component
 from batou.lib.python import VirtualEnv
 
 
+@pytest.mark.slow
 def test_venv_creates_correct_python_version(root):
     """Test that VirtualEnv creates a venv with the requested Python version."""
     import ast
@@ -28,6 +31,7 @@ def test_venv_creates_correct_python_version(root):
     assert (sys.version_info.major, sys.version_info.minor) == ast.literal_eval(out)
 
 
+@pytest.mark.slow
 def test_venv_does_not_update_if_python_does_not_change(root):
     """Test that VirtualEnv is idempotent when Python version stays the same."""
 

@@ -36,6 +36,7 @@ def test_untar_extracts_archive_to_target_directory(root):
     assert os.listdir(str(extract.target)) == ["foo"]
 
 
+@pytest.mark.slow
 def test_ignores_ctime_for_directories(root, tmp_path):
     # This is hard to test: ctime can not be changed directly,
     # we thus have to perform a somewhat elaborate dance to align

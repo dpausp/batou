@@ -2,6 +2,8 @@
 
 import os
 
+import pytest
+
 from batou.check import (
     CheckCommand,
     LocalValidator,
@@ -121,6 +123,7 @@ def test_find_basedir_cwd_fallback(monkeypatch):
 # =============================================================================
 
 
+@pytest.mark.slow
 def test_check_success_case(sample_service, monkeypatch):
     """Test check command with successful validation."""
     monkeypatch.chdir(sample_service)

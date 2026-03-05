@@ -359,6 +359,7 @@ class NotifyTests(unittest.TestCase):
     #     notify('foo', 'bar')
     #     call.assert_called_with(['notify-send', 'foo', 'bar'])
 
+    @pytest.mark.slow
     @mock.patch("subprocess.check_call", side_effect=OSError)
     def test_notify_does_not_fail_if_os_call_fails(self, call):
         notify("foo", "bar")

@@ -6,6 +6,7 @@ from batou.environment import Environment
 from batou.secrets.edit import Editor
 
 
+@pytest.mark.slow
 def test_edit_gpg(tmpdir):
     editor = Editor(
         "true",

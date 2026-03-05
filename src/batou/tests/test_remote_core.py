@@ -265,6 +265,7 @@ def test_channelexec_handle_exception(remote_core_mod):
         next(response)
 
 
+@pytest.mark.slow
 def test_git_remote_init_bundle(tmpdir, git_main_branch):
     source = tmpdir.mkdir("source")
     dest = tmpdir.mkdir("dest")
@@ -283,6 +284,7 @@ def test_git_remote_init_bundle(tmpdir, git_main_branch):
     assert "bar" == dest.join("foo.txt").read()
 
 
+@pytest.mark.slow
 def test_git_remote_init_pull(tmpdir, git_main_branch):
     source = tmpdir.mkdir("source")
     dest = tmpdir.mkdir("dest")

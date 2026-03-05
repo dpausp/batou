@@ -91,6 +91,7 @@ x = 1
     assert 0 != encrypted_file.stat().st_size
 
 
+@pytest.mark.slow
 def test_write_fails_if_recipient_key_is_missing_keeps_old_file(encrypted_file):
     encrypted = GPGEncryptedFile(pathlib.Path(encrypted_file), writeable=True)
     with encrypted as secrets:

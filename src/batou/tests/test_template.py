@@ -57,6 +57,7 @@ def test_jinja2_template_file():
         assert ref.read() == result
 
 
+@pytest.mark.slow
 @mock.patch("batou.remote_core.Output.line")
 def test_jinja2_large_template_str(output):
     tmpl = TemplateEngine.get("jinja2")

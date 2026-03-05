@@ -14,6 +14,7 @@ from batou.repository import (
 )
 
 
+@pytest.mark.slow
 def test_repository_hg_norepo(tmpdir):
     tmpdir = str(tmpdir)
     environment = mock.Mock()
@@ -28,6 +29,7 @@ def test_repository_hg_norepo(tmpdir):
     MercurialRepository(environment)
 
 
+@pytest.mark.slow
 def test_repository_hg_show_upstream(tmpdir):
     tmpdir = str(tmpdir)
     environment = mock.Mock()
@@ -70,6 +72,7 @@ default = ssh://test@example.com/repos
     assert repository.upstream == "ssh://test@example.com/repos"
 
 
+@pytest.mark.slow
 def test_repository_hg_verify(tmpdir):
     tmpdir = str(tmpdir)
     environment = mock.Mock()
@@ -118,6 +121,7 @@ default = file:///{tmpdir}/remote
     repository.verify()
 
 
+@pytest.mark.slow
 def test_repository_hg_ship_verify_after_ship(tmpdir):
     tmpdir = str(tmpdir)
     environment = mock.Mock()

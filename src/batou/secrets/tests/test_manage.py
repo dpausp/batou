@@ -43,6 +43,7 @@ def test_manage__2(tmp_path, monkeypatch, capsys):
     assert "306151601E813A47" in out
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(
     sys.version_info < (3, 7),
     reason="age is available in tests with python 3.7 only",
