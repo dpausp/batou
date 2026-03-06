@@ -25,7 +25,7 @@ Check pyproject.toml for available build/lint/test tools/commands.
 - **Target Python**: 3.10+ for implementation code (.py), 3.14+ for type stubs (.pyi)
 
 ### Type Hints
-- Optional but encouraged
+- we strive for comprehensively-typed code
 - Use Python 3.10+ syntax: `list[str]` not `List[str]`, `X | None` not `Optional[X]`
 - Simple return hints: `def git_main_branch() -> str:`
 - No `from __future__ import annotations`
