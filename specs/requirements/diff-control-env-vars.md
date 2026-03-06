@@ -169,6 +169,45 @@ All behavior-altering ENV vars must be visible at startup to prevent surprises d
 - Diffs shown for all files including those marked sensitive
 - User can verify changes manually
 
+## Verification
+
+### Test Coverage Requirements
+
+All 5 functional requirements MUST have corresponding test cases with proper traceability.
+
+**Test Traceability Requirements:**
+- Each test function MUST include REQ-FUNC-003-XXX comment reference
+- Test file location: src/batou/tests/test_diff_control.py (to be created)
+- Tests MUST cover environment variable parsing and behavior
+- Tests MUST verify startup logging for behavior-changing variables
+- Tests MUST ensure backward compatibility
+
+### Verification Matrix
+
+| Requirement ID | Verification Method | Test Function | Test Location | Status |
+|----------------|---------------------|---------------|---------------|--------|
+| REQ-FUNC-003-001 | test | test_batou_show_diff_full | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-001 | test | test_batou_show_diff_summary | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-001 | test | test_batou_show_diff_none | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-001 | test | test_batou_show_diff_invalid | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-002 | test | test_batou_show_secret_diffs_enabled | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-002 | test | test_batou_show_secret_diffs_disabled | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-003 | test | test_startup_logging_env_vars | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-003 | test | test_startup_logging_secret_warning | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-004 | test | test_file_component_diff_modes | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-004 | test | test_file_component_sensitive_data | test_diff_control.py | **Missing** |
+| REQ-FUNC-003-005 | test | test_backward_compatibility | test_diff_control.py | **Missing** |
+
+### Missing Test Coverage
+
+**ALL requirements lack test coverage (0/5 tested).** Critical gap requiring immediate attention:
+
+1. **REQ-FUNC-003-001**: BATOU_SHOW_DIFF environment variable behavior (full/summary/none)
+2. **REQ-FUNC-003-002**: BATOU_SHOW_SECRET_DIFFS override behavior
+3. **REQ-FUNC-003-003**: Startup logging for behavior-changing variables
+4. **REQ-FUNC-003-004**: File component diff control integration
+5. **REQ-FUNC-003-005**: Backward compatibility verification
+
 ## Acceptance Criteria
 
 - [ ] `BATOU_SHOW_DIFF=summary` shows file list only
@@ -179,3 +218,4 @@ All behavior-altering ENV vars must be visible at startup to prevent surprises d
 - [ ] Default behavior unchanged (backward compatibility)
 - [ ] Invalid values fall back to `full` with warning
 - [ ] Sensitive override displays warning at startup
+- [ ] All tests have REQ-FUNC-003-XXX traceability comments

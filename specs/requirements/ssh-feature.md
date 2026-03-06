@@ -105,10 +105,16 @@ All requirements apply to the experimental SSH feature. No integration with exis
 
 The system shall provide `batou ssh <environment> <host> <command>` command for SSH operations.
 
+**CLI Registration Requirements:**
+- Command MUST be registered in src/batou/main.py using argparse subparsers
+- Help text MUST include "(experimental)" marker
+- Command MUST be registered with function ssh_main from main.py
+
 Command arguments:
-- environment: batou environment name
-- host: target hostname from environment configuration
-- command: shell command to execute on remote host
+- environment: batou environment name (required)
+- host: target hostname from environment configuration (required)
+- command: shell command to execute on remote host (required)
+- --check-hostkey: Check host key before connection (default: True)
 
 #### 3.1.2 SSH Configuration Interface
 
@@ -166,29 +172,56 @@ Feature shall follow batou's experimental feature guidelines and be clearly mark
 
 ## 4. Verification
 
-| Requirement ID | Verification Method | Test Location | Status |
-|----------------|---------------------|---------------|--------|
-| REQ-FUNC-SSH-001 | test | test_ssh.py::test_host_key_check | Pending |
-| REQ-FUNC-SSH-002 | test | test_ssh.py::test_host_key_failure | Pending |
-| REQ-FUNC-SSH-003 | test | test_ssh.py::test_auto_add_host_key | Pending |
-| REQ-FUNC-SSH-004 | test | test_ssh.py::test_no_interactive_prompt | Pending |
-| REQ-FUNC-SSH-005 | test | test_ssh.py::test_command_execution | Pending |
-| REQ-FUNC-SSH-006 | test | test_ssh.py::test_stdout_capture | Pending |
-| REQ-FUNC-SSH-007 | test | test_ssh.py::test_stderr_capture | Pending |
-| REQ-FUNC-SSH-008 | test | test_ssh.py::test_exit_code | Pending |
-| REQ-FUNC-SSH-009 | test | test_ssh.py::test_check_parameter | Pending |
-| REQ-FUNC-SSH-010 | test | test_ssh.py::test_ssh_config_reuse | Pending |
-| REQ-FUNC-SSH-011 | test | test_ssh.py::test_openssh_directives | Pending |
-| REQ-FUNC-SSH-012 | test | test_ssh.py::test_environment_hosts | Pending |
+### 4.1 Test Coverage Requirements
+
+All 12 functional requirements MUST have corresponding test cases with proper traceability.
+
+**Test Traceability Requirements:**
+- Each test function MUST include REQ-FUNC-SSH-XXX comment reference
+- Test file location: src/batou/tests/test_ssh.py
+- Tests MUST cover both success and failure scenarios
+- Tests MUST use mocking for paramiko to avoid requiring SSH infrastructure
+
+### 4.2 Verification Matrix
+
+| Requirement ID | Verification Method | Test Function | Test Location | Status |
+|----------------|---------------------|---------------|---------------|--------|
+| REQ-FUNC-SSH-001 | test | test_host_key_check | test_ssh.py::TestSSHClient::test_ensure_known_host_success | Implemented |
+| REQ-FUNC-SSH-002 | test | test_host_key_failure | test_ssh.py::TestSSHClient::test_ensure_known_host_failure | Implemented |
+| REQ-FUNC-SSH-003 | test | test_auto_add_host_key | test_ssh.py | **Missing** |
+| REQ-FUNC-SSH-004 | test | test_no_interactive_prompt | test_ssh.py | **Missing** |
+| REQ-FUNC-SSH-005 | test | test_command_execution | test_ssh.py::TestSSHClient::test_run_success | Implemented |
+| REQ-FUNC-SSH-006 | test | test_stdout_capture | test_ssh.py::TestSSHClient::test_run_success | Implemented |
+| REQ-FUNC-SSH-007 | test | test_stderr_capture | test_ssh.py::TestSSHClient::test_run_success | Implemented |
+| REQ-FUNC-SSH-008 | test | test_exit_code | test_ssh.py::TestSSHClient::test_run_success, test_run_failure_without_check | Implemented |
+| REQ-FUNC-SSH-009 | test | test_check_parameter | test_ssh.py::TestSSHClient::test_run_failure_with_check, test_run_failure_without_check | Implemented |
+| REQ-FUNC-SSH-010 | test | test_ssh_config_reuse | test_ssh.py::TestSSHConfig::test_init, test_init_no_config_path | Implemented |
+| REQ-FUNC-SSH-011 | test | test_openssh_directives | test_ssh.py | **Missing** |
+| REQ-FUNC-SSH-012 | test | test_environment_hosts | test_ssh.py | **Missing** |
+
+### 4.3 Missing Test Coverage
+
+The following requirements lack test coverage and MUST be implemented:
+
+1. **REQ-FUNC-SSH-003**: Auto-add host keys when configured
+2. **REQ-FUNC-SSH-004**: Prevent interactive prompts that garble console output
+3. **REQ-FUNC-SSH-011**: Parse standard OpenSSH configuration directives
+4. **REQ-FUNC-SSH-012**: Support environment-specific host configurations
 
 ## 5. Appendixes
 
 ### 5.1 Experimental Feature Guidelines
 
-- Clearly marked as experimental in documentation
-- Separate from production deployment code
-- Subject to removal if approach proves unsuitable
+**Experimental Marking Requirements:**
+- CLI help text MUST include "(experimental)" marker
+- Feature MUST be documented as experimental in user-facing documentation
 - No backward compatibility guarantees
+- Subject to removal if approach proves unsuitable
+
+**Implementation Requirements:**
+- Separate from production deployment code (no execnet integration)
+- No impact on existing deployment workflows
+- Clear separation in codebase (src/batou/ssh.py module)
 
 ### 5.2 CLI Command Example
 
