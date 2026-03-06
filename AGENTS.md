@@ -22,7 +22,7 @@ Check pyproject.toml for available build/lint/test tools/commands.
 - **Line length**: 80 characters (enforced by ruff)
 - **Formatter**: ruff format (black-compatible)
 - **Import sorting**: ruff (isort-compatible)
-- **Target Python**: 3.10+ for implementation code, 3.14+ for type stubs (pyi)
+- **Target Python**: 3.10+ for implementation code (.py), 3.14+ for type stubs (.pyi)
 
 ### Import Organization
 ```python
