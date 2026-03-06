@@ -192,36 +192,11 @@ class Environment:
         batou.utils.resolve_override.clear()
         batou.utils.resolve_v6_override.clear()
 
-        # Try TOML first, fall back to INI
-        toml_file = (
-            pathlib.Path(self.base_dir)
-            / "environments"
-            / self.name
-            / "environment.toml"
-        )
         config_file = (
             pathlib.Path(self.base_dir) / "environments" / self.name / "environment.cfg"
         )
 
-        if toml_file.exists():
-            # Load TOML with Pydantic validation
-            from batou.config_toml import (
-                ConfigLoadError,
-                DictConfig,
-                load_toml_config,
-                to_legacy_format,
-            )
-
-            try:
-                content = toml_file.read_text()
-                pydantic_config = load_toml_config(content, str(toml_file))
-                legacy_data = to_legacy_format(pydantic_config)
-                config = DictConfig(legacy_data)
-                self._toml_config = pydantic_config  # Keep for future use
-            except ConfigLoadError as e:
-                self.exceptions.append(ConfigurationError.from_context(str(e)))
-                return
-        elif config_file.exists():
+        if config_file.exists():
             config = Config(config_file)
         else:
             raise MissingEnvironment.from_context(self)

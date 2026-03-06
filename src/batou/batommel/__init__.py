@@ -2,6 +2,7 @@
 
 import typer
 
+from batou.batommel.deploy import deploy
 from batou.check import check
 from batou.ini_to_toml import migrate
 from batou.toml_to_ini import convert
@@ -14,3 +15,4 @@ app = typer.Typer(
 app.command(name="check")(check)
 app.command(name="ini-to-toml")(migrate)
 app.command(name="toml-to-ini")(convert)
+app.command(name="deploy")(deploy)
