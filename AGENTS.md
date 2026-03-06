@@ -1,54 +1,35 @@
-# Development Guide for Agents
+# Project-Specific Dev Guide for Agents
 
-- uv is used for dependency management
+Tools are configured in @pyproject.toml, read it!
 
-## Build / Lint / Test Commands
+## Before Commit
+- `uv run tox p` MUST pass (includes ruff, ty, tests)
+- ruff may auto-fix code - review changes before committing!
 
-Check pyproject.toml for available build/lint/test tools/commands.
-
-### Quality Gates
-
-#### Before Commit
-  - `uv run tox p` MUST pass (without errors, without warnings), includes:
-    - ruff linting/formatting for Python
-    - ty type checking for Python
-    - uv, architecture unit and integration tests using pytest-archon
-    - you won't need other tools, just use tox!
-    - execution could change code (ruff fixes/formatting), look at changes before commiting!
-
-## Code Style Guidelines
-
-### Formatting
-- **Line length**: 80 characters (enforced by ruff)
-- **Formatter**: ruff format (black-compatible)
-- **Import sorting**: ruff (isort-compatible)
-- **Target Python**: 3.10+ for implementation code (.py), 3.14+ for type stubs (.pyi)
+## Code Style
 
 ### Type Hints
-- we strive for comprehensively-typed code
-- Use Python 3.10+ syntax: `list[str]` not `List[str]`, `X | None` not `Optional[X]`
-- Simple return hints: `def git_main_branch() -> str:`
+- Type stubs (.pyi) go to `stubs/` directory
+- Types in implementation code ONLY if external libraries need it (pydantic, typer, dataclasses)
+- Type stubs should use modern Python 3.14+ syntax, modernize existing old-style type hints
 - No `from __future__ import annotations`
 
-### Error Handling
-```python
-# Base exception for user-facing errors
-class ReportingException(Exception):
-    def report(self):
-        """Custom error reporting with context"""
+## Project-Specific Constraints
 
-# Specific exceptions inherit from ReportingException
-class ConfigurationError(ReportingException):
-    pass
+### Project Structure
+- Tests and implementation both live in `src/`
 
-# Silent errors (no user output)
-class SilentConfigurationError(Exception):
-    pass
+### Bootstrap Requirement
+`src/batou/__init__.py` must not import non-stdlib at module level (self-bootstrapping).
+Exception: jinja2
 
-# Raise with context
-if not self.connections:
-    raise ConfigurationError.from_context("No host found.")
-```
+### RPC / Remote Methods
+Methods in `remote_core.py` can be called remotely via `host.rpc.method_name()` using execnet channels.
+All arguments and return values MUST be pickle-serializable (no file handles, no local objects, no closures).
+Exceptions are caught remotely and re-raised locally as RuntimeError with generic message.
+Output from remote execution is sent back via channel and displayed locally.
+Remote methods execute in isolated Python process on target host - no shared state with local deployment.
+Debugging RPC issues: check pickle serialization, remote exception tracebacks in deployment logs.
 
 ### Component Lifecycle
 ```python
@@ -67,100 +48,6 @@ class MyComponent(Component):
         self.path.write("data")
 ```
 
-### Testing Patterns
-```python
-import pytest
-
-# Autouse fixtures for environment setup
-@pytest.fixture(autouse=True)
-def setup_environment(monkeypatch):
-    monkeypatch.setitem(os.environ, "KEY", "value")
-
-# Test naming: test_<functionality>
-def test_decrypt_with_valid_key(encrypted_file):
-    with GPGEncryptedFile(encrypted_file) as secret:
-        assert secret.cleartext == expected_value
-
-# Exception testing
-def test_missing_key_raises_error():
-    with pytest.raises(batou.GPGCallError):
-        function_that_raises()
-
-# Use tmp_path for temporary directories
-def test_file_operations(tmp_path):
-    config_file = tmp_path / "config.cfg"
-    config_file.write_text("[section]\nkey = value")
-```
-
-## Important Constraints
-
-### Bootstrap Requirement
-- `src/batou/__init__.py` must **not** import non-stdlib modules at module level
-- Required for self-bootstrapping without dependencies
-- Only stdlib imports: `importlib.metadata`, `os`, `socket`, `traceback`, etc.
-- Exception: `import jinja2` (required for template loading)
-
-### Python Version Support
-- **Minimum**: Python 3.10
-- **Tested**: 3.10, 3.11, 3.12, 3.13, 3.14
-- **Default dev**: Python 3.14
-
-### Test Configuration
-- **Timeout**: 120s per test
-- **Coverage**: Required, branch coverage enabled
-- **Warnings**: Treated as errors (`-W error`)
-- **Traceback**: Native format (`--tb=native`)
-- **Parallel**: xdist enabled (use `-n auto`)
-
-## Project Structure
-
-### Source Code
-- Main package: `src/batou/`
-- Entry points: `src/batou/main.py`, `src/batou/batommel/__init__.py`
-- Components: `src/batou/component.py`, `src/batou/lib/`
-- Secrets: `src/batou/secrets/`
-
-### Test Locations
-- Main tests: `src/batou/tests/test_*.py`
-- Component tests: `src/batou/component/tests/`
-- Secret tests: `src/batou/secrets/tests/test_*.py`
-- Fixtures: `src/batou/conftest.py`, `src/batou/secrets/tests/fixture/`
-
-### Configuration Files
-- `pyproject.toml`: Project metadata, dependencies, tool configs
-- `uv.lock`: Dependency lockfile
-- `.pre-commit-config.yaml`: Git hooks configuration
-
-## Secrets & Encryption
-
-### Test Fixture Secrets
-- GPG home: `src/batou/secrets/tests/fixture/gnupg/`
-- Age keys: `src/batou/secrets/tests/fixture/age/`
-- Re-encrypt fixtures: `./re-encrypt-fixture-secrets.sh`
-
-### Environment Variables (auto-set by conftest.py)
-- `GNUPGHOME`: GPG home directory
-- `BATOU_AGE_IDENTITIES`: Age identity file
-- `GIT_CONFIG_GLOBAL`: Isolated git config
-
-## Development Workflow
-
-### Before Committing
-```bash
-pytest                                    # Run tests
-pre-commit run --all-files               # Run linters
-# OR: git commit (auto-runs hooks if installed)
-```
-
-### Release Process
-```bash
-./changelog.sh      # Create changelog entry
-./release-this.sh   # Run full release (must be on main)
-```
-
-### Common Commands
-```bash
-uv run batou deploy dev              # Deploy locally
-uv run batou check dev               # Fast local validation
-uv run ./update-appenv-lockfiles.py  # Update example lockfiles
-```
+### Secrets Testing
+- GPG/Age fixtures: `src/batou/secrets/tests/fixture/`
+- Environment auto-set by conftest.py
