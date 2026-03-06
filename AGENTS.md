@@ -1,50 +1,20 @@
 # Development Guide for Agents
 
-## Development Environment Setup
+- uv is used for dependency management
 
-### Using uv (recommended)
-```bash
-./develop.sh [python version]  # Defaults to 3.14
-source .venv/bin/activate
-# Or: uv run pytest, uv run batou deploy dev
-```
+## Build / Lint / Test Commands
 
-### Manual Setup
-```bash
-uv venv --python 3.14
-uv sync --all-extras --all-groups
-```
+Check pyproject.toml for available build/lint/test tools/commands.
 
-## Build, Lint, and Test Commands
+### Quality Gates
 
-### Testing
-```bash
-pytest                                          # Run all tests
-pytest src/batou/tests/test_file.py::test_func  # Run single test (most common)
-pytest src/batou/tests/test_file.py::TestClass  # Run test class
-pytest src/batou/tests/test_file.py             # Run tests in file
-pytest -m slow                                  # Only slow tests
-pytest -m "not slow"                            # Skip slow tests
-pytest -m "not debug"                           # Default (excludes debug)
-pytest --cov=src --cov-report=html              # With coverage
-pytest -n auto                                  # Parallel execution
-```
-
-### Multi-Python Version Testing
-```bash
-tox                    # All Python versions (3.10-3.14)
-tox -e py312          # Specific version
-tox -e pre-commit     # Linters only
-```
-
-### Linting & Formatting
-```bash
-pre-commit run --all-files --show-diff-on-failure  # Run all hooks
-pre-commit install                                  # Auto-run before commits
-ruff check src/       # Lint
-ruff format src/      # Format
-ruff check --fix src/ # Auto-fix
-```
+#### Before Commit
+  - `uv run tox p` MUST pass (without errors, without warnings), includes:
+    - ruff linting/formatting for Python
+    - ty type checking for Python
+    - uv, architecture unit and integration tests using pytest-archon
+    - you won't need other tools, just use tox!
+    - execution could change code (ruff fixes/formatting), look at changes before commiting!
 
 ## Code Style Guidelines
 
@@ -52,7 +22,7 @@ ruff check --fix src/ # Auto-fix
 - **Line length**: 80 characters (enforced by ruff)
 - **Formatter**: ruff format (black-compatible)
 - **Import sorting**: ruff (isort-compatible)
-- **Target Python**: 3.10+ (modern type hint syntax)
+- **Target Python**: 3.10+ for implementation code, 3.14+ for type stubs (pyi)
 
 ### Import Organization
 ```python
