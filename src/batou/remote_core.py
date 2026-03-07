@@ -227,7 +227,7 @@ class Deployment:
 
         self.debug_settings = DebugSettings(**self.debug_settings_dict)
 
-        from batou.debug.remote_fd_tracking import init_remote_fd_tracking
+        from batou.debug.fd_tracker import init_remote_fd_tracking
 
         init_remote_fd_tracking(self.debug_settings.track_fds)
 
@@ -455,12 +455,9 @@ def setup_deployment(*args):
 
 def deploy(root, predict_only=False):
     # Always install FD tracking hook (we'll only return stats if requested)
-    from batou.debug.remote_fd_tracking import (
-        get_remote_fd_tracking_stats,
-        install_remote_fd_tracking_hook,
-    )
+    from batou.debug.fd_tracker import get_remote_fd_tracking_stats
 
-    install_remote_fd_tracking_hook()
+    # Remote FD tracking hook is installed via init_remote_fd_tracking() in Deployment.load()
     if deployment is not None:
         deployment.deploy(root, predict_only)
 
@@ -514,7 +511,7 @@ def get_profiling_results():
 
 def get_fd_tracking_stats():
     """RPC function to get FD tracking stats from remote side."""
-    from batou.debug.remote_fd_tracking import get_remote_fd_tracking_stats
+    from batou.debug.fd_tracker import get_remote_fd_tracking_stats
 
     return get_remote_fd_tracking_stats()
 

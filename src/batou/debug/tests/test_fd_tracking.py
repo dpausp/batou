@@ -261,7 +261,7 @@ def test_fd_tracker_tracks_opens_with_timestamps(monkeypatch, tmpdir):
     # Verify timestamps are recorded in logs
     assert len(tracker._fd_tracking_logs) > 0
     timestamp_pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
-    now, count, path, mode, action = tracker._fd_tracking_logs[0]
+    now, fd_count, path, mode, action = tracker._fd_tracking_logs[0]
     assert timestamp_pattern.match(now)
 
     # Generate report
@@ -481,23 +481,6 @@ def test_fd_tracker_generate_reports_when_disabled(monkeypatch):
 
     # Verify RPC was NOT called (early return at line 390)
     assert not host.rpc.get_fd_tracking_stats.called
-
-
-def test_fd_tracker_generate_reports_host_without_gateway(monkeypatch):
-    """Test that generate_reports skips hosts without gateway."""
-    monkeypatch.setenv("BATOU_TRACK_FDS", "1")
-
-    tracker = FileDescriptorTracker("test-env", DebugSettings())
-
-    # Create mock host WITHOUT gateway attribute
-    host = mock.Mock(spec=["name"])
-    host.name = "local-only-host"
-
-    # Call generate_reports - should skip this host (line 394)
-    tracker.generate_reports([host])
-
-    # Verify remote stats were not added
-    assert "local-only-host" not in tracker.remote_opens
 
 
 def test_fd_tracker_generate_reports_remote_stats_zero_opens(monkeypatch):

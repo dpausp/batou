@@ -15,7 +15,10 @@ class TestProfilingLocal:
 
     def test_local_profiling_creates_file(self, tmp_path, monkeypatch):
         """Test that profiling creates profile file for local deployments."""
+        from batou.debug.settings import reset_debug_settings
+
         monkeypatch.setenv("BATOU_PROFILE", "1")
+        reset_debug_settings()  # Clear singleton to pick up new env var
 
         profiler = RemoteProfiler("localhost", 30, output_dir=str(tmp_path))
 
@@ -37,7 +40,10 @@ class TestProfilingLocal:
 
     def test_profiling_disabled_no_file(self, tmp_path, monkeypatch):
         """Test that no profile file is created when profiling is disabled."""
+        from batou.debug.settings import reset_debug_settings
+
         monkeypatch.delenv("BATOU_PROFILE", raising=False)
+        reset_debug_settings()  # Clear singleton to pick up new env var
 
         profiler = RemoteProfiler("localhost", 30, output_dir=str(tmp_path))
 

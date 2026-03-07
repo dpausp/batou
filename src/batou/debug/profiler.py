@@ -28,9 +28,14 @@ class Profiler:
             return
 
         for host in hosts:
-            if getattr(host, "gateway", None):
-                profile = host.rpc.get_profiling_results()
-                if profile:
-                    output.annotate(
-                        f"Profiling for {profile['host']}: {profile['profile_path']}"
-                    )
+            # Only collect profiling from remote hosts (those with a gateway)
+            if not hasattr(host, "gateway"):
+                continue
+            if host.gateway is None:
+                continue
+
+            profile = host.rpc.get_profiling_results()
+            if profile:
+                output.annotate(
+                    f"Profiling for {profile['host']}: {profile['profile_path']}"
+                )

@@ -26,10 +26,10 @@ class RemoteProfiler:
 
     def profile_execution(self, func):
         """Execute function with profiling enabled."""
-        import os
+        from batou.debug.settings import get_debug_settings
 
-        # Check if profiling is enabled via environment variable
-        if not os.environ.get("BATOU_PROFILE"):
+        # Check if profiling is enabled via debug settings
+        if not get_debug_settings().profile:
             # Profiling disabled - just execute function without profiling
             return func()
 

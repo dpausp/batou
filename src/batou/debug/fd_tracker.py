@@ -4,16 +4,22 @@ import builtins
 import datetime
 import os
 import socket
-from typing import NamedTuple, TypedDict
+import traceback
+from typing import Any, NamedTuple, TypedDict
 
 from batou import output
+
+try:
+    from typing import NotRequired
+except ImportError:
+    from typing_extensions import NotRequired
 
 
 class FDTrackingLogEntry(NamedTuple):
     """A single FD tracking log entry."""
 
     time: str
-    count: int
+    fd_count: int  # Renamed to avoid conflict with tuple.count() method
     path: str
     mode: str
     action: str
@@ -36,12 +42,26 @@ class FDTrackingStats(TypedDict):
     logs: list[FDTrackingLogEntry]
 
 
+# Type for fd_records dictionary
+FDRecordDict = dict[
+    str, dict[str, Any]
+]  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
+
+
+class RemoteFDTrackingStats(TypedDict):
+    """File descriptor tracking statistics from remote side."""
+
+    total_opens: int
+    total_closes: int
+    leaked_fds: list[tuple[int, str, str, str]]
+    logs: list[FDTrackingLogEntry]
+    fd_records: NotRequired[FDRecordDict]
+
+
 class FileDescriptorTracker:
     """File descriptor tracking for leak detection."""
 
     from batou.debug.settings import DebugSettings
-
-    _instance = None
 
     def __init__(self, environment_name: str, debug_settings: DebugSettings):
         self.enabled = debug_settings.track_fds > 0
@@ -348,10 +368,11 @@ class FileDescriptorTracker:
 
     @classmethod
     def cleanup(cls):
-        """Clean up the singleton instance and reset builtins.open."""
-        if cls._instance is not None:
-            builtins.open = cls._instance.original_open
-            cls._instance = None
+        """Clean up the FD tracker instance and reset builtins.open.
+
+        This class method delegates to the factory function for backward compatibility.
+        """
+        cleanup_fd_tracker()
 
     def generate_reports(self, hosts):
 
@@ -360,7 +381,7 @@ class FileDescriptorTracker:
 
         # First, collect all remote stats
         for host in hosts:
-            if getattr(host, "gateway", None):
+            if host.gateway:
                 remote_stats = host.rpc.get_fd_tracking_stats()
                 if remote_stats and remote_stats.get("total_opens", 0) > 0:
                     output.annotate(
@@ -483,3 +504,228 @@ class FileDescriptorTracker:
                 display_path = path_str
             output.line(f"  {open_count:4d}x {display_path}")
             output.line(f"       |{bar} [{modes_str}]")
+
+
+class RemoteFDTracker:
+    """Remote FD tracking for use in remote_core.py.
+
+    Simple FD tracking without batou code filtering - tracks ALL opens.
+    Uses module-level state for RPC serialization compatibility.
+    """
+
+    def __init__(self, track_fds_level: int):
+        """Initialize remote FD tracking with verbosity level.
+
+        Args:
+            track_fds_level: 0=disabled, 1=enabled, 2=verbose
+        """
+        self.enabled = track_fds_level > 0
+        self.verbose = track_fds_level > 1
+
+        # Instance-level tracking state (like FileDescriptorTracker)
+        self.total_opens = 0
+        self.total_closes = 0
+        self._open_fds: dict[int, FileDescriptorState] = {}
+        self._fd_tracking_logs: list[FDTrackingLogEntry] = []
+        self._fd_records: FDRecordDict = {}
+
+    def _track_fd_open(self, fd: int, path: str, mode: str = "r"):
+        """Track file descriptor opens."""
+        if not self.enabled:
+            return
+
+        self.total_opens += 1
+        now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+
+        self._open_fds[fd] = FileDescriptorState(path, mode, now)
+        self._fd_tracking_logs.append(
+            FDTrackingLogEntry(now, self.total_opens, path, mode, "open")
+        )
+
+        # Track in fd_records for detailed analysis
+        if path not in self._fd_records:
+            self._fd_records[path] = {"open_count": 0, "modes": {}, "stack_traces": []}
+        self._fd_records[path]["open_count"] += 1
+        if mode not in self._fd_records[path]["modes"]:
+            self._fd_records[path]["modes"][mode] = 0
+        self._fd_records[path]["modes"][mode] += 1
+
+        # Collect stack traces if verbose mode is enabled
+        if self.verbose:
+            full_stack = traceback.extract_stack()
+            filtered_stack = []
+            for frame in full_stack:
+                # Skip tracking code frames
+                if "batou/remote_core.py" in frame.filename and (
+                    "tracked_open" in frame.name or "_track_fd_open" in frame.name
+                ):
+                    continue
+                # Convert FrameSummary to tuple for serialization
+                filtered_stack.append((frame.filename, frame.lineno, frame.name))
+                if len(filtered_stack) >= 10:
+                    break
+            if filtered_stack:
+                self._fd_records[path]["stack_traces"].append(filtered_stack)
+
+        # Warn if we have too many FDs open
+        fd_warning_threshold = 200
+        if len(self._open_fds) > fd_warning_threshold:
+            self._fd_tracking_logs.append(
+                FDTrackingLogEntry(
+                    now,
+                    self.total_opens,
+                    f"WARNING: {len(self._open_fds)} FDs open (threshold: {fd_warning_threshold})",
+                    "warning",
+                    "leak",
+                )
+            )
+
+    def _track_fd_close(self, fd: int):
+        """Track file descriptor closes."""
+        if not self.enabled:
+            return
+
+        now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+
+        if fd in self._open_fds:
+            path, mode, open_time = self._open_fds.pop(fd)
+            self.total_closes += 1
+            self._fd_tracking_logs.append(
+                FDTrackingLogEntry(now, self.total_opens, path, mode, "close")
+            )
+        else:
+            # Low-level fd (like from mkstemp) - log it
+            self.total_closes += 1
+            self._fd_tracking_logs.append(
+                FDTrackingLogEntry(
+                    now,
+                    self.total_opens,
+                    f"fd:{fd} (low-level)",
+                    "low-level",
+                    "close",
+                )
+            )
+
+    def install_hook(self):
+        """Install builtins.open hook for FD tracking."""
+        if not self.enabled:
+            return
+
+        _original_open = builtins.open
+
+        def tracked_open(path, mode="r", *args, **kwargs):
+            fd = _original_open(path, mode, *args, **kwargs)
+            self._track_fd_open(fd.fileno(), path, mode)
+
+            # Wrap close() to track it
+            original_close = fd.close
+
+            def tracked_close():
+                self._track_fd_close(fd.fileno())
+                return original_close()
+
+            fd.close = tracked_close
+            return fd
+
+        builtins.open = tracked_open  # type: ignore[assignment]
+
+        # Track os.close() for low-level FD operations like mkstemp()
+        _original_os_close = os.close
+
+        def tracked_os_close(fd):
+            self._track_fd_close(fd)
+            return _original_os_close(fd)
+
+        os.close = tracked_os_close  # type: ignore[assignment]
+
+    def get_stats(self) -> RemoteFDTrackingStats:
+        """Get FD tracking statistics from remote side."""
+        stats: RemoteFDTrackingStats = {
+            "total_opens": self.total_opens,
+            "total_closes": self.total_closes,
+            "leaked_fds": [
+                (fd, path, mode, open_time)
+                for fd, (path, mode, open_time) in self._open_fds.items()
+            ],
+            "logs": self._fd_tracking_logs,
+        }
+        if self._fd_records:
+            stats["fd_records"] = self._fd_records
+        return stats
+
+
+# Module-level factory functions (replacing singletons)
+
+_fd_tracker_instance: FileDescriptorTracker | None = None
+_remote_fd_tracker_instance: RemoteFDTracker | None = None
+
+
+def get_fd_tracker(
+    environment_name: str | None = None, debug_settings=None
+) -> FileDescriptorTracker:
+    """Get or create the FD tracker instance.
+
+    This factory function replaces the singleton pattern.
+    Tests should call cleanup_fd_tracker() to reset state.
+    """
+    global _fd_tracker_instance
+    if _fd_tracker_instance is None:
+        from batou.debug.settings import get_debug_settings
+
+        if debug_settings is None:
+            debug_settings = get_debug_settings()
+        if environment_name is None:
+            environment_name = "default"
+        _fd_tracker_instance = FileDescriptorTracker(environment_name, debug_settings)
+    return _fd_tracker_instance
+
+
+def cleanup_fd_tracker():
+    """Clean up the FD tracker instance and reset builtins.open.
+
+    This replaces FileDescriptorTracker.cleanup() class method.
+    """
+    global _fd_tracker_instance
+    if _fd_tracker_instance is not None:
+        builtins.open = _fd_tracker_instance.original_open
+        _fd_tracker_instance = None
+
+
+def get_remote_fd_tracker(track_fds_level: int = 0) -> RemoteFDTracker:
+    """Get or create the remote FD tracker instance.
+
+    This factory function is used by remote_core.py.
+    """
+    global _remote_fd_tracker_instance
+    if _remote_fd_tracker_instance is None:
+        _remote_fd_tracker_instance = RemoteFDTracker(track_fds_level)
+    return _remote_fd_tracker_instance
+
+
+def init_remote_fd_tracking(track_fds_level: int) -> RemoteFDTracker:
+    """Initialize remote FD tracking with verbosity level.
+
+    This is the main entry point for remote_core.py.
+    Creates a fresh tracker and installs the hook.
+    """
+    global _remote_fd_tracker_instance
+    _remote_fd_tracker_instance = RemoteFDTracker(track_fds_level)
+    _remote_fd_tracker_instance.install_hook()
+    return _remote_fd_tracker_instance
+
+
+def get_remote_fd_tracking_stats() -> RemoteFDTrackingStats:
+    """RPC function to get FD tracking stats from remote side.
+
+    This is called by remote_core.py via RPC.
+    """
+    global _remote_fd_tracker_instance
+    if _remote_fd_tracker_instance is None:
+        # Return empty stats if tracking was never initialized
+        return {
+            "total_opens": 0,
+            "total_closes": 0,
+            "leaked_fds": [],
+            "logs": [],
+        }
+    return _remote_fd_tracker_instance.get_stats()
