@@ -151,6 +151,39 @@ class GPGEncryptedFile(EncryptedFile):
             raise GPGCallError.from_context(e.cmd, e.returncode, e.stderr) from e
         return p.stdout
 
+    def _extract_recipients(self) -> list[str] | None:
+        """Extract recipient keyids from the encrypted file.
+
+        Returns list of 8-char keyids, or None if extraction fails.
+        """
+        if not self.path.exists() or self.path.stat().st_size == 0:
+            return None
+
+        try:
+            result = subprocess.run(
+                [
+                    self.gpg(),
+                    "--list-packets",
+                    "--list-options",
+                    "show-unusable-subkeys",
+                    str(self.path),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            output = result.stdout.decode("utf-8")
+            recipients = []
+            for line in output.splitlines():
+                if "keyid" in line:
+                    keyid = line.split("keyid")[-1].strip()
+                    if keyid and len(keyid) >= 8:
+                        # Extract the last 8 characters (keyid is at least 8 chars)
+                        recipients.append(keyid[-8:])
+            return recipients if recipients else None
+        except Exception:
+            return None
+
     def _write(self, content, recipients, reencrypt=False):
         if not self.locked:
             raise RuntimeError("File not locked")
@@ -388,7 +421,23 @@ class AGEEncryptedFile(EncryptedFile):
         if not self.locked:
             raise ValueError("File is not locked")
         if not self.writeable:
-            raise ValueError("File is not writeable")
+            raise ValueError("File is not writable")
+
+        # If not forcing reencrypt, check if content has changed
+        if not reencrypt:
+            try:
+                old_content = self.decrypted
+                if old_content == content:
+                    if debug:
+                        print(
+                            f"Content unchanged, skipping re-encryption of `{self.path}`",
+                            file=sys.stderr,
+                        )
+                    return
+            except Exception:
+                # If we can't decrypt or compare, proceed with reencryption
+                pass
+
         args = [self.age(), "-e"]
         for recipient in recipients:
             args.extend(["-r", recipient])
