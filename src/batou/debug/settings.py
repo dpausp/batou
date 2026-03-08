@@ -21,11 +21,11 @@ def _int_to_literal(value):
     """Convert string environment variable to int for Literal types."""
     if isinstance(value, str):
         # SPEC: SDD-F001 - Environment variable type conversion
-        # Allow string-to-int conversion for numeric Literal types, preserving original value on failure
+        # Allow string-to-int conversion for numeric Literal types
         try:
             return int(value)
         except ValueError:
-            return value
+            raise ValueError(f"Invalid value '{value}' for int field - must be numeric")
     return value
 
 

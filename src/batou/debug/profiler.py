@@ -1,6 +1,7 @@
 """Profiling support for remote host deployment performance tracking."""
 
 from batou import output
+from batou.debug.settings import DebugSettings
 
 
 class Profiler:
@@ -10,7 +11,7 @@ class Profiler:
     collects profiling data from remote hosts and generates reports.
     """
 
-    def __init__(self, debug_settings):
+    def __init__(self, debug_settings: DebugSettings) -> None:
         """Initialize profiler with debug settings.
 
         Args:
