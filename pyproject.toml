@@ -127,6 +127,7 @@ commands = [["pytest", "--basetemp={env_tmp_dir}", { replace = "posargs", extend
 [tool.tox.env.fix]
 skip_install = true
 depends = []
+allowlist_externals = ["ruff", "ty"]
 description = "Format, lint, fix whitespace, type-check"
 dependency_groups = ["test", "lint"]
 commands = [
