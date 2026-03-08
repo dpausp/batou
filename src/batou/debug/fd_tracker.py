@@ -5,7 +5,8 @@ import datetime
 import os
 import socket
 import traceback
-from typing import Any, NamedTuple, TypedDict
+from dataclasses import dataclass, field
+from typing import NamedTuple, TypedDict
 
 from batou import output
 
@@ -23,6 +24,15 @@ class FDTrackingLogEntry(NamedTuple):
     path: str
     mode: str
     action: str
+
+
+@dataclass(slots=True)
+class FDRecord:
+    """Record for tracking file open operations."""
+
+    open_count: int = 0
+    modes: dict[str, int] = field(default_factory=dict)
+    stack_traces: list = field(default_factory=list)
 
 
 class FileDescriptorState(NamedTuple):
@@ -43,9 +53,7 @@ class FDTrackingStats(TypedDict):
 
 
 # Type for fd_records dictionary
-FDRecordDict = dict[
-    str, dict[str, Any]
-]  # path -> {"open_count": int, "modes": {}, "stack_traces": []}
+FDRecordDict = dict[str, FDRecord]  # path -> FDRecord
 
 
 class RemoteFDTrackingStats(TypedDict):
@@ -136,14 +144,14 @@ class FileDescriptorTracker:
         self.total_opens += 1
 
         if path not in self.fd_records:
-            self.fd_records[path] = {"open_count": 0, "modes": {}, "stack_traces": []}
+            self.fd_records[path] = FDRecord()
 
-        self.fd_records[path]["open_count"] += 1
+        self.fd_records[path].open_count += 1
 
         # Track modes
-        if mode not in self.fd_records[path]["modes"]:
-            self.fd_records[path]["modes"][mode] = 0
-        self.fd_records[path]["modes"][mode] += 1
+        if mode not in self.fd_records[path].modes:
+            self.fd_records[path].modes[mode] = 0
+        self.fd_records[path].modes[mode] += 1
 
         if self.verbose:
             import traceback
@@ -164,7 +172,7 @@ class FileDescriptorTracker:
                 if len(filtered_stack) >= 10:
                     break
             if filtered_stack:
-                self.fd_records[path]["stack_traces"].append(filtered_stack)
+                self.fd_records[path].stack_traces.append(filtered_stack)
 
         now = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
@@ -253,7 +261,7 @@ class FileDescriptorTracker:
             # Sort items for use in stack traces and file listing
             items = sorted(
                 self.fd_records.items(),
-                key=lambda x: x[1]["open_count"],
+                key=lambda x: x[1].open_count,
                 reverse=True,
             )
 
@@ -266,8 +274,8 @@ class FileDescriptorTracker:
                 traces_by_key = {}  # stack_key -> [(path, count), ...]
 
                 for path, record in items:
-                    if record["stack_traces"]:
-                        for stack in record["stack_traces"]:
+                    if record.stack_traces:
+                        for stack in record.stack_traces:
                             # Stack may be tuples (from remote) or FrameSummary objects (from local)
                             # Normalize to tuple format
                             if stack and isinstance(stack[0], tuple):
@@ -281,9 +289,7 @@ class FileDescriptorTracker:
                                 )
                             if stack_key not in traces_by_key:
                                 traces_by_key[stack_key] = []
-                            traces_by_key[stack_key].append(
-                                (path, record["open_count"])
-                            )
+                            traces_by_key[stack_key].append((path, record.open_count))
 
                 # Sort traces by total open count (descending)
                 sorted_traces = sorted(
@@ -327,7 +333,7 @@ class FileDescriptorTracker:
             # Show top 20 files with full details
             f.write("Top 20 Files:\n")
             for path, record in items[:20]:
-                open_count = record["open_count"]
+                open_count = record.open_count
                 bar_length = min(open_count, 50)
                 bar = "*" * bar_length
                 f.write(f"  {open_count:4d}x {path}\n")
@@ -337,7 +343,7 @@ class FileDescriptorTracker:
             if len(items) > 20:
                 f.write(f"\nRemaining {len(items) - 20} files:\n")
                 for path, record in items[20:]:
-                    open_count = record["open_count"]
+                    open_count = record.open_count
                     f.write(f"  {open_count:4d}x {path}\n")
 
             # Leak detection at end of report (like remote)
@@ -375,7 +381,6 @@ class FileDescriptorTracker:
         cleanup_fd_tracker()
 
     def generate_reports(self, hosts):
-
         if not self.enabled:
             return
 
@@ -397,22 +402,18 @@ class FileDescriptorTracker:
                             # Prefix with hostname to distinguish between hosts
                             host_path = f"[{host.name}] {path}"
                             if host_path not in self.fd_records:
-                                self.fd_records[host_path] = {
-                                    "open_count": 0,
-                                    "modes": {},
-                                    "stack_traces": [],
-                                }
-                            self.fd_records[host_path]["open_count"] += record[
+                                self.fd_records[host_path] = FDRecord()
+                            self.fd_records[host_path].open_count += record[
                                 "open_count"
                             ]
                             # Merge modes
                             for mode, count in record.get("modes", {}).items():
-                                if mode not in self.fd_records[host_path]["modes"]:
-                                    self.fd_records[host_path]["modes"][mode] = 0
-                                self.fd_records[host_path]["modes"][mode] += count
+                                if mode not in self.fd_records[host_path].modes:
+                                    self.fd_records[host_path].modes[mode] = 0
+                                self.fd_records[host_path].modes[mode] += count
                             # Merge stack traces
                             for stack in record.get("stack_traces", []):
-                                self.fd_records[host_path]["stack_traces"].append(stack)
+                                self.fd_records[host_path].stack_traces.append(stack)
                     # Show verbose logs if available
                     if "logs" in remote_stats and self.verbose:
                         output.line(f"  FD opens for {host.name}:")
@@ -483,18 +484,18 @@ class FileDescriptorTracker:
         output.line("Top Files (by open count):")
         items = sorted(
             self.fd_records.items(),
-            key=lambda x: x[1]["open_count"],
+            key=lambda x: x[1].open_count,
             reverse=True,
         )
         for path, record in items[:10]:
-            open_count = record["open_count"]
+            open_count = record.open_count
             if open_count <= 1:
                 continue
             bar_length = min(open_count, 20)
             bar = "█" * bar_length
             # Format modes for display
             modes_str = ", ".join(
-                [f"{mode}:{count}" for mode, count in sorted(record["modes"].items())]
+                [f"{mode}:{count}" for mode, count in sorted(record.modes.items())]
             )
             # Shorten path for display
             path_str = str(path)
@@ -544,11 +545,11 @@ class RemoteFDTracker:
 
         # Track in fd_records for detailed analysis
         if path not in self._fd_records:
-            self._fd_records[path] = {"open_count": 0, "modes": {}, "stack_traces": []}
-        self._fd_records[path]["open_count"] += 1
-        if mode not in self._fd_records[path]["modes"]:
-            self._fd_records[path]["modes"][mode] = 0
-        self._fd_records[path]["modes"][mode] += 1
+            self._fd_records[path] = FDRecord()
+        self._fd_records[path].open_count += 1
+        if mode not in self._fd_records[path].modes:
+            self._fd_records[path].modes[mode] = 0
+        self._fd_records[path].modes[mode] += 1
 
         # Collect stack traces if verbose mode is enabled
         if self.verbose:
@@ -565,7 +566,7 @@ class RemoteFDTracker:
                 if len(filtered_stack) >= 10:
                     break
             if filtered_stack:
-                self._fd_records[path]["stack_traces"].append(filtered_stack)
+                self._fd_records[path].stack_traces.append(filtered_stack)
 
         # Warn if we have too many FDs open
         fd_warning_threshold = 200

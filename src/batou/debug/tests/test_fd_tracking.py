@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from batou.debug.fd_tracker import FileDescriptorTracker
+from batou.debug.fd_tracker import FDRecord, FileDescriptorTracker
 from batou.debug.settings import DebugSettings
 
 pytestmark = pytest.mark.debug
@@ -144,30 +144,24 @@ def test_fd_tracker_merge_remote_fd_records(monkeypatch):
     for path, record in remote_stats["fd_records"].items():
         host_path = f"[remote_host] {path}"
         if host_path not in tracker.fd_records:
-            tracker.fd_records[host_path] = {
-                "open_count": 0,
-                "modes": {},
-                "stack_traces": [],
-            }
-        tracker.fd_records[host_path]["open_count"] += record["open_count"]
+            tracker.fd_records[host_path] = FDRecord()
+        tracker.fd_records[host_path].open_count += record["open_count"]
         for mode, count in record.get("modes", {}).items():  # type: ignore[union-attr]
-            if mode not in tracker.fd_records[host_path]["modes"]:
-                tracker.fd_records[host_path]["modes"][mode] = 0
-            tracker.fd_records[host_path]["modes"][mode] += count
+            if mode not in tracker.fd_records[host_path].modes:
+                tracker.fd_records[host_path].modes[mode] = 0
+            tracker.fd_records[host_path].modes[mode] += count
         for stack in record.get("stack_traces", []):  # type: ignore[union-attr]
-            tracker.fd_records[host_path]["stack_traces"].append(stack)
+            tracker.fd_records[host_path].stack_traces.append(stack)
 
     # Verify merge
     assert len(tracker.fd_records) == 2
-    assert tracker.fd_records["[remote_host] /remote/file1.txt"]["open_count"] == 3
-    assert tracker.fd_records["[remote_host] /remote/file2.txt"]["open_count"] == 7
-    assert tracker.fd_records["[remote_host] /remote/file1.txt"]["modes"] == {
+    assert tracker.fd_records["[remote_host] /remote/file1.txt"].open_count == 3
+    assert tracker.fd_records["[remote_host] /remote/file2.txt"].open_count == 7
+    assert tracker.fd_records["[remote_host] /remote/file1.txt"].modes == {
         "r": 2,
         "w": 1,
     }
-    assert (
-        len(tracker.fd_records["[remote_host] /remote/file1.txt"]["stack_traces"]) == 1
-    )
+    assert len(tracker.fd_records["[remote_host] /remote/file1.txt"].stack_traces) == 1
 
 
 def test_fd_tracker_filter_tracking_frames(monkeypatch, tmpdir):
@@ -460,7 +454,7 @@ def test_fd_tracker_generate_reports_with_remote_rpc(monkeypatch):
     # total_opens includes remote opens + local file operations for report()
     assert tracker.total_opens >= 15
     assert "[remote-host] /remote/file1.txt" in tracker.fd_records
-    assert tracker.fd_records["[remote-host] /remote/file1.txt"]["open_count"] == 10
+    assert tracker.fd_records["[remote-host] /remote/file1.txt"].open_count == 10
 
 
 def test_fd_tracker_generate_reports_when_disabled(monkeypatch):
@@ -579,11 +573,11 @@ def test_fd_tracker_generate_reports_merges_existing_paths(
     tracker = FileDescriptorTracker("test-env", DebugSettings())
 
     # Pre-populate fd_records with existing remote data
-    tracker.fd_records["[test-host] /remote/file.txt"] = {
-        "open_count": 5,
-        "modes": {"r": 5},
-        "stack_traces": [],
-    }
+    tracker.fd_records["[test-host] /remote/file.txt"] = FDRecord(
+        open_count=5,
+        modes={"r": 5},
+        stack_traces=[],
+    )
 
     # Create mock host with RPC returning same path
     host = mock.Mock()
@@ -608,8 +602,8 @@ def test_fd_tracker_generate_reports_merges_existing_paths(
     tracker.generate_reports([host])
 
     # Verify counts were added, not replaced
-    assert tracker.fd_records["[test-host] /remote/file.txt"]["open_count"] == 8
-    assert tracker.fd_records["[test-host] /remote/file.txt"]["modes"] == {
+    assert tracker.fd_records["[test-host] /remote/file.txt"].open_count == 8
+    assert tracker.fd_records["[test-host] /remote/file.txt"].modes == {
         "r": 5,
         "w": 3,
     }
@@ -624,11 +618,11 @@ def test_fd_tracker_generate_reports_merges_existing_modes(
     tracker = FileDescriptorTracker("test-env", DebugSettings())
 
     # Pre-populate with data that has mode "r"
-    tracker.fd_records["[test-host] /remote/file.txt"] = {
-        "open_count": 5,
-        "modes": {"r": 3},
-        "stack_traces": [],
-    }
+    tracker.fd_records["[test-host] /remote/file.txt"] = FDRecord(
+        open_count=5,
+        modes={"r": 3},
+        stack_traces=[],
+    )
 
     # Create mock host with RPC returning same mode
     host = mock.Mock()
@@ -653,7 +647,7 @@ def test_fd_tracker_generate_reports_merges_existing_modes(
     tracker.generate_reports([host])
 
     # Verify mode counts were added
-    assert tracker.fd_records["[test-host] /remote/file.txt"]["modes"]["r"] == 5
+    assert tracker.fd_records["[test-host] /remote/file.txt"].modes["r"] == 5
 
 
 def test_fd_tracker_generate_reports_appends_stack_traces(
@@ -694,8 +688,8 @@ def test_fd_tracker_generate_reports_appends_stack_traces(
 
     # Verify stack traces were appended (line 425)
     host_path = "[test-host] /remote/file.txt"
-    assert len(tracker.fd_records[host_path]["stack_traces"]) == 1
-    assert tracker.fd_records[host_path]["stack_traces"][0] == [
+    assert len(tracker.fd_records[host_path].stack_traces) == 1
+    assert tracker.fd_records[host_path].stack_traces[0] == [
         ("/remote/code.py", 42, "func1"),
         ("/another/file.py", 100, "caller"),
     ]
