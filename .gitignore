@@ -56,3 +56,5 @@ monkeytype.sqlite3
 .pymon
 pytestdebug.log
 /dist/
+coverage.json
+/docs/
