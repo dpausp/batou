@@ -505,5 +505,5 @@ insert_marker = "- Nothing changed yet."
 categories = ""
 
 [tool.uv.sources]
-pytest-deduplicate = { path = "../pytest_deduplicate" }
-pytest-patterns = { path = "../pytest-patterns" }
+pytest-patterns = { git = "https://github.com/dpausp/pytest-patterns", branch = "ts-ai" }
+pytest-deduplicate = { git = "https://github.com/dpausp/pytest_deduplicate", branch = "ts-ai" }
