@@ -1230,6 +1230,16 @@ wheels = [
 name = "pytest-deduplicate"
 version = "0.1.6"
 source = { directory = "../pytest_deduplicate" }
+dependencies = [
+    { name = "coverage" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "coverage" },
+    { name = "pytest" },
+]
 
 [[package]]
 name = "pytest-instafail"
@@ -1245,8 +1255,32 @@ wheels = [
 
 [[package]]
 name = "pytest-patterns"
-version = "0.1.0"
 source = { directory = "../pytest-patterns" }
+dependencies = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pytest", specifier = ">=6" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.0.0" },
+    { name = "pyproject-fmt", specifier = ">=2.5.0" },
+    { name = "pytest-cov" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+    { name = "tox" },
+    { name = "tox-uv" },
+]
+lint = [
+    { name = "mypy", specifier = ">=1.0.0" },
+    { name = "ruff" },
+]
+test = [
+    { name = "pytest-cov" },
+    { name = "pytest-xdist" },
+]
 
 [[package]]
 name = "pytest-ruff"
