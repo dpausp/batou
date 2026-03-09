@@ -16,7 +16,13 @@ def _pyrage_available():
     return True
 
 
+def _age_binary_available():
+    """Check if the age CLI binary is available."""
+    return shutil.which("age") is not None
+
+
 Pyrage_available = _pyrage_available()
+Age_binary_available = _age_binary_available()
 
 FIXTURE = pathlib.Path(__file__).parent / "fixture"
 FIXTURE_ENCRYPTED_CONFIG = FIXTURE / "encrypted.cfg.gpg"
@@ -38,6 +44,8 @@ def age_encrypted_file(tmpdir, monkeypatch):
     """
     if not Pyrage_available:
         pytest.skip("requires pyrage")
+    if not Age_binary_available:
+        pytest.skip("requires age CLI binary")
 
     # Set up AGE identity for decryption
     monkeypatch.setenv("BATOU_AGE_IDENTITIES", str(FIXTURE_AGE_IDENTITY))

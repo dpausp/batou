@@ -20,6 +20,7 @@ deployment integrity. No silent failures.
 """
 
 import difflib
+import os
 import sys
 from pathlib import Path
 from typing import Annotated
@@ -120,6 +121,9 @@ def deploy(
     The TOML file (environment.toml) is the source of truth.
     INI file (environment.cfg) is regenerated on each deployment.
     """
+    # Store project root early - CLI runners may change CWD during invoke
+    project_root = Path.cwd()
+
     # Find environment directory
     env_dir = Path("environments") / environment
 
@@ -200,7 +204,14 @@ def deploy(
     sys.argv = ["batou"] + deploy_args
 
     # SPEC: REQ-FUNC-DEPLOY-002-deploy-delegation - Preserve batou's exit status
+    # CLI runners (like typer.testing.CliRunner) may change CWD during invoke,
+    # so we restore to the project_root we captured at function start.
+    # We also set APPENV_BASEDIR to override find_basedir() which would otherwise
+    # use VIRTUAL_ENV's parent directory (the batou repo root) instead of the
+    # actual project directory when running tests.
     try:
+        os.chdir(project_root)
+        os.environ["APPENV_BASEDIR"] = str(project_root)
         main()
     except SystemExit:
         raise

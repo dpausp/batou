@@ -22,17 +22,17 @@ class RotatedLogfile(HookComponent):
 
 class Logrotate(Component):
     common_config = b""
-    logrotate_template = (
-        importlib.resources.files(__name__)
-        .joinpath("resources/logrotate.in")
-        .read_bytes()
-    )
 
     def configure(self):
         self.logfiles = self.require(RotatedLogfile.key, host=self.host)
         self.logfiles.sort(key=lambda logfile: logfile.path)
 
-        config = self.common_config + self.logrotate_template
+        logrotate_template = (
+            importlib.resources.files("batou.lib")
+            .joinpath("resources/logrotate.in")
+            .read_bytes()
+        )
+        config = self.common_config + logrotate_template
         self.logrotate_conf = File("logrotate.conf", content=config)
         self += self.logrotate_conf
 

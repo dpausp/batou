@@ -32,6 +32,10 @@ def temp_project():
         components_dir = project_dir / "components"
         components_dir.mkdir()
 
+        # Create .batou.json to pass migration check (version 2400 = latest)
+        batou_config = project_dir / ".batou.json"
+        batou_config.write_text('{"migration": {"version": 2400}}\n')
+
         yield project_dir
 
 
