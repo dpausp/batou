@@ -22,7 +22,7 @@ REMOTE_OS_ENV_KEYS = (
 # 'vagrant' support has been added to 'execnet' release 1.4.
 def get_kitchen_ssh_connection_info(name):
     cmd = "kitchen", "diagnose", "--log-level=error", name
-    info = yaml.load(subprocess.check_output(cmd))
+    info = yaml.safe_load(subprocess.check_output(cmd))
     (instance,) = list(info["instances"].values())
     state = instance["state_file"]
     return [

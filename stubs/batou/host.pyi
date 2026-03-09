@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypedDict
 
 import execnet
 from execnet.xspec import XSpec
@@ -8,6 +8,14 @@ from batou.component import RootComponent
 from batou.environment import ConfigSection, Environment
 from batou.provision import Provisioner
 from batou.utils import BagOfAttributes
+
+type ComponentKey = tuple[str, str]
+
+class RootDependencyInfo(TypedDict):
+    """Information about a root component's dependencies."""
+
+    dependencies: list[tuple[str, str]]
+    ignore: bool
 
 def new_ssh_args(spec: XSpec) -> list[str]: ...
 
@@ -42,7 +50,7 @@ class Host:
     def name(self) -> str: ...
     @property
     def provisioner(self) -> Provisioner | None: ...
-    def root_dependencies(self) -> Any: ...
+    def root_dependencies(self) -> dict[ComponentKey, RootDependencyInfo]: ...
     def summarize(self) -> None: ...
 
 class LocalHost(Host):

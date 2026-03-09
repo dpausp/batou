@@ -1,7 +1,7 @@
 from collections import defaultdict
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from batou.component import ComponentDefinition, RootComponent
 from batou.debug.template_stats import TemplateStats
@@ -10,6 +10,15 @@ from batou.provision import Provisioner
 from batou.repository import Repository
 from batou.resources import Resources
 from batou.secrets import SecretProvider
+
+class PathMapper(Protocol):
+    def map(self, path: str) -> str: ...
+
+class Deployment(Protocol):
+    """Protocol for deployment orchestration."""
+
+    environment: Environment | None
+    host_name: str | None
 
 def parse_host_components(components: list[str]) -> dict[str, dict[str, Any]]: ...
 
@@ -64,7 +73,7 @@ class Environment:
         ]
         | None
     )
-    vfs_sandbox: Any
+    vfs_sandbox: PathMapper | None
     target_directory: str | None
     jobs: int | None
     require_v4: bool | Literal["optional"]
@@ -78,7 +87,7 @@ class Environment:
     _toml_config: Any
     _resolve_override: dict[str, str]
     _resolve_v6_override: dict[str, str]
-    deployment: Any
+    deployment: Deployment | None
 
     def __init__(
         self,
