@@ -115,6 +115,7 @@ include = ["src/batou/provision.py"]
 
 [overrides.rules]
 invalid-method-override = "ignore"
+unresolved-attribute = "ignore"  # RawConfigParser._convert_to_boolean is private
 
 # =============================================================================
 # Library components - all use configure()/verify()/update() pattern
