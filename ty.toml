@@ -1,0 +1,230 @@
+[environment]
+python-version = "3.14"
+
+[src]
+include = ["src", "stubs"]
+exclude = [
+  "**/tests/**",
+  "**/test_*.py",
+  "**/*_test.py",
+]
+# Core exceptions - factory pattern with dynamic attributes in from_context()
+[[overrides]]
+include = ["src/batou/__init__.py", "stubs/batou/__init__.pyi"]
+
+[overrides.rules]
+invalid-method-override = "ignore"
+unresolved-attribute = "ignore"
+unsupported-operator = "ignore"
+
+# Component base - workdir:str=None pattern
+[[overrides]]
+include = ["src/batou/component.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+invalid-assignment = "ignore"
+not-iterable = "ignore"
+
+# Template engine - dynamic cache attributes
+[[overrides]]
+include = ["src/batou/template.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+
+# Resources - dynamic component/resource attributes
+[[overrides]]
+include = ["src/batou/resources.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+call-non-callable = "ignore"
+unsupported-operator = "ignore"
+not-subscriptable = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Remote core - channel can be None, execnet dynamic
+[[overrides]]
+include = ["src/batou/remote_core.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+unresolved-reference = "ignore"
+not-subscriptable = "ignore"
+call-non-callable = "ignore"
+possibly-missing-attribute = "ignore"
+invalid-argument-type = "ignore"  # len() on stats dict
+
+# Host - execnet monkey-patching, yaml.load
+[[overrides]]
+include = ["src/batou/host.py"]
+
+[overrides.rules]
+invalid-assignment = "ignore"
+invalid-argument-type = "ignore"
+missing-argument = "ignore"
+
+# Environment - configparser optionxform override, Self@method inference
+[[overrides]]
+include = ["src/batou/environment.py"]
+
+[overrides.rules]
+invalid-assignment = "ignore"
+invalid-argument-type = "ignore"  # Self@method not inferred as Environment
+
+# Deploy - deployment tracking, threading.join override
+[[overrides]]
+include = ["src/batou/deploy.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+call-non-callable = "ignore"
+invalid-method-override = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Check - timing attributes
+[[overrides]]
+include = ["src/batou/check.py"]
+
+[overrides.rules]
+unsupported-operator = "ignore"
+possibly-missing-attribute = "ignore"
+unresolved-attribute = "ignore"
+
+# Utils - dynamic attributes
+[[overrides]]
+include = ["src/batou/utils.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+possibly-missing-attribute = "ignore"
+
+# Repository - vcs attributes
+[[overrides]]
+include = ["src/batou/repository.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+
+# Provision - dynamic provisioner
+[[overrides]]
+include = ["src/batou/provision.py"]
+
+[overrides.rules]
+invalid-method-override = "ignore"
+
+# =============================================================================
+# Library components - all use configure()/verify()/update() pattern
+# =============================================================================
+
+[[overrides]]
+include = ["src/batou/lib/file.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+possibly-missing-attribute = "ignore"
+invalid-assignment = "ignore"  # Attribute descriptor mode conversion
+
+[[overrides]]
+include = ["src/batou/lib/archive.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+
+[[overrides]]
+include = ["src/batou/lib/goceptnet.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"  # Dynamic attributes from parent
+
+[[overrides]]
+include = ["src/batou/lib/buildout.py"]
+
+[overrides.rules]
+unsupported-operator = "ignore"  # list + Unknown
+
+[[overrides]]
+include = ["src/batou/lib/supervisor.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+not-iterable = "ignore"
+call-non-callable = "ignore"
+no-matching-overload = "ignore"
+invalid-argument-type = "ignore"  # RunningSupervisor(service) pattern
+
+[[overrides]]
+include = ["src/batou/lib/cmmi.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+
+[[overrides]]
+include = ["src/batou/lib/download.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+
+[[overrides]]
+include = ["src/batou/lib/python.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+no-matching-overload = "ignore"
+
+[[overrides]]
+include = ["src/batou/lib/package.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+
+[[overrides]]
+include = ["src/batou/lib/cron.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+unknown-argument = "ignore"
+invalid-argument-type = "ignore"
+
+[[overrides]]
+include = ["src/batou/lib/appenv.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+no-matching-overload = "ignore"
+missing-argument = "ignore"
+
+[[overrides]]
+include = [
+  "src/batou/lib/service.py",
+  "src/batou/lib/mercurial.py",
+  "src/batou/lib/logrotate.py",
+]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+no-matching-overload = "ignore"
+possibly-missing-attribute = "ignore"
+
+[[overrides]]
+include = ["src/batou/secrets/__init__.py", "src/batou/secrets/edit.py", "src/batou/secrets/manage.py"]
+
+[overrides.rules]
+unresolved-attribute = "ignore"
+possibly-missing-attribute = "ignore"
+
+# =============================================================================
+# Third-party workarounds
+# =============================================================================
+
+[analysis]
+allowed-unresolved-imports = ["yaml", "importlib_resources"]

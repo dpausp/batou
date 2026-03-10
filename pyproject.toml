@@ -1,499 +1,231 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+requires = [ "hatch-vcs", "hatchling>=1.26" ]
 
 [project]
 name = "batou"
-dynamic = ["version"]
 description = "A utility for automating multi-host, multi-environment software builds and deployments."
 readme = "README.md"
+keywords = [ "deployment" ]
 license = "BSD-2-Clause"
-license-files = ["LICENSE"]
+license-files = [ "LICENSE" ]
+authors = [ { name = "Christian Theune", email = "ct@flyingcircus.io" } ]
 requires-python = ">=3.10"
-authors = [{ name = "Christian Theune", email = "ct@flyingcircus.io" }]
-keywords = ["deployment"]
 classifiers = [
-    "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3 :: Only",
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
+dynamic = [ "version" ]
 dependencies = [
-    "ConfigUpdater>=3.2",
-    "Jinja2>=3.1.4",
-    "pydantic>=2.0.0",
-    "pydantic-settings>=2.0.0",
-    "requests",
-    "setuptools>=66.1.0",
-    "execnet>=1.8.1",
-    "py>=1.11.0",
-    "pyyaml",
-    "rich",
-    "remote-pdb",
-    "paramiko>=3.0.0",
+  "configupdater>=3.2",
+  "execnet>=1.8.1",
+  "jinja2>=3.1.4",
+  "paramiko>=3",
+  "py>=1.11",
+  "pydantic>=2",
+  "pydantic-settings>=2",
+  "pyyaml",
+  "remote-pdb",
+  "requests",
+  "rich",
+  "setuptools>=66.1",
 ]
-
-[project.scripts]
-batou = "batou.main:main"
-batommel = "batou.batommel:app"
-
-[project.entry-points."zc.buildout"]
-requirements = "batou.buildout:Requirements"
-
-[project.entry-points."batou.provisioners"]
-fc-nixos-dev-container = "batou.provision:FCDevContainer"
-fc-nixos-dev-vm = "batou.provision:FCDevVM"
-
-[project.urls]
-Homepage = "https://batou.readthedocs.io/en/latest/"
-Repository = "https://github.com/flyingcircusio/batou"
-
-[project.optional-dependencies]
-pyrage = [
-    "pyrage",
-    "cryptography",
-    "bcrypt",
+optional-dependencies.batommel = [ "rtoml", "typer" ]
+optional-dependencies.pyrage = [
+  "bcrypt",
+  "cryptography",
+  "pyrage",
 ]
-batommel = ["typer", "rtoml"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/batou"]
-artifacts = [
-    # Init template for `batou init`
-    "src/batou/init-template/**/*",
-    # Test fixtures
-    "src/batou/tests/fixture/**/*",
-    "src/batou/secrets/tests/fixture/**/*",
-    # Resource templates
-    "src/batou/lib/resources/**/*",
-    # Additional data files
-    "src/batou/insecure-private.key",
-    "src/batou/**/*.txt",
-    "src/batou/**/*.in",
-    "src/batou/**/*.key",
-]
-
-[tool.hatch.build.targets.sdist]
-include = ["/src", "/README.md", "/LICENSE"]
-
-[tool.hatch.version]
-source = "vcs"
-raw-options = { version_scheme = "no-guess-dev", local_scheme = "node-and-timestamp", fallback_version = "3.0.0.dev0" }
+urls.Homepage = "https://batou.readthedocs.io/en/latest/"
+urls.Repository = "https://github.com/flyingcircusio/batou"
+scripts.batommel = "batou.batommel:app"
+scripts.batou = "batou.main:main"
+entry-points."batou.provisioners".fc-nixos-dev-container = "batou.provision:FCDevContainer"
+entry-points."batou.provisioners".fc-nixos-dev-vm = "batou.provision:FCDevVM"
+entry-points."zc.buildout".requirements = "batou.buildout:Requirements"
 
 [dependency-groups]
-test = [
-    "mock",
-    "pytest",
-    "pytest-cov",
-    "pytest-instafail",
-    "pytest-patterns>=0.3.0",
-    "pytest-timeout",
-    "pytest-ruff",
-    "pytest-ty",
-    "pytest-xdist",
-    "pyrage-stubs>=1.3.1",
-    "pytest-deduplicate",
-]
-lint = ["ruff", "ty", "types-PyYAML", "types-requests"]
+batommel = [ "rtoml", "typer" ]
 dev = [
-    { include-group = "test" },
-    { include-group = "lint" },
-    "tox>=4.0",
-    "tox-uv",
-    "sphinx",
-    "recommonmark",
+  "tox",
+  "tox-uv-bare",
+  { include-group = "docs" },
+  { include-group = "lint" },
+  { include-group = "test" },
+]
+test = [
+  "pyrage-stubs",
+  "pytest",
+  "pytest-cov",
+  "pytest-deduplicate",
+  "pytest-instafail>=0.5.0",
+  "pytest-patterns",
+  "pytest-ruff",
+  "pytest-timeout",
+  "pytest-ty",
+  "pytest-xdist",
+]
+docs = [
+  "furo",
+  "myst-parser",
+  "sphinx",
+  "sphinx-autoapi",
+  "sphinx-autodoc-typehints",
+  "sphinx-copybutton",
+]
+lint = [
+  "pyproject-fmt",
+  "ruff",
+  "ty",
+  "types-pyyaml",
+  "types-requests",
+  "vulture",
 ]
 
-# =============================================================================
-# tox configuration
-# =============================================================================
-[tool.tox]
-env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "fix"]
-skip_missing_interpreters = true
-
-[tool.tox.env_run_base]
-package = "wheel"
-runner = "uv-venv-lock-runner"
-setenv = {APPENV_BEST_PYTHON = "{envpython}", COLUMNS = "80", IN_TOX_TEST = "1"}
-depends = ["fix"]
-dependency_groups = ["test"]
-extras = ["batommel", "pyrage"]
-commands = [["pytest", "--basetemp={env_tmp_dir}", { replace = "posargs", extend = true }]]
-
-[tool.tox.env.fix]
-skip_install = true
-depends = []
-allowlist_externals = ["ruff", "ty"]
-description = "Format, lint, fix whitespace, type-check"
-dependency_groups = ["test", "lint"]
-commands = [
-    ["ruff", "check", "--fix", "."],
-    ["ruff", "format", "."],
-    ["ty", "check", "."],
+[tool.hatch]
+build.targets.sdist.include = [ "/src", "/README.md", "/LICENSE" ]
+build.targets.wheel.packages = [ "src/batou" ]
+build.targets.wheel.artifacts = [
+  # Init template for `batou init`
+  "src/batou/init-template/**/*",
+  # Test fixtures
+  "src/batou/tests/fixture/**/*",
+  "src/batou/secrets/tests/fixture/**/*",
+  # Resource templates
+  "src/batou/lib/resources/**/*",
+  # Additional data files
+  "src/batou/insecure-private.key",
+  "src/batou/**/*.txt",
+  "src/batou/**/*.in",
+  "src/batou/**/*.key",
 ]
+version.source = "vcs"
+version.raw-options = { version_scheme = "no-guess-dev", local_scheme = "node-and-timestamp", fallback_version = "3.0.0.dev0" }
 
-[tool.tox.env.cov]
-base_python = ["3.14"]
-package = "wheel"
-runner = "uv-venv-lock-runner"
-setenv = {APPENV_BEST_PYTHON = "{envpython}"}
-dependency_groups = ["test"]
-description = "Tests with coverage and test deduplication check"
-commands = [
-    ["pytest", "--cov=batou", "--cov-report=term-missing", "--cov-report=html"],
-    ["python", "-m", "pytest_deduplicate", "."],
-]
+# [tool.ty] -> see ty.conf
+[tool.uv]
+sources.pytest-deduplicate = { git = "https://github.com/dpausp/pytest_deduplicate", branch = "ts-ai" }
+sources.pytest-patterns = { git = "https://github.com/dpausp/pytest-patterns", branch = "ts-ai" }
 
-# =============================================================================
-# ruff configuration
-# =============================================================================
 [tool.ruff]
 target-version = "py310"
-src = ["src", "stubs"]
+src = [ "src" ]
 exclude = [
-    "examples/**",  # Example projects - not batou source code
+  "examples/**", # Example projects - not batou source code
 ]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "C4"]
-ignore = [
-    "E501",  # line too long
-    "N818",  # batou exception naming convention (ReportingException, not ReportingError)
-    "B904",  # raise without from - batou exception hierarchy pattern
-    "COM812",  # trailing comma missing - conflicts with formatter
-    "ISC001",  # implicitly concatenated strings - conflicts with formatter
-]
-
-# Stub-specific ignores - stubs mirror source code conventions
-[tool.ruff.lint.per-file-ignores]
-"stubs/**" = [
-    "E402",   # Module import not at top - stubs often need forward references
-    "N801",   # Class naming - batou convention (VirtualEnvPy2_7)
-    "N802",   # Function naming - batou convention (ServiceCheck)
-    "N818",   # Exception naming - batou convention (ReportingException, etc.)
-    "ANN401", # Any in type hints - necessary for dynamic patterns
-    "ANN201", # Missing return type - acceptable for void methods in stubs
-]
-"src/batou/lib/file.py" = [
-    "E402",   # Lazy imports for optional dependencies
-]
-"src/batou/lib/nagios.py" = [
-    "N802",   # ServiceCheck function name - Nagios convention
-]
-"src/batou/lib/python.py" = [
-    "N801",   # VirtualEnvPy2_7 class name - version-specific class
-]
-"src/batou/deploy.py" = [
-    "N806",   # STEPS, ACTION, SUCCESS_FORMAT constants
-]
-"src/batou/provision.py" = [
-    "N806",   # KNOWN_HOSTS_FILE constant
-]
-"src/batou/secrets/encryption.py" = [
-    "N806",   # IS_CHILD constant
-]
-"src/batou/debug/remote_fd_tracking.py" = [
-    "N806",   # FD_WARNING_THRESHOLD constant
-]
-"src/batou/remote_core.py" = [
-    "B018",   # `channel` name check for bootstrapping
+lint.select = [ "B", "C4", "E", "F", "FLY", "I", "N", "PERF", "RUF", "SIM", "UP", "W" ]
+lint.ignore = [
+  "B904",   # raise without from - batou exception hierarchy pattern
+  "COM812", # trailing comma missing - conflicts with formatter
+  "E501",   # line too long
+  "ISC001", # implicitly concatenated strings - conflicts with formatter
+  "N818",   # batou exception naming convention (ReportingException, not ReportingError)
 ]
 # Test-specific ignores
-"**/tests/**/*.py" = [
-    "B018",   # Useless expressions - test fixtures and assertions
-    "B017",   # assert Exception - broad exception testing
-    "B015",   # Pointless comparison - test assertions
-    "N802",   # Function names like test_..._TRUE - descriptive test names
-    "N806",   # Variables like TEMPLATE, OLD_GPG_BINARY_CANDIDATES - test constants
+lint.per-file-ignores."**/tests/**/*.py" = [
+  "B015", # Pointless comparison - test assertions
+  "B017", # assert Exception - broad exception testing
+  "B018", # Useless expressions - test fixtures and assertions
+  "N802", # Function names like test_..._TRUE - descriptive test names
+  "N806", # Variables like TEMPLATE, OLD_GPG_BINARY_CANDIDATES - test constants
+]
+lint.per-file-ignores."src/batou/debug/remote_fd_tracking.py" = [
+  "N806", # FD_WARNING_THRESHOLD constant
+]
+lint.per-file-ignores."src/batou/deploy.py" = [
+  "N806", # STEPS, ACTION, SUCCESS_FORMAT constants
+]
+lint.per-file-ignores."src/batou/lib/file.py" = [
+  "E402", # Lazy imports for optional dependencies
+]
+lint.per-file-ignores."src/batou/lib/nagios.py" = [
+  "N802", # ServiceCheck function name - Nagios convention
+]
+lint.per-file-ignores."src/batou/lib/python.py" = [
+  "N801", # VirtualEnvPy2_7 class name - version-specific class
+]
+lint.per-file-ignores."src/batou/provision.py" = [
+  "N806", # KNOWN_HOSTS_FILE constant
+]
+lint.per-file-ignores."src/batou/remote_core.py" = [
+  "B018", # `channel` name check for bootstrapping
+]
+lint.per-file-ignores."src/batou/secrets/encryption.py" = [
+  "N806", # IS_CHILD constant
+]
+# Stub-specific ignores - stubs mirror source code conventions
+lint.per-file-ignores."stubs/**" = [
+  "ANN201", # Missing return type - acceptable for void methods in stubs
+  "ANN401", # Any in type hints - necessary for dynamic patterns
+  "E402",   # Module import not at top - stubs often need forward references
+  "N801",   # Class naming - batou convention (VirtualEnvPy2_7)
+  "N802",   # Function naming - batou convention (ServiceCheck)
+  "N818",   # Exception naming - batou convention (ReportingException, etc.)
 ]
 
-# =============================================================================
-# ty type-checking configuration
-# =============================================================================
-
-[tool.ty.environment]
-python-version = "3.14"
-
-[tool.ty.src]
-include = ["src", "stubs"]
-exclude = [
-    "**/tests/**",
-    "**/test_*.py",
-    "**/*_test.py",
+[tool.pytest]
+ini_options.addopts = [
+  "--cov=src",
+  "--cov-report=html",
+  "--junitxml=report.xml",
+  "--instafail",
+  "--import-mode=importlib",
+  "--timeout=120",
+  "-W",
+  "error",
+  # "--ruff",
+  "--ty",
+  "-m",
+  "not slow and not debug",
 ]
-
-# =============================================================================
-# ty type-checking overrides
-# Batou uses dynamic attribute patterns (configure() sets attributes used in verify()/update())
-# that ty cannot statically verify. These overrides silence false positives.
-# =============================================================================
-
-# Core exceptions - factory pattern with dynamic attributes in from_context()
-[[tool.ty.overrides]]
-include = ["src/batou/__init__.py", "stubs/batou/__init__.pyi"]
-
-[tool.ty.overrides.rules]
-invalid-method-override = "ignore"
-unresolved-attribute = "ignore"
-unsupported-operator = "ignore"
-
-# Component base - workdir:str=None pattern
-[[tool.ty.overrides]]
-include = ["src/batou/component.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-invalid-assignment = "ignore"
-not-iterable = "ignore"
-
-# Template engine - dynamic cache attributes
-[[tool.ty.overrides]]
-include = ["src/batou/template.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-
-# Resources - dynamic component/resource attributes
-[[tool.ty.overrides]]
-include = ["src/batou/resources.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-call-non-callable = "ignore"
-unsupported-operator = "ignore"
-not-subscriptable = "ignore"
-possibly-missing-attribute = "ignore"
-
-# Remote core - channel can be None, execnet dynamic
-[[tool.ty.overrides]]
-include = ["src/batou/remote_core.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-unresolved-reference = "ignore"
-not-subscriptable = "ignore"
-call-non-callable = "ignore"
-possibly-missing-attribute = "ignore"
-invalid-argument-type = "ignore"  # len() on stats dict
-
-# Host - execnet monkey-patching, yaml.load
-[[tool.ty.overrides]]
-include = ["src/batou/host.py"]
-
-[tool.ty.overrides.rules]
-invalid-assignment = "ignore"
-invalid-argument-type = "ignore"
-missing-argument = "ignore"
-
-# Environment - configparser optionxform override, Self@method inference
-[[tool.ty.overrides]]
-include = ["src/batou/environment.py"]
-
-[tool.ty.overrides.rules]
-invalid-assignment = "ignore"
-invalid-argument-type = "ignore"  # Self@method not inferred as Environment
-
-# Deploy - deployment tracking, threading.join override
-[[tool.ty.overrides]]
-include = ["src/batou/deploy.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-call-non-callable = "ignore"
-invalid-method-override = "ignore"
-possibly-missing-attribute = "ignore"
-
-# Check - timing attributes
-[[tool.ty.overrides]]
-include = ["src/batou/check.py"]
-
-[tool.ty.overrides.rules]
-unsupported-operator = "ignore"
-possibly-missing-attribute = "ignore"
-unresolved-attribute = "ignore"
-
-# Utils - dynamic attributes
-[[tool.ty.overrides]]
-include = ["src/batou/utils.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-invalid-argument-type = "ignore"
-no-matching-overload = "ignore"
-possibly-missing-attribute = "ignore"
-
-# Repository - vcs attributes
-[[tool.ty.overrides]]
-include = ["src/batou/repository.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-
-# Provision - dynamic provisioner
-[[tool.ty.overrides]]
-include = ["src/batou/provision.py"]
-
-[tool.ty.overrides.rules]
-invalid-method-override = "ignore"
-
-# =============================================================================
-# Library components - all use configure()/verify()/update() pattern
-# =============================================================================
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/file.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-invalid-argument-type = "ignore"
-no-matching-overload = "ignore"
-possibly-missing-attribute = "ignore"
-invalid-assignment = "ignore"  # Attribute descriptor mode conversion
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/archive.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-invalid-argument-type = "ignore"
-no-matching-overload = "ignore"
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/goceptnet.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"  # Dynamic attributes from parent
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/buildout.py"]
-
-[tool.ty.overrides.rules]
-unsupported-operator = "ignore"  # list + Unknown
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/supervisor.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-not-iterable = "ignore"
-call-non-callable = "ignore"
-no-matching-overload = "ignore"
-invalid-argument-type = "ignore"  # RunningSupervisor(service) pattern
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/cmmi.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/download.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-invalid-argument-type = "ignore"
-no-matching-overload = "ignore"
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/python.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-no-matching-overload = "ignore"
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/package.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/cron.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-unknown-argument = "ignore"
-invalid-argument-type = "ignore"
-
-[[tool.ty.overrides]]
-include = ["src/batou/lib/appenv.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-no-matching-overload = "ignore"
-missing-argument = "ignore"
-
-[[tool.ty.overrides]]
-include = [
-    "src/batou/lib/service.py",
-    "src/batou/lib/mercurial.py",
-    "src/batou/lib/logrotate.py",
+ini_options.junit_family = "xunit2"
+ini_options.markers = [
+  "slow: This is a slow test.",
+  "debug: Debug/development tests.",
 ]
+ini_options.testpaths = [ "src" ]
 
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-no-matching-overload = "ignore"
-possibly-missing-attribute = "ignore"
+[tool.coverage]
+run.branch = true
+run.source = [ "batou" ]
+report.precision = 2
 
-# =============================================================================
-# Secrets - encryption providers
-# =============================================================================
-
-[[tool.ty.overrides]]
-include = ["src/batou/secrets/__init__.py", "src/batou/secrets/edit.py", "src/batou/secrets/manage.py"]
-
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-possibly-missing-attribute = "ignore"
-
-# =============================================================================
-# Third-party workarounds
-# =============================================================================
-
-[tool.ty.analysis]
-allowed-unresolved-imports = ["yaml", "importlib_resources"]
-
-# =============================================================================
-# pytest configuration
-# =============================================================================
-[tool.pytest.ini_options]
-addopts = [
-    "-W", "error",
-    "--timeout=120",
-    "--tb=native",
-    "--cov=src",
-    "--cov-report=html",
-    "--junitxml=report.xml",
-    "--instafail",
-    "--import-mode=importlib",
-    "--ruff",
-    "--ty",
-    "-m", "not slow and not debug",
+[tool.tox]
+env_list = [ "fix", "cov", "3.10", "3.11", "3.12", "3.13", "3.14" ]
+skip_missing_interpreters = true
+env.cov.base_python = [ "3.14" ]
+env.cov.package = "wheel"
+env.cov.runner = "uv-venv-lock-runner"
+env.cov.setenv = { APPENV_BEST_PYTHON = "{envpython}" }
+env.cov.depends = [ "fix" ]
+env.cov.description = "Tests with coverage and test deduplication check"
+env.cov.commands = [
+  [ "pytest", "--cov=batou", "--cov-report=term-missing", "--cov-report=html" ],
+  # [ "python", "-m", "pytest_deduplicate", "src" ],
 ]
-markers = [
-    "slow: This is a slow test.",
-    "debug: Debug/development tests (excluded by default).",
+env.fix.skip_install = true
+env.fix.depends = []
+env.fix.description = "Format, lint, fix whitespace, type-check, dead code"
+env.fix.dependency_groups = [ "test", "lint" ]
+env.fix.commands = [
+  # [ "ruff", "check", ],
+  # [ "vulture", "src/", ".vulture_exclude", "--min-confidence=80" ],
+  # [ "python", "fix_whitespace.py", "." ],
+  [ "ruff", "format" ],
 ]
-testpaths = ["src"]
-junit_family = "xunit2"
+env_run_base.package = "wheel"
+env_run_base.runner = "uv-venv-lock-runner"
+env_run_base.setenv = { APPENV_BEST_PYTHON = "{envpython}" }
+env_run_base.dependency_groups = [ "test", "batommel" ]
+env_run_base.depends = [ "fix" ]
+env_run_base.commands = [ [ "pytest", { replace = "posargs", extend = true } ] ]
 
-# =============================================================================
-# coverage configuration
-# =============================================================================
-[tool.coverage.run]
-branch = true
-source = ["batou"]
-
-[tool.coverage.report]
-precision = 2
-
-# =============================================================================
-# scriv changelog configuration
-# =============================================================================
 [tool.scriv]
 format = "md"
 fragment_directory = "CHANGES.d"
@@ -503,7 +235,3 @@ entry_title_template = ""
 new_fragment_template = "- New changelog entry."
 insert_marker = "- Nothing changed yet."
 categories = ""
-
-[tool.uv.sources]
-pytest-patterns = { git = "https://github.com/dpausp/pytest-patterns", branch = "ts-ai" }
-pytest-deduplicate = { git = "https://github.com/dpausp/pytest_deduplicate", branch = "ts-ai" }
