@@ -160,9 +160,7 @@ def test_manage__reencrypt__1(tmp_path, monkeypatch, capsys):
             new2[path] = f.read()
 
     for path in old2:
-        assert (
-            old2[path] == new2[path]
-        ), f"File {path} changed without key change"
+        assert old2[path] == new2[path], f"File {path} changed without key change"
 
     assert set(old2) == set(new2)
 

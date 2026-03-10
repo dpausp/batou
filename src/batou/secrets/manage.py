@@ -76,9 +76,7 @@ def reencrypt(environments, **kw):
         environment.load_secrets()
         with environment.secret_provider.edit():
             config = environment.secret_provider.config
-            environment.secret_provider.write_config(
-                str(config).encode("utf-8")
-            )
+            environment.secret_provider.write_config(str(config).encode("utf-8"))
 
 
 def decrypt_to_stdout(file: str):
