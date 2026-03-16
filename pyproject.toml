@@ -1,7 +1,167 @@
-[tool.black]
-line-length = 80
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatch-vcs", "hatchling>=1.26"]
 
-[tool.isort]
-profile = "black"
-line_length = 80
+[project]
+name = "batou"
+description = "A utility for automating multi-host, multi-environment software builds and deployments."
+readme = "README.md"
+keywords = ["deployment"]
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "Christian Theune", email = "ct@flyingcircus.io" }]
+requires-python = ">=3.8"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dynamic = ["version"]
+dependencies = [
+  "ConfigUpdater>=3.2",
+  "Jinja2>=3.1.4",
+  "execnet>=1.8.1",
+  "importlib_metadata",
+  "importlib_resources",
+  "py>=1.11.0",
+  "pyyaml",
+  "remote-pdb",
+  "requests",
+  "setuptools>=66.1.0",
+]
+
+[project.urls]
+Homepage = "https://batou.readthedocs.io/en/latest/"
+Repository = "https://github.com/flyingcircusio/batou"
+
+[project.scripts]
+batou = "batou.main:main"
+
+[project.entry-points."zc.buildout"]
+requirements = "batou.buildout:Requirements"
+
+[project.entry-points."batou.provisioners"]
+fc-nixos-dev-container = "batou.provision:FCDevContainer"
+fc-nixos-dev-vm = "batou.provision:FCDevVM"
+
+
+# PEP 735
+[dependency-groups]
+dev = [
+  "tox",
+  "tox-uv",
+  { include-group = "lint" },
+  { include-group = "test" },
+]
+test = [
+  "mock",
+  "pytest",
+  "pytest-cov",
+  "pytest-instafail",
+  "pytest-timeout",
+]
+lint = [
+  "ruff",
+]
+
+[tool.ruff]
+target-version = "py38"
+src = ["src"]
+exclude = ["appenv.py", "examples/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = [
+  "E501",  # line too long
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = [
+  "N802",  # Function names like test_..._TRUE
+  "N806",  # Variables like TEMPLATE - test constants
+]
+
+[tool.pytest.ini_options]
+testpaths = ["src"]
+addopts = [
+  "-W", "error",
+  "--timeout=120",
+  "--tb=native",
+  "--cov=src",
+  "--cov-report=html",
+  "--junitxml=report.xml",
+  "--instafail",
+  "--import-mode=importlib",
+]
+markers = [
+  "slow: This is a slow test.",
+]
+junit_family = "xunit2"
+
+[tool.coverage.run]
+branch = true
+source = ["batou"]
+
+[tool.coverage.report]
+precision = 2
+
+[tool.tox]
+env_list = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+skip_missing_interpreters = true
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+package = "wheel"
+setenv = { APPENV_BEST_PYTHON = "{envpython}" }
+dependency_groups = ["test"]
+commands = [["pytest", { replace = "posargs", extend = true }]]
+
+[tool.tox.env.fix]
+skip_install = true
+dependency_groups = ["lint"]
+commands = [
+  # ["ruff", "check", "--fix"]
+  ["ruff", "format"]
+]
+
+[tool.tox.env.pre-commit]
+base_python = ["3.12"]
+description = "Run all linters configured in .pre-commit-config.yaml"
+skip_install = true
+deps = ["pre-commit"]
+commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
+
+[tool.scriv]
+format = "md"
+fragment_directory = "CHANGES.d"
+output_file = "CHANGES.md"
+version = "unreleased"
+entry_title_template = ""
+new_fragment_template = "- New changelog entry."
+insert_marker = "- Nothing changed yet."
+categories = ""
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/README.md", "/LICENSE"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/batou"]
+artifacts = [
+  "src/batou/init-template/**/*",
+  "src/batou/tests/fixture/**/*",
+  "src/batou/secrets/tests/fixture/**/*",
+  "src/batou/lib/resources/**/*",
+  "src/batou/insecure-private.key",
+  "src/batou/**/*.txt",
+  "src/batou/**/*.in",
+  "src/batou/**/*.key",
+]
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { version_scheme = "no-guess-dev", local_scheme = "node-and-timestamp", fallback_version = "2.8.0.dev0" }

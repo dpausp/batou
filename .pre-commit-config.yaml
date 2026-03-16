@@ -26,16 +26,9 @@ repos:
                 examples/sensitive-values/secrets.cfg.age.clear
             )$
 
--   repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
     hooks:
-      - id: isort
-        name: isort (python)
-        args: ["--profile", "black", "--filter-files"]
-
--   repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-    -   id: black
-        exclude:
-            examples/errors/components/component5/component.py
+    -   id: ruff
+        args: ["--fix"]
+    -   id: ruff-format
