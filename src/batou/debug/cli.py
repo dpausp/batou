@@ -1,23 +1,27 @@
 """Debug settings inspection command."""
 
-import typer
+import argparse
+import sys
+
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
+# Import batou._settings with alias to avoid shadowing batou.settings instance
+# SPEC: SDD-F001 - Import pattern to prevent namespace collision
 from batou.debug.settings import get_debug_settings
 
-app = typer.Typer(
-    no_args_is_help=True,
-    help="Display all available debug settings.",
-)
+debug_settings = get_debug_settings()
 console = Console(width=200)
 
 
-@app.command()
-def debug() -> None:
+def main(args: list[str] | None = None) -> None:
     """Display all available debug settings."""
-    debug_settings = get_debug_settings()
+    parser = argparse.ArgumentParser(
+        description="Display all available debug settings."
+    )
+    parser.parse_args(args or [])
+
     settings_info = debug_settings.describe()
 
     # Create table with columns as specified in SDD D-006
@@ -63,10 +67,5 @@ def debug() -> None:
     console.print(table)
 
 
-def main(args: list[str] | None = None) -> None:
-    """Entry point for the debug command."""
-    app(args)
-
-
 if __name__ == "__main__":
-    app()
+    main(sys.argv[1:])
