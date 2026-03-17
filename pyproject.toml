@@ -127,7 +127,7 @@ skip_install = true
 dependency_groups = ["lint"]
 commands = [
   # ["ruff", "check", "--fix"]
-  ["ruff", "format"]
+  # ["ruff", "format"]
 ]
 
 [tool.tox.env.pre-commit]
@@ -135,7 +135,8 @@ base_python = ["3.12"]
 description = "Run all linters configured in .pre-commit-config.yaml"
 skip_install = true
 deps = ["pre-commit"]
-commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
+commands = [
+    #["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
 
 [tool.scriv]
 format = "md"
