@@ -14,9 +14,7 @@ from .test_secrets import encrypted_file
 def test_edit_gpg(tmpdir):
     editor = Editor(
         "true",
-        environment=Environment(
-            "tutorial", basedir="examples/tutorial-secrets"
-        ),
+        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
         edit_file="asdf",
     )
     editor.cleartext = "asdf"
@@ -42,9 +40,7 @@ def test_edit_age(tmpdir):
 def test_edit_command_loop(tmpdir, capsys):
     editor = Editor(
         "true",
-        environment=Environment(
-            "tutorial", basedir="examples/tutorial-secrets"
-        ),
+        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
     )
     editor.cleartext = "asdf"
 
@@ -74,11 +70,11 @@ def test_edit_command_loop(tmpdir, capsys):
 An error occurred: gpg is broken
 Traceback:
 Traceback (most recent call last):
-  File ".../src/batou/secrets/edit.py", line ..., in interact
+  File ".../batou/secrets/edit.py", line ..., in interact
     self.process_cmd(cmd)
-  File ".../src/batou/secrets/edit.py", line ..., in process_cmd
+  File ".../batou/secrets/edit.py", line ..., in process_cmd
     self.edit()
-  File ".../src/batou/secrets/tests/test_editor.py", line ..., in broken_cmd
+  File ".../batou/secrets/tests/test_editor.py", line ..., in broken_cmd
     raise RuntimeError("gpg is broken")
 RuntimeError: gpg is broken
 
@@ -92,11 +88,11 @@ Your changes are still available. You can try:
 An error occurred: gpg is broken
 Traceback:
 Traceback (most recent call last):
-  File ".../src/batou/secrets/edit.py", line ..., in interact
+  File ".../batou/secrets/edit.py", line ..., in interact
     self.process_cmd(cmd)
-  File ".../src/batou/secrets/edit.py", line ..., in process_cmd
+  File ".../batou/secrets/edit.py", line ..., in process_cmd
     self.edit()
-  File ".../src/batou/secrets/tests/test_editor.py", line ..., in broken_cmd
+  File ".../batou/secrets/tests/test_editor.py", line ..., in broken_cmd
     raise RuntimeError("gpg is broken")
 RuntimeError: gpg is broken
 
@@ -110,9 +106,9 @@ Your changes are still available. You can try:
 An error occurred: unknown command `asdf`
 Traceback:
 Traceback (most recent call last):
-  File ".../src/batou/secrets/edit.py", line ..., in interact
+  File ".../batou/secrets/edit.py", line ..., in interact
     self.process_cmd(cmd)
-  File ".../src/batou/secrets/edit.py", line ..., in process_cmd
+  File ".../batou/secrets/edit.py", line ..., in process_cmd
     raise ValueError("unknown command `{}`".format(cmd))
 ValueError: unknown command `asdf`
 
@@ -126,11 +122,11 @@ Your changes are still available. You can try:
 An error occurred: gpg is broken
 Traceback:
 Traceback (most recent call last):
-  File ".../src/batou/secrets/edit.py", line ..., in interact
+  File ".../batou/secrets/edit.py", line ..., in interact
     self.process_cmd(cmd)
-  File ".../src/batou/secrets/edit.py", line ..., in process_cmd
+  File ".../batou/secrets/edit.py", line ..., in process_cmd
     self.encrypt()
-  File ".../src/batou/secrets/tests/test_editor.py", line ..., in broken_cmd
+  File ".../batou/secrets/tests/test_editor.py", line ..., in broken_cmd
     raise RuntimeError("gpg is broken")
 RuntimeError: gpg is broken
 
@@ -147,9 +143,7 @@ def test_edit_file_has_secret_prefix_gpg(tmpdir, encrypted_file):
     filename = "asdf123"
     editor = Editor(
         "true",
-        environment=Environment(
-            "tutorial", basedir="examples/tutorial-secrets"
-        ),
+        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
         edit_file=filename,
     )
     assert editor.file.path.name == f"secret-{filename}.gpg"
@@ -172,9 +166,7 @@ def test_edit_file_has_secret_prefix_age(tmpdir, encrypted_file):
 def test_blank_edit(tmpdir, encrypted_file):
     editor = Editor(
         "true",
-        environment=Environment(
-            "tutorial", basedir="examples/tutorial-secrets"
-        ),
+        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
         edit_file="asdf",
     )
     with editor.file:
