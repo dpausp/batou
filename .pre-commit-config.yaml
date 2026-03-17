@@ -10,6 +10,7 @@ repos:
         # These are non-anchored regular rexpressions
         exclude: ^(.*/encrypted.cfg|.*/secrets.cfg|.*/secret-foobar.yaml|.*\.age|.*\.gpg)
     -   id: check-added-large-files
+        exclude: "S\\.gpg-agent"
     -   id: check-json
     -   id: check-xml
     -   id: check-toml
