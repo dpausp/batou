@@ -2,9 +2,9 @@ name: Unit tests
 
 on:
   push:
-    branches: [main, 'batou-*']
   pull_request:
-    branches: [main, 'batou-*']
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
 
 jobs:
   build:
