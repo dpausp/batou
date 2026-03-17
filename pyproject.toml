@@ -136,7 +136,8 @@ description = "Run all linters configured in .pre-commit-config.yaml"
 skip_install = true
 deps = ["pre-commit"]
 commands = [
-    #["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
+  #["pre-commit", "run", "--all-files", "--show-diff-on-failure"]
+]
 
 [tool.scriv]
 format = "md"
