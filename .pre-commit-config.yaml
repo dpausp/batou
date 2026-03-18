@@ -10,7 +10,6 @@ repos:
         # These are non-anchored regular rexpressions
         exclude: ^(.*/encrypted.cfg|.*/secrets.cfg|.*/secret-foobar.yaml|.*\.age|.*\.gpg)
     -   id: check-added-large-files
-        exclude: "S\\.gpg-agent"
     -   id: check-json
     -   id: check-xml
     -   id: check-toml
@@ -27,9 +26,16 @@ repos:
                 examples/sensitive-values/secrets.cfg.age.clear
             )$
 
--   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
     hooks:
-    -   id: ruff
-        args: ["--fix"]
-    -   id: ruff-format
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black", "--filter-files"]
+
+-   repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+    -   id: black
+        exclude:
+            examples/errors/components/component5/component.py
