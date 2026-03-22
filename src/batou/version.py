@@ -30,7 +30,9 @@ def format_version(color: bool = True) -> str:
     # Pattern: version+g<sha>[.d<timestamp>][.dirty]
     # 'g' prefix from git describe is stripped from output
     # Timestamp is optional - hatch-vcs may not always include it
-    match = re.match(r"^([^+]+)\+([gd][a-f0-9]+)(?:\.d(\d{14}))?(?:\.dirty)?$", version)
+    match = re.match(
+        r"^([^+]+)\+([gd][a-f0-9]+)(?:\.d(\d{14}))?(?:\.dirty)?$", version
+    )
 
     if not match:
         # Not a hatch-vcs local version (release or unknown)
@@ -44,7 +46,9 @@ def format_version(color: bool = True) -> str:
     if timestamp_str:
         try:
             dt = datetime.strptime(timestamp_str, "%Y%m%d%H%M%S")
-            formatted_time = f", committed at {dt.strftime('%Y-%m-%d %H:%M:%S')}"
+            formatted_time = (
+                f", committed at {dt.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
         except ValueError:
             formatted_time = f", committed at {timestamp_str}"
     else:

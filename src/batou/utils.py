@@ -129,7 +129,9 @@ try:
     notify = notify_macosx
 except (subprocess.CalledProcessError, OSError):
     try:
-        subprocess.check_output(["which", "notify-send"], stderr=subprocess.STDOUT)
+        subprocess.check_output(
+            ["which", "notify-send"], stderr=subprocess.STDOUT
+        )
         notify = notify_send
     except (subprocess.CalledProcessError, OSError):
         notify = notify_none
@@ -148,9 +150,13 @@ def resolve(host, port=0, resolve_override=resolve_override):
     else:
         output.annotate("resolving (v4) `{}`".format(host), debug=True)
         responses = socket.getaddrinfo(host, int(port), socket.AF_INET)
-        output.annotate("resolved (v4) `{}` to {}".format(host, responses), debug=True)
+        output.annotate(
+            "resolved (v4) `{}` to {}".format(host, responses), debug=True
+        )
         address = responses[0][4][0]
-        output.annotate("selected (v4) {}, {}".format(host, address), debug=True)
+        output.annotate(
+            "selected (v4) {}, {}".format(host, address), debug=True
+        )
     return address
 
 
@@ -164,7 +170,9 @@ def resolve_v6(host, port=0, resolve_override=resolve_v6_override):
     else:
         output.annotate("resolving (v6) `{}`".format(host), debug=True)
         responses = socket.getaddrinfo(host, int(port), socket.AF_INET6)
-        output.annotate("resolved (v6) `{}` to {}".format(host, responses), debug=True)
+        output.annotate(
+            "resolved (v6) `{}` to {}".format(host, responses), debug=True
+        )
         address = None
         for _, _, _, _, sockaddr in responses:
             addr = sockaddr[0]
@@ -174,7 +182,9 @@ def resolve_v6(host, port=0, resolve_override=resolve_v6_override):
             break
         if not address:
             raise ValueError("No valid address found for `{}`.".format(host))
-        output.annotate("selected (v6) {}, {}".format(host, address), debug=True)
+        output.annotate(
+            "selected (v6) {}, {}".format(host, address), debug=True
+        )
     return address
 
 
@@ -425,7 +435,9 @@ def topological_sort(graph):
     graph = ensure_graph_data(graph)
     sorted = []
     reverse_graph = revert_graph(graph)
-    roots = [node for node, incoming in list(reverse_graph.items()) if not incoming]
+    roots = [
+        node for node, incoming in list(reverse_graph.items()) if not incoming
+    ]
     while roots:
         root = roots.pop()
         sorted.append(root)
@@ -652,4 +664,6 @@ def export_environment_variables(environ):
     for k in environ:
         if not VARNAME_PATTERN.match(k):
             raise ValueError(f"`{k}` is not a valid shell variable name")
-    return "\n".join(sorted(f"export {k}={shlex.quote(v)}" for k, v in environ.items()))
+    return "\n".join(
+        sorted(f"export {k}={shlex.quote(v)}" for k, v in environ.items())
+    )

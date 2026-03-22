@@ -14,7 +14,9 @@ from .test_secrets import encrypted_file
 def test_edit_gpg(tmpdir):
     editor = Editor(
         "true",
-        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
+        environment=Environment(
+            "tutorial", basedir="examples/tutorial-secrets"
+        ),
         edit_file="asdf",
     )
     editor.cleartext = "asdf"
@@ -40,7 +42,9 @@ def test_edit_age(tmpdir):
 def test_edit_command_loop(tmpdir, capsys):
     editor = Editor(
         "true",
-        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
+        environment=Environment(
+            "tutorial", basedir="examples/tutorial-secrets"
+        ),
     )
     editor.cleartext = "asdf"
 
@@ -143,7 +147,9 @@ def test_edit_file_has_secret_prefix_gpg(tmpdir, encrypted_file):
     filename = "asdf123"
     editor = Editor(
         "true",
-        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
+        environment=Environment(
+            "tutorial", basedir="examples/tutorial-secrets"
+        ),
         edit_file=filename,
     )
     assert editor.file.path.name == f"secret-{filename}.gpg"
@@ -166,7 +172,9 @@ def test_edit_file_has_secret_prefix_age(tmpdir, encrypted_file):
 def test_blank_edit(tmpdir, encrypted_file):
     editor = Editor(
         "true",
-        environment=Environment("tutorial", basedir="examples/tutorial-secrets"),
+        environment=Environment(
+            "tutorial", basedir="examples/tutorial-secrets"
+        ),
         edit_file="asdf",
     )
     with editor.file:
