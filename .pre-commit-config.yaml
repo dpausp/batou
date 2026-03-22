@@ -25,5 +25,3 @@ repos:
                 examples/sensitive-values/ssh-keys/host_rsa|
                 examples/sensitive-values/secrets.cfg.age.clear
             )$
-
-
