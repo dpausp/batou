@@ -211,13 +211,9 @@ env.cov.commands = [
 ]
 env.fix.skip_install = true
 env.fix.depends = []
-env.fix.description = "Format, lint, fix whitespace, type-check, dead code"
-env.fix.dependency_groups = [ "test", "lint" ]
+env.fix.description = "Format code with ruff"
 env.fix.commands = [
-  # [ "ruff", "check", ],
-  # [ "vulture", "src/", ".vulture_exclude", "--min-confidence=80" ],
-  # [ "python", "fix_whitespace.py", "." ],
-  [ "ruff", "format" ],
+  [ "uvx", "ruff", "format" ],
 ]
 env_run_base.package = "wheel"
 env_run_base.runner = "uv-venv-lock-runner"
