@@ -1,9 +1,9 @@
 #!/bin/sh
 
-set -ex
-
 # Development environment setup with uv
-# Usage: ./develop.sh [python version, e.g. 3.12]
+# Usage: ./develop.sh [python version, default 3.14]
+
+set -ex
 
 python_version="${1:-3.14}"
 

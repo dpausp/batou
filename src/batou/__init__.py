@@ -10,7 +10,6 @@ import jinja2
 from ._output import output
 
 __version__ = importlib.metadata.version("batou")
-
 # Configure `remote-pdb` to be used with `breakpoint()` in Python 3.7+:
 os.environ["PYTHONBREAKPOINT"] = "remote_pdb.set_trace"
 if not os.environ.get("REMOTE_PDB_HOST", None):

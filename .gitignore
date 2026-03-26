@@ -8,8 +8,10 @@
 .idea/
 .vscode/
 .ty-symbols.db
+*.lock
 *src/batou.egg-info/
 .appenv
+coverage.json
 .batou
 .batou-lock
 .batou.json
